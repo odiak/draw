@@ -1,5 +1,6 @@
-import React, { useRef, useLayoutEffect, useState, useCallback } from 'react'
+import React, { useRef, useLayoutEffect, useState, useCallback, useMemo } from 'react'
 import styled from '@emotion/styled'
+import firebase from 'firebase/app'
 import { AuthDisplay } from './AuthDisplay'
 
 const Board = styled.svg`
@@ -22,6 +23,8 @@ type Path = {
 export function App() {
   const [paths, setPaths] = useState<readonly Path[]>([])
   const [drawingPath, setDrawingPath] = useState<Path | null>(null)
+
+  const db = useMemo(() => firebase.firestore(), [])
 
   const color = '#000'
   const lineWidth = 3
@@ -50,6 +53,22 @@ export function App() {
     <div>
       <h1>draw</h1>
       <AuthDisplay />
+      <div>
+        <button
+          onClick={useCallback(
+            (e: React.MouseEvent<unknown, MouseEvent>) => {
+              db.collection('pictures')
+                .add({ paths })
+                .then((pictureRef) => {
+                  console.log(pictureRef)
+                })
+            },
+            [paths]
+          )}
+        >
+          save
+        </button>
+      </div>
       <Board
         ref={boardRef}
         onMouseDown={useCallback((e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
