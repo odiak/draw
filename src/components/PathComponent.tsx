@@ -1,5 +1,16 @@
 import React from 'react'
-import { Path } from './App'
+
+export type Point = {
+  x: number
+  y: number
+}
+
+export type Path = {
+  color: string
+  width: number
+  points: readonly Point[]
+}
+
 export function PathComponent({ path }: { path: Path }) {
   return (
     <path

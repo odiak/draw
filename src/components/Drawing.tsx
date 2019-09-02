@@ -1,18 +1,7 @@
 import React, { useRef, useLayoutEffect, useState, useCallback, useMemo } from 'react'
 import firebase from 'firebase/app'
-import { PathComponent } from './PathComponent'
+import { PathComponent, Path, Point } from './PathComponent'
 import styled from '@emotion/styled'
-
-type Point = {
-  x: number
-  y: number
-}
-
-type Path = {
-  color: string
-  width: number
-  points: readonly Point[]
-}
 
 const BoardContainer = styled.svg`
   width: 700px;
