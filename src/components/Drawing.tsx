@@ -1,13 +1,7 @@
 import React, { useRef, useLayoutEffect, useState, useCallback, useMemo } from 'react'
-import styled from '@emotion/styled'
 import firebase from 'firebase/app'
-import { AuthDisplay } from './AuthDisplay'
-
-const Board = styled.svg`
-  width: 700px;
-  height: 500px;
-  border: 1px solid #aaa;
-`
+import { PathComponent } from './PathComponent'
+import styled from '@emotion/styled'
 
 type Point = {
   x: number
@@ -20,18 +14,21 @@ type Path = {
   points: readonly Point[]
 }
 
-export function App() {
+const BoardContainer = styled.svg`
+  width: 700px;
+  height: 500px;
+  border: 1px solid #aaa;
+`
+
+export function Drawing() {
   const [paths, setPaths] = useState<readonly Path[]>([])
   const [drawingPath, setDrawingPath] = useState<Path | null>(null)
-
   const db = useMemo(() => firebase.firestore(), [])
-
   const color = '#000'
   const lineWidth = 3
   const boardRef = useRef<SVGSVGElement>(null)
   const memo = useRef({ isMouseDown: false, points: [] as Point[], paths })
   memo.current.paths = paths
-
   useLayoutEffect(() => {
     const onMouseUp = (e: MouseEvent) => {
       if (memo.current.isMouseDown) {
@@ -43,16 +40,13 @@ export function App() {
       }
     }
     document.addEventListener('mouseup', onMouseUp)
-
     return () => {
       document.removeEventListener('mouseup', onMouseUp)
     }
   }, [])
 
   return (
-    <div>
-      <h1>draw</h1>
-      <AuthDisplay />
+    <>
       <div>
         <button
           onClick={useCallback(
@@ -69,7 +63,7 @@ export function App() {
           save
         </button>
       </div>
-      <Board
+      <BoardContainer
         ref={boardRef}
         onMouseDown={useCallback((e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
           memo.current.isMouseDown = true
@@ -92,26 +86,7 @@ export function App() {
           <PathComponent key={i} path={p} />
         ))}
         {drawingPath && <PathComponent path={drawingPath} />}
-      </Board>
-    </div>
-  )
-}
-
-function PathComponent({ path }: { path: Path }) {
-  return (
-    <path
-      d={path.points
-        .map(({ x, y }, i) => {
-          if (i === 0) {
-            return `M ${x},${y}`
-          } else {
-            return `L ${x},${y}`
-          }
-        })
-        .join(' ')}
-      fill="none"
-      stroke={path.color}
-      strokeWidth={path.width}
-    />
+      </BoardContainer>
+    </>
   )
 }

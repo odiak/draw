@@ -3,7 +3,7 @@ import { render } from 'react-dom'
 import firebase from 'firebase/app'
 import 'firebase/auth'
 import 'firebase/firestore'
-import { App } from './App'
+import { App } from './components/App'
 
 firebase.initializeApp({
   apiKey: 'AIzaSyAHYun-sXC5ZkK-XNpEqaImnd24nxrCbLM',
