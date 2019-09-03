@@ -10,12 +10,16 @@ const config: webpack.Configuration = {
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.js'
+    filename: 'bundle.js',
+    publicPath: '/'
   },
   module: {
     rules: [{ test: /\.tsx?/, loader: 'ts-loader' }]
   },
-  plugins: [new HtmlWebpackPlugin({ template: './src/index.html' })]
+  plugins: [new HtmlWebpackPlugin({ template: './src/index.html' })],
+  devServer: {
+    historyApiFallback: true
+  }
 }
 
 export default config
