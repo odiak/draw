@@ -305,6 +305,11 @@
     lodash.camelcase "^4.3.0"
     protobufjs "^6.8.6"
 
+"@odiak/iterate@^0.0.4":
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/@odiak/iterate/-/iterate-0.0.4.tgz#efc745d34813bb41620488d89c71dc6ed30356c1"
+  integrity sha512-QtQAgI703mZh5JfQojB+jZiBKtoG+M5nCToHxZOloP7nDG4xquvg6XUlxkY7LIVEqq3NnzygFE8ZwsX4Psxvmw==
+
 "@protobufjs/aspromise@^1.1.1", "@protobufjs/aspromise@^1.1.2":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@protobufjs/aspromise/-/aspromise-1.1.2.tgz#9b8b0cc663d669a7d8f6f5d0893a14d348f30fbf"

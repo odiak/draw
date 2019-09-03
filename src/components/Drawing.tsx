@@ -1,7 +1,8 @@
-import React, { useRef, useLayoutEffect, useState, useCallback, useMemo } from 'react'
+import React, { useRef, useLayoutEffect, useState, useCallback, useMemo, useEffect } from 'react'
 import firebase from 'firebase/app'
 import { PathComponent, Path, Point } from './PathComponent'
 import styled from '@emotion/styled'
+import { range } from '@odiak/iterate'
 
 const BoardContainer = styled.svg`
   width: 700px;
@@ -9,10 +10,30 @@ const BoardContainer = styled.svg`
   border: 1px solid #aaa;
 `
 
-export function Drawing() {
+type Props = {
+  pictureId?: string
+}
+
+export function Drawing({ pictureId }: Props) {
   const [paths, setPaths] = useState<readonly Path[]>([])
-  const [drawingPath, setDrawingPath] = useState<Path | null>(null)
+
   const db = useMemo(() => firebase.firestore(), [])
+  useEffect(() => {
+    if (pictureId == null) return
+    console.log(pictureId)
+
+    db.collection('pictures')
+      .doc(pictureId)
+      .get()
+      .then((doc) => {
+        console.log(doc)
+        if (doc.exists) {
+          setPaths((doc.data() as any).paths as Path[])
+        }
+      })
+  }, [pictureId])
+
+  const [drawingPath, setDrawingPath] = useState<Path | null>(null)
   const color = '#000'
   const lineWidth = 3
   const boardRef = useRef<SVGSVGElement>(null)
@@ -40,13 +61,24 @@ export function Drawing() {
         <button
           onClick={useCallback(
             (e: React.MouseEvent<unknown, MouseEvent>) => {
+              const id =
+                pictureId != null
+                  ? pictureId
+                  : range(16)
+                      .map(() => Math.floor(Math.random() * 16).toString(16))
+                      .toArray()
+                      .join('')
+
               db.collection('pictures')
-                .add({ paths })
-                .then((pictureRef) => {
-                  console.log(pictureRef)
+                .doc(id)
+                .set({ paths })
+                .then(() => {
+                  if (pictureId == null) {
+                    location.href = `/p/${id}`
+                  }
                 })
             },
-            [paths]
+            [paths, pictureId]
           )}
         >
           save
