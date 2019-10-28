@@ -17,6 +17,8 @@ type Props = {
 export function Drawing({ pictureId }: Props) {
   const [paths, setPaths] = useState<readonly Path[]>([])
 
+  const [uid, setUid] = useState(null as string | null)
+
   const db = useMemo(() => firebase.firestore(), [])
   useEffect(() => {
     if (pictureId == null) return
@@ -32,6 +34,12 @@ export function Drawing({ pictureId }: Props) {
         }
       })
   }, [pictureId])
+
+  useEffect(() => {
+    firebase.auth().onAuthStateChanged((user) => {
+      setUid(user != null ? user.uid : null)
+    })
+  }, [])
 
   const [drawingPath, setDrawingPath] = useState<Path | null>(null)
   const color = '#000'
@@ -71,7 +79,7 @@ export function Drawing({ pictureId }: Props) {
 
               db.collection('pictures')
                 .doc(id)
-                .set({ paths })
+                .set({ uid, paths })
                 .then(() => {
                   if (pictureId == null) {
                     location.href = `/p/${id}`
