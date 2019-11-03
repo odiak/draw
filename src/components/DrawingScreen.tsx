@@ -20,6 +20,7 @@ type Props = {
 
 export function DrawingScreen({ pictureId }: Props) {
   const [paths, setPaths] = useState<readonly Path[]>([])
+  const [title, setTitle] = useState('untitled')
 
   const [drawingPath, setDrawingPath] = useState<Path | null>(null)
   const color = '#000'
@@ -45,7 +46,7 @@ export function DrawingScreen({ pictureId }: Props) {
 
   return (
     <>
-      <InfoBar title="untitled" />
+      <InfoBar title={title} onChangeTitle={setTitle} />
       <SVGWrapper>
         <StyledSVG
           ref={boardRef}
