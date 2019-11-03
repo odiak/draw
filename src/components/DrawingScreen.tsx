@@ -1,6 +1,7 @@
 import React, { useRef, useLayoutEffect, useState, useCallback } from 'react'
 import { PathComponent, Path, Point } from './PathComponent'
 import styled from '@emotion/styled'
+import { InfoBar } from './InfoBar'
 
 const BoardContainer = styled.svg`
   width: 100%;
@@ -38,6 +39,7 @@ export function DrawingScreen({ pictureId }: Props) {
 
   return (
     <>
+      <InfoBar title="untitled" />
       <BoardContainer
         ref={boardRef}
         onMouseDown={useCallback((e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {

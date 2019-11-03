@@ -14,6 +14,7 @@ const globalStyle = css`
   #app {
     display: flex;
     height: 100%;
+    flex-direction: column;
   }
 `
 
