@@ -1,45 +1,18 @@
-import React, { useRef, useLayoutEffect, useState, useCallback, useMemo, useEffect } from 'react'
-import firebase from 'firebase/app'
+import React, { useRef, useLayoutEffect, useState, useCallback } from 'react'
 import { PathComponent, Path, Point } from './PathComponent'
 import styled from '@emotion/styled'
-import { range } from '@odiak/iterate'
 
 const BoardContainer = styled.svg`
-  width: 700px;
-  height: 500px;
-  border: 1px solid #aaa;
+  width: 100%;
+  height: 100%;
 `
 
 type Props = {
   pictureId?: string
 }
 
-export function Drawing({ pictureId }: Props) {
+export function DrawingScreen({ pictureId }: Props) {
   const [paths, setPaths] = useState<readonly Path[]>([])
-
-  const [uid, setUid] = useState(null as string | null)
-
-  const db = useMemo(() => firebase.firestore(), [])
-  useEffect(() => {
-    if (pictureId == null) return
-    console.log(pictureId)
-
-    db.collection('pictures')
-      .doc(pictureId)
-      .get()
-      .then((doc) => {
-        console.log(doc)
-        if (doc.exists) {
-          setPaths((doc.data() as any).paths as Path[])
-        }
-      })
-  }, [pictureId])
-
-  useEffect(() => {
-    firebase.auth().onAuthStateChanged((user) => {
-      setUid(user != null ? user.uid : null)
-    })
-  }, [])
 
   const [drawingPath, setDrawingPath] = useState<Path | null>(null)
   const color = '#000'
@@ -65,33 +38,6 @@ export function Drawing({ pictureId }: Props) {
 
   return (
     <>
-      <div>
-        <button
-          onClick={useCallback(
-            (e: React.MouseEvent<unknown, MouseEvent>) => {
-              const id =
-                pictureId != null
-                  ? pictureId
-                  : range(16)
-                      .map(() => Math.floor(Math.random() * 16).toString(16))
-                      .toArray()
-                      .join('')
-
-              db.collection('pictures')
-                .doc(id)
-                .set({ uid, paths })
-                .then(() => {
-                  if (pictureId == null) {
-                    location.href = `/p/${id}`
-                  }
-                })
-            },
-            [paths, pictureId]
-          )}
-        >
-          save
-        </button>
-      </div>
       <BoardContainer
         ref={boardRef}
         onMouseDown={useCallback((e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
