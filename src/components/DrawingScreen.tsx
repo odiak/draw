@@ -3,9 +3,15 @@ import { PathComponent, Path, Point } from './PathComponent'
 import styled from '@emotion/styled'
 import { InfoBar } from './InfoBar'
 
-const BoardContainer = styled.svg`
+const SVGWrapper = styled.div`
   width: 100%;
   height: 100%;
+  overflow: scroll;
+`
+
+const StyledSVG = styled.svg`
+  width: 2000px;
+  height: 2000px;
 `
 
 type Props = {
@@ -40,30 +46,32 @@ export function DrawingScreen({ pictureId }: Props) {
   return (
     <>
       <InfoBar title="untitled" />
-      <BoardContainer
-        ref={boardRef}
-        onMouseDown={useCallback((e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-          memo.current.isMouseDown = true
-        }, [])}
-        onMouseMove={useCallback((e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-          if (memo.current.isMouseDown) {
-            const {
-              nativeEvent: { offsetX: x, offsetY: y }
-            } = e
-            const { points } = memo.current
-            const lastPoint = points.length > 0 ? points[points.length - 1] : null
-            if (lastPoint == null || lastPoint.x !== x || lastPoint.y !== y) {
-              memo.current.points.push({ x, y })
-              setDrawingPath({ color, width: lineWidth, points: memo.current.points })
+      <SVGWrapper>
+        <StyledSVG
+          ref={boardRef}
+          onMouseDown={useCallback((e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
+            memo.current.isMouseDown = true
+          }, [])}
+          onMouseMove={useCallback((e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
+            if (memo.current.isMouseDown) {
+              const {
+                nativeEvent: { offsetX: x, offsetY: y }
+              } = e
+              const { points } = memo.current
+              const lastPoint = points.length > 0 ? points[points.length - 1] : null
+              if (lastPoint == null || lastPoint.x !== x || lastPoint.y !== y) {
+                memo.current.points.push({ x, y })
+                setDrawingPath({ color, width: lineWidth, points: memo.current.points })
+              }
             }
-          }
-        }, [])}
-      >
-        {paths.map((p, i) => (
-          <PathComponent key={i} path={p} />
-        ))}
-        {drawingPath && <PathComponent path={drawingPath} />}
-      </BoardContainer>
+          }, [])}
+        >
+          {paths.map((p, i) => (
+            <PathComponent key={i} path={p} />
+          ))}
+          {drawingPath && <PathComponent path={drawingPath} />}
+        </StyledSVG>
+      </SVGWrapper>
     </>
   )
 }
