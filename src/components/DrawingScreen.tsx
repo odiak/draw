@@ -1,4 +1,4 @@
-import React, { useRef, useLayoutEffect, useState, useCallback, useMemo } from 'react'
+import React, { useRef, useLayoutEffect, useState, useCallback, useMemo, useEffect } from 'react'
 import { PathComponent, Path, Point } from './PathComponent'
 import styled from '@emotion/styled'
 import { InfoBar } from './InfoBar'
@@ -24,6 +24,21 @@ export function DrawingScreen({ pictureId }: Props) {
   const [title, setTitle] = useState('untitled')
 
   const socket = useMemo(() => io('http://localhost:8000'), [])
+
+  useEffect(() => {
+    if (pictureId != null) {
+      ;(async () => {
+        const res = await fetch(`http://localhost:8000/pictures/${pictureId}`, { mode: 'cors' })
+        const json = await res.json()
+        console.log(json)
+        setPaths(json.paths)
+        setTitle(json.title)
+      })()
+    }
+    return () => {
+      socket.disconnect()
+    }
+  }, [])
 
   const [drawingPath, setDrawingPath] = useState<Path | null>(null)
   const color = '#000'
@@ -53,7 +68,7 @@ export function DrawingScreen({ pictureId }: Props) {
         title={title}
         onChangeTitle={setTitle}
         onSave={() => {
-          socket.emit('createPicture', paths, (id: string) => {
+          socket.emit('savePicture', { id: pictureId, title, paths }, (id: string) => {
             console.log(id)
           })
         }}
