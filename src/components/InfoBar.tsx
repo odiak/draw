@@ -8,6 +8,7 @@ const Container = styled.div`
 type Props = {
   title: string
   onChangeTitle?: ((newTitle: string) => void) | null
+  onSave?: (() => void) | null
 }
 
 const TitleInput = styled.input`
@@ -19,7 +20,7 @@ const TitleInput = styled.input`
   }
 `
 
-export function InfoBar({ title, onChangeTitle }: Props) {
+export function InfoBar({ title, onChangeTitle, onSave }: Props) {
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState(title)
 
@@ -34,8 +35,7 @@ export function InfoBar({ title, onChangeTitle }: Props) {
           }
         }}
       />
-      <button>undo</button>
-      <button>redo</button>
+      <button onClick={onSave || undefined}>save</button>
     </Container>
   )
 }

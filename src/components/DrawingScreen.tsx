@@ -1,7 +1,8 @@
-import React, { useRef, useLayoutEffect, useState, useCallback } from 'react'
+import React, { useRef, useLayoutEffect, useState, useCallback, useMemo } from 'react'
 import { PathComponent, Path, Point } from './PathComponent'
 import styled from '@emotion/styled'
 import { InfoBar } from './InfoBar'
+import io from 'socket.io-client'
 
 const SVGWrapper = styled.div`
   width: 100%;
@@ -21,6 +22,8 @@ type Props = {
 export function DrawingScreen({ pictureId }: Props) {
   const [paths, setPaths] = useState<readonly Path[]>([])
   const [title, setTitle] = useState('untitled')
+
+  const socket = useMemo(() => io('http://localhost:8000'), [])
 
   const [drawingPath, setDrawingPath] = useState<Path | null>(null)
   const color = '#000'
@@ -46,7 +49,15 @@ export function DrawingScreen({ pictureId }: Props) {
 
   return (
     <>
-      <InfoBar title={title} onChangeTitle={setTitle} />
+      <InfoBar
+        title={title}
+        onChangeTitle={setTitle}
+        onSave={() => {
+          socket.emit('createPicture', paths, (id: string) => {
+            console.log(id)
+          })
+        }}
+      />
       <SVGWrapper>
         <StyledSVG
           ref={boardRef}
