@@ -3,6 +3,7 @@ import { PathComponent, Path, Point } from './PathComponent'
 import styled from '@emotion/styled'
 import { InfoBar } from './InfoBar'
 import io from 'socket.io-client'
+import { useHistory } from 'react-router-dom'
 
 const SVGWrapper = styled.div`
   width: 100%;
@@ -24,6 +25,8 @@ export function DrawingScreen({ pictureId }: Props) {
   const [title, setTitle] = useState('untitled')
 
   const socket = useMemo(() => io('http://localhost:8000'), [])
+
+  const history = useHistory()
 
   useEffect(() => {
     if (pictureId != null) {
@@ -69,7 +72,9 @@ export function DrawingScreen({ pictureId }: Props) {
         onChangeTitle={setTitle}
         onSave={() => {
           socket.emit('savePicture', { id: pictureId, title, paths }, (id: string) => {
-            console.log(id)
+            if (pictureId == null) {
+              history.push(`/p/${id}`)
+            }
           })
         }}
       />
