@@ -16,7 +16,12 @@ const config: webpack.Configuration = {
   module: {
     rules: [{ test: /\.tsx?/, loader: 'ts-loader' }]
   },
-  plugins: [new HtmlWebpackPlugin({ template: './src/index.html' })],
+  plugins: [
+    new HtmlWebpackPlugin({ template: './src/index.html' }),
+    new webpack.DefinePlugin({
+      SERVER_URL: JSON.stringify('http://localhost:8000')
+    })
+  ],
   devServer: {
     historyApiFallback: true
   }

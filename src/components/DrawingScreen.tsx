@@ -24,14 +24,16 @@ export function DrawingScreen({ pictureId }: Props) {
   const [paths, setPaths] = useState<readonly Path[]>([])
   const [title, setTitle] = useState('untitled')
 
-  const socket = useMemo(() => io('http://localhost:8000'), [])
+  const socket = useMemo(() => io(SERVER_URL), [])
 
   const history = useHistory()
 
   useEffect(() => {
     if (pictureId != null) {
       ;(async () => {
-        const res = await fetch(`http://localhost:8000/pictures/${pictureId}`, { mode: 'cors' })
+        const res = await fetch(`${SERVER_URL}/pictures/${pictureId}`, {
+          mode: 'cors'
+        })
         const json = await res.json()
         console.log(json)
         setPaths(json.paths)
