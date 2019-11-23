@@ -1,7 +1,9 @@
-import React, { useRef, useLayoutEffect, useState, useCallback } from 'react'
+import React, { useRef, useLayoutEffect, useState, useCallback, useMemo, useEffect } from 'react'
 import { PathComponent, Path, Point } from './PathComponent'
 import styled from '@emotion/styled'
 import { InfoBar } from './InfoBar'
+import io from 'socket.io-client'
+import { useHistory } from 'react-router-dom'
 
 const SVGWrapper = styled.div`
   width: 100%;
@@ -21,6 +23,25 @@ type Props = {
 export function DrawingScreen({ pictureId }: Props) {
   const [paths, setPaths] = useState<readonly Path[]>([])
   const [title, setTitle] = useState('untitled')
+
+  const socket = useMemo(() => io('http://localhost:8000'), [])
+
+  const history = useHistory()
+
+  useEffect(() => {
+    if (pictureId != null) {
+      ;(async () => {
+        const res = await fetch(`http://localhost:8000/pictures/${pictureId}`, { mode: 'cors' })
+        const json = await res.json()
+        console.log(json)
+        setPaths(json.paths)
+        setTitle(json.title)
+      })()
+    }
+    return () => {
+      socket.disconnect()
+    }
+  }, [])
 
   const [drawingPath, setDrawingPath] = useState<Path | null>(null)
   const color = '#000'
@@ -46,7 +67,17 @@ export function DrawingScreen({ pictureId }: Props) {
 
   return (
     <>
-      <InfoBar title={title} onChangeTitle={setTitle} />
+      <InfoBar
+        title={title}
+        onChangeTitle={setTitle}
+        onSave={() => {
+          socket.emit('savePicture', { id: pictureId, title, paths }, (id: string) => {
+            if (pictureId == null) {
+              history.push(`/p/${id}`)
+            }
+          })
+        }}
+      />
       <SVGWrapper>
         <StyledSVG
           ref={boardRef}
