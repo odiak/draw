@@ -1,5 +1,6 @@
 import { Component, OnInit, HostListener } from '@angular/core'
 import { Path, Point, PictureService } from '../picture.service'
+import { Router, ActivatedRoute } from '@angular/router'
 
 @Component({
   selector: 'app-drawing-screen',
@@ -8,13 +9,28 @@ import { Path, Point, PictureService } from '../picture.service'
 })
 export class DrawingScreenComponent implements OnInit {
   paths: Path[] = []
-  title = ''
+  title = 'untitled'
+  pictureId: string | null = null
 
   currentDrawingPath: Path | null = null
 
-  constructor(private pictureService: PictureService) {}
+  constructor(
+    private pictureService: PictureService,
+    private router: Router,
+    private activatedRoute: ActivatedRoute
+  ) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    const pictureId = this.activatedRoute.snapshot.params.pictureId
+    if (typeof pictureId === 'string') {
+      this.pictureId = pictureId
+      ;(async () => {
+        const { title, paths } = await this.pictureService.fetchPicture(pictureId)
+        this.title = title
+        this.paths = paths
+      })()
+    }
+  }
 
   onMouseDown(event: MouseEvent) {
     this.currentDrawingPath = { color: '#000', width: 3, points: [getXYFromMouseEvent(event)] }
@@ -28,7 +44,6 @@ export class DrawingScreenComponent implements OnInit {
       if (x !== lastPoint.x && y !== lastPoint.y) {
         currentDrawingPath.points.push(xy)
       }
-      console.log(currentDrawingPath)
     }
   }
 
@@ -51,6 +66,17 @@ export class DrawingScreenComponent implements OnInit {
         }
       })
       .join(' ')
+  }
+
+  async savePicture() {
+    const { pictureId } = await this.pictureService.savePicture({
+      id: this.pictureId,
+      title: this.title,
+      paths: this.paths
+    })
+    if (pictureId !== this.pictureId) {
+      this.router.navigateByUrl(`/p/${pictureId}`)
+    }
   }
 }
 

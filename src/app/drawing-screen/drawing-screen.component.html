@@ -1,3 +1,4 @@
+<app-tool-bar [(title)]="title" (save)="savePicture()"></app-tool-bar>
 <div class="svg-wapper">
   <svg (mousedown)="onMouseDown($event)" (mousemove)="onMouseMove($event)">
     <svg:path

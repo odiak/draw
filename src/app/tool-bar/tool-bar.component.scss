@@ -1,0 +1,13 @@
+:host {
+  display: block;
+  border-bottom: 1px solid #000;
+}
+
+input {
+  display: block;
+  border: 1px solid transparent;
+
+  &:hover {
+    border-color: #ccc;
+  }
+}

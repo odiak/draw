@@ -6,7 +6,7 @@ import io from 'socket.io-client'
 export type Point = { x: number; y: number }
 export type Path = { color: string; width: number; points: Point[] }
 export type Picture = {
-  pictureId: string
+  id: string
   title: string
   paths: Path[]
 }
@@ -28,7 +28,9 @@ export class PictureService {
     return res as Picture
   }
 
-  async savePicture(picture: Omit<Picture, 'pictureId'>): Promise<{ pictureId: string }> {
+  async savePicture(
+    picture: Omit<Picture, 'id'> & { id: string | null }
+  ): Promise<{ pictureId: string }> {
     return new Promise((resolve, reject) => {
       try {
         this.socketIOClient.emit('savePicture', picture, (pictureId: string) => {
