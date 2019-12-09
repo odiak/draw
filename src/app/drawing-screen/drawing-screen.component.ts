@@ -80,10 +80,6 @@ export class DrawingScreenComponent implements OnInit, OnDestroy {
       })
       .join(' ')
   }
-
-  save() {
-    this.drawingService.save()
-  }
 }
 
 function getXYFromMouseEvent(event: MouseEvent): Point {

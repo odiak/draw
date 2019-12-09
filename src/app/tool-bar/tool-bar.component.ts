@@ -9,8 +9,6 @@ export class ToolBarComponent implements OnInit {
   @Input() title: string = ''
   @Output() titleChange = new EventEmitter<string>()
 
-  @Output() save = new EventEmitter<undefined>()
-
   constructor() {}
 
   ngOnInit() {}

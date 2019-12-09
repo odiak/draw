@@ -59,7 +59,15 @@ export class DrawingService {
   }
 
   handlePenUp() {
-    this.currentlyDrawingPath = null
+    const {currentlyDrawingPath,picture}= this
+    if (currentlyDrawingPath!=null) {
+      this.currentlyDrawingPath = null
+      if (picture!=null) {
+        this.pictureService.savePicture(picture).then((o) => {
+          this.onSave.next(o)
+        })
+      }
+    }
   }
 
   setTitle(title: string) {
@@ -67,15 +75,5 @@ export class DrawingService {
     if (picture != null) {
       picture.title = title
     }
-  }
-
-  async save() {
-    const {picture} = this;
-    if (picture==null) {
-      return
-    }
-
-    const o = await this.pictureService.savePicture(picture)
-    this.onSave.next(o)
   }
 }
