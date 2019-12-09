@@ -6,7 +6,7 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core'
   styleUrls: ['./tool-bar.component.scss']
 })
 export class ToolBarComponent implements OnInit {
-  @Input() title: string
+  @Input() title: string = ''
   @Output() titleChange = new EventEmitter<string>()
 
   @Output() save = new EventEmitter<undefined>()

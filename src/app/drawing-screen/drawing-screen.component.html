@@ -1,5 +1,5 @@
-<app-tool-bar [(title)]="title" (save)="savePicture()"></app-tool-bar>
-<div class="svg-wapper">
+<app-tool-bar [(title)]="title" (save)="save()"></app-tool-bar>
+<div class="svg-wrapper">
   <svg (mousedown)="onMouseDown($event)" (mousemove)="onMouseMove($event)">
     <svg:path
       *ngFor="let path of paths"
@@ -7,13 +7,6 @@
       fill="none"
       [attr.stroke]="path.color"
       [attr.stroke-width]="path.width"
-    />
-    <svg:path
-      *ngIf="currentDrawingPath != null"
-      [attr.d]="getPathDescriptor(currentDrawingPath)"
-      fill="none"
-      [attr.stroke]="currentDrawingPath.color"
-      [attr.stroke-width]="currentDrawingPath.width"
     />
   </svg>
 </div>
