@@ -27,6 +27,8 @@ export class DrawingScreenComponent implements OnInit, OnDestroy {
     if (typeof pictureId === 'string') {
       this.pictureId = pictureId
       this.drawingService.loadPicture(pictureId)
+    } else {
+      this.drawingService.init()
     }
 
     this.subscription.add(

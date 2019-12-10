@@ -9,11 +9,13 @@ type PenEvent = {
   width: number
 }
 
+type PictureWithNullableId = Omit<Picture, 'id'> & { id: string | null }
+
 @Injectable({
   providedIn: 'root'
 })
 export class DrawingService {
-  picture: Picture | null = null
+  picture: PictureWithNullableId | null = null
   private currentlyDrawingPath: Path | null = null
 
   readonly onSave = new Subject<{ pictureId: string }>()
@@ -23,6 +25,10 @@ export class DrawingService {
   clean() {
     this.picture = null
     this.currentlyDrawingPath = null
+  }
+
+  init() {
+    this.picture = { title: 'Untitled', paths: [], id: null }
   }
 
   async loadPicture(pictureId: string) {
@@ -59,10 +65,10 @@ export class DrawingService {
   }
 
   handlePenUp() {
-    const {currentlyDrawingPath,picture}= this
-    if (currentlyDrawingPath!=null) {
+    const { currentlyDrawingPath, picture } = this
+    if (currentlyDrawingPath != null) {
       this.currentlyDrawingPath = null
-      if (picture!=null) {
+      if (picture != null) {
         this.pictureService.savePicture(picture).then((o) => {
           this.onSave.next(o)
         })
