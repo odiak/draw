@@ -71,6 +71,21 @@ export class DrawingScreenComponent implements OnInit, OnDestroy {
     this.drawingService.handlePenUp()
   }
 
+  onTouchStart(event: TouchEvent) {
+    event.preventDefault()
+    this.drawingService.handlePenDown({ color: '#000', width: 3, ...getXYFromTouchEvent(event) })
+  }
+
+  onTouchMove(event: TouchEvent) {
+    event.preventDefault()
+    this.drawingService.handlePenMove(getXYFromTouchEvent(event))
+  }
+
+  onTouchEnd(event: TouchEvent) {
+    event.preventDefault()
+    this.drawingService.handlePenUp()
+  }
+
   getPathDescriptor(path: Path): string {
     return path.points
       .map(({ x, y }, i) => {
@@ -86,4 +101,11 @@ export class DrawingScreenComponent implements OnInit, OnDestroy {
 
 function getXYFromMouseEvent(event: MouseEvent): Point {
   return { x: event.offsetX, y: event.offsetY }
+}
+
+function getXYFromTouchEvent(event: TouchEvent): Point {
+  const rect = (event.target as Element).getBoundingClientRect()
+  const x = event.touches[0].clientX - window.pageXOffset - rect.left
+  const y = event.touches[0].clientY - window.pageYOffset - rect.top
+  return { x, y }
 }

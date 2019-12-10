@@ -1,6 +1,12 @@
 <app-tool-bar [(title)]="title"></app-tool-bar>
 <div class="svg-wrapper">
-  <svg (mousedown)="onMouseDown($event)" (mousemove)="onMouseMove($event)">
+  <svg
+    (mousedown)="onMouseDown($event)"
+    (mousemove)="onMouseMove($event)"
+    (touchstart)="onTouchStart($event)"
+    (touchmove)="onTouchMove($event)"
+    (touchend)="onTouchEnd($event)"
+  >
     <svg:path
       *ngFor="let path of paths"
       [attr.d]="getPathDescriptor(path)"
