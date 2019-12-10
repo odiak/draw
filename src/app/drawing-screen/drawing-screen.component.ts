@@ -1,5 +1,5 @@
 import { Component, OnInit, HostListener, OnDestroy } from '@angular/core'
-import { Path, Point, PictureService } from '../picture.service'
+import { Path, Point } from '../picture.service'
 import { Router, ActivatedRoute } from '@angular/router'
 import { DrawingService } from '../drawing.service'
 import { Subscription } from 'rxjs'
