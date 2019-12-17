@@ -3,6 +3,7 @@ import { Path, Point } from '../picture.service'
 import { Router, ActivatedRoute } from '@angular/router'
 import { DrawingService } from '../drawing.service'
 import { Subscription } from 'rxjs'
+import { Tool } from '../tool-bar/tool-bar.component'
 
 @Component({
   selector: 'app-drawing-screen',
@@ -11,6 +12,8 @@ import { Subscription } from 'rxjs'
 })
 export class DrawingScreenComponent implements OnInit, OnDestroy {
   pictureId: string | null = null
+
+  selectedTool: Tool = 'pen'
 
   private subscription = new Subscription()
 

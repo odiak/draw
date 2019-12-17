@@ -11,10 +11,18 @@ export class ToolBarComponent implements OnInit {
   @Input() title: string = ''
   @Output() titleChange = new EventEmitter<string>()
 
-  @Input() tool: Tool = 'pen'
-  @Output() toolChange = new EventEmitter<Tool>()
+  @Input() selectedTool: Tool = 'pen'
+  @Output() selectedToolChange = new EventEmitter<Tool>()
 
   constructor() {}
 
   ngOnInit() {}
+
+  get selectedTool_() {
+    return this.selectedTool
+  }
+
+  set selectedTool_(tool: Tool) {
+    this.selectedToolChange.next(tool)
+  }
 }

@@ -1,6 +1,6 @@
 <input type="text" [(ngModel)]="title" (ngModelChange)="titleChange.emit(title)" />
 <div>
-  <app-tool-button tool="pen" [(selectedTool)]="tool"></app-tool-button>
-  <app-tool-button tool="hand" [(selectedTool)]="tool"></app-tool-button>
-  <app-tool-button tool="eraser" [(selectedTool)]="tool"></app-tool-button>
+  <app-tool-button tool="pen" [(selectedTool)]="selectedTool_"></app-tool-button>
+  <app-tool-button tool="hand" [(selectedTool)]="selectedTool_"></app-tool-button>
+  <app-tool-button tool="eraser" [(selectedTool)]="selectedTool_"></app-tool-button>
 </div>
