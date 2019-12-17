@@ -1,0 +1,17 @@
+:host {
+  display: inline-block;
+}
+
+button {
+  width: 50px;
+  height: 30px;
+  border: 0;
+
+  &.selected {
+    background: #000;
+
+    > fa-icon {
+      color: #fff;
+    }
+  }
+}

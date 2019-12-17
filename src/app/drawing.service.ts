@@ -80,6 +80,9 @@ export class DrawingService {
     const { picture } = this
     if (picture != null) {
       picture.title = title
+      this.pictureService.savePicture(picture).then((o) => {
+        this.onSave.next(o)
+      })
     }
   }
 }
