@@ -1,5 +1,4 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core'
-import { faPen, faHandPaper, faEraser } from '@fortawesome/free-solid-svg-icons'
 
 export type Tool = 'pen' | 'hand' | 'eraser'
 
@@ -14,12 +13,6 @@ export class ToolBarComponent implements OnInit {
 
   @Input() tool: Tool = 'pen'
   @Output() toolChange = new EventEmitter<Tool>()
-
-  icons = {
-    faPen,
-    faHandPaper,
-    faEraser
-  }
 
   constructor() {}
 
