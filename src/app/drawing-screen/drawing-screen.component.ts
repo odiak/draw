@@ -62,16 +62,44 @@ export class DrawingScreenComponent implements OnInit, OnDestroy {
   }
 
   onMouseDown(event: MouseEvent) {
-    this.drawingService.handlePenDown({ color: '#000', width: 3, ...getXYFromMouseEvent(event) })
+    switch (this.selectedTool) {
+      case 'pen':
+        this.drawingService.handlePenDown({
+          color: '#000',
+          width: 3,
+          ...getXYFromMouseEvent(event)
+        })
+        break
+
+      case 'eraser':
+        this.drawingService.handleEraserDown(getXYFromMouseEvent(event))
+        break
+    }
   }
 
   onMouseMove(event: MouseEvent) {
-    this.drawingService.handlePenMove(getXYFromMouseEvent(event))
+    switch (this.selectedTool) {
+      case 'pen':
+        this.drawingService.handlePenMove(getXYFromMouseEvent(event))
+        break
+
+      case 'eraser':
+        this.drawingService.handleEraserMove(getXYFromMouseEvent(event))
+        break
+    }
   }
 
   @HostListener('document:mouseup', ['$event'])
   onMouseUpGlobal(event: MouseEvent) {
-    this.drawingService.handlePenUp()
+    switch (this.selectedTool) {
+      case 'pen':
+        this.drawingService.handlePenUp()
+        break
+
+      case 'eraser':
+        this.drawingService.handleEraserUp()
+        break
+    }
   }
 
   onTouchStart(event: TouchEvent) {

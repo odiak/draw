@@ -1,4 +1,4 @@
-import { Injectable, EventEmitter } from '@angular/core'
+import { Injectable } from '@angular/core'
 import { Picture, PictureService, Path } from './picture.service'
 import { Subject } from 'rxjs'
 
@@ -17,6 +17,7 @@ type PictureWithNullableId = Omit<Picture, 'id'> & { id: string | null }
 export class DrawingService {
   picture: PictureWithNullableId | null = null
   private currentlyDrawingPath: Path | null = null
+  private isErasing = false
 
   readonly onSave = new Subject<{ pictureId: string }>()
 
@@ -85,4 +86,38 @@ export class DrawingService {
       })
     }
   }
+
+  handleEraserDown({ x, y }: { x: number; y: number }) {
+    this.isErasing = true
+    this.handleEraserMove({ x, y })
+  }
+
+  handleEraserMove({ x, y }: { x: number; y: number }) {
+    if (!this.isErasing) {
+      return
+    }
+
+    const { picture } = this
+    if (picture == null) {
+      return
+    }
+
+    const deletingPathIndices = [] as number[]
+    for (const [i, path] of picture.paths.entries()) {
+      for (const { x: x_, y: y_ } of path.points) {
+        if (squaredDistance(x - x_, y - y_) <= 9) {
+          deletingPathIndices.push(i)
+        }
+      }
+    }
+
+    picture.paths = picture.paths.filter((_, i) => !deletingPathIndices.includes(i))
+    this.pictureService.savePicture(picture)
+  }
+
+  handleEraserUp() {}
+}
+
+function squaredDistance(dx: number, dy: number): number {
+  return dx * dx + dy * dy
 }
