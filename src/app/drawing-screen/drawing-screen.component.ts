@@ -103,18 +103,49 @@ export class DrawingScreenComponent implements OnInit, OnDestroy {
   }
 
   onTouchStart(event: TouchEvent) {
-    event.preventDefault()
-    this.drawingService.handlePenDown({ color: '#000', width: 3, ...getXYFromTouchEvent(event) })
+    switch (this.selectedTool) {
+      case 'pen':
+        event.preventDefault()
+        this.drawingService.handlePenDown({
+          color: '#000',
+          width: 3,
+          ...getXYFromTouchEvent(event)
+        })
+        break
+
+      case 'eraser':
+        event.preventDefault()
+        this.drawingService.handleEraserDown(getXYFromTouchEvent(event))
+        break
+    }
   }
 
   onTouchMove(event: TouchEvent) {
-    event.preventDefault()
-    this.drawingService.handlePenMove(getXYFromTouchEvent(event))
+    switch (this.selectedTool) {
+      case 'pen':
+        event.preventDefault()
+        this.drawingService.handlePenMove(getXYFromTouchEvent(event))
+        break
+
+      case 'eraser':
+        event.preventDefault()
+        this.drawingService.handleEraserMove(getXYFromTouchEvent(event))
+        break
+    }
   }
 
   onTouchEnd(event: TouchEvent) {
-    event.preventDefault()
-    this.drawingService.handlePenUp()
+    switch (this.selectedTool) {
+      case 'pen':
+        event.preventDefault()
+        this.drawingService.handlePenUp()
+        break
+
+      case 'eraser':
+        event.preventDefault()
+        this.drawingService.handleEraserUp()
+        break
+    }
   }
 
   getPathDescriptor(path: Path): string {
