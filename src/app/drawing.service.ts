@@ -115,7 +115,13 @@ export class DrawingService {
     this.pictureService.savePicture(picture)
   }
 
-  handleEraserUp() {}
+  handleEraserUp() {
+    if (!this.isErasing) {
+      return
+    }
+
+    this.isErasing = false
+  }
 }
 
 function squaredDistance(dx: number, dy: number): number {
