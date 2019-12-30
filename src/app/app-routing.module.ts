@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core'
 import { Routes, RouterModule, UrlMatchResult, UrlSegment } from '@angular/router'
 import { DrawingScreenComponent } from './drawing-screen/drawing-screen.component'
+import { NotFoundComponent } from './not-found/not-found.component'
 
 export function pictureIdMatcher(segments: UrlSegment[]): UrlMatchResult {
   if (segments.length === 1 && segments[0].path.match(/^[0-9a-f]{32}$/)) {
@@ -15,7 +16,8 @@ const routes: Routes = [
   {
     matcher: pictureIdMatcher,
     component: DrawingScreenComponent
-  }
+  },
+  {path:'**',component: NotFoundComponent}
 ]
 
 @NgModule({

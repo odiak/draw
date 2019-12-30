@@ -8,10 +8,11 @@ import { ToolBarComponent } from './tool-bar/tool-bar.component'
 import { HttpClientModule } from '@angular/common/http'
 import { FormsModule } from '@angular/forms'
 import { ToolButtonComponent } from './tool-button/tool-button.component'
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome'
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { NotFoundComponent } from './not-found/not-found.component'
 
 @NgModule({
-  declarations: [AppComponent, DrawingScreenComponent, ToolBarComponent, ToolButtonComponent],
+  declarations: [AppComponent, DrawingScreenComponent, ToolBarComponent, ToolButtonComponent, NotFoundComponent],
   imports: [BrowserModule, AppRoutingModule, HttpClientModule, FormsModule, FontAwesomeModule],
   providers: [],
   bootstrap: [AppComponent]
