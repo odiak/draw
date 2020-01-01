@@ -4,6 +4,7 @@ import { Router, ActivatedRoute } from '@angular/router'
 import { DrawingService } from '../drawing.service'
 import { Subscription } from 'rxjs'
 import { Tool } from '../tool-bar/tool-bar.component'
+import { TitleAdapterService } from '../title-adapter.service'
 
 @Component({
   selector: 'app-drawing-screen',
@@ -20,7 +21,8 @@ export class DrawingScreenComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
-    private drawingService: DrawingService
+    private drawingService: DrawingService,
+    private titleAdapterService: TitleAdapterService
   ) {}
 
   ngOnInit() {
@@ -29,9 +31,12 @@ export class DrawingScreenComponent implements OnInit, OnDestroy {
     const pictureId = this.activatedRoute.snapshot.params.pictureId
     if (typeof pictureId === 'string') {
       this.pictureId = pictureId
-      this.drawingService.loadPicture(pictureId)
+      this.drawingService.loadPicture(pictureId).then(() => {
+        this.titleAdapterService.title.next(this.title)
+      })
     } else {
       this.drawingService.init()
+      this.titleAdapterService.title.next(this.title)
     }
 
     this.subscription.add(
@@ -54,6 +59,7 @@ export class DrawingScreenComponent implements OnInit, OnDestroy {
 
   set title(title: string) {
     this.drawingService.setTitle(title)
+    this.titleAdapterService.title.next(title)
   }
 
   get paths() {
