@@ -11,3 +11,27 @@ input {
     border-color: #ccc;
   }
 }
+
+.tools {
+  display: flex;
+  flex-direction: row;
+}
+
+.tool-group {
+  margin-right: 20px;
+}
+
+.tool-bar-button {
+  width: 50px;
+  height: 30px;
+  border: 0;
+  overflow: hidden;
+
+  &.selected {
+    background: #444;
+
+    fa-icon {
+      color: #fff;
+    }
+  }
+}

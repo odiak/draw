@@ -16,6 +16,8 @@ export class DrawingScreenComponent implements OnInit, OnDestroy {
 
   selectedTool: Tool = 'pen'
 
+  palmRejectionEnabled = false
+
   private subscription = new Subscription()
 
   constructor(
@@ -110,46 +112,62 @@ export class DrawingScreenComponent implements OnInit, OnDestroy {
 
   onTouchStart(event: TouchEvent) {
     switch (this.selectedTool) {
-      case 'pen':
+      case 'pen': {
+        const xy = getXYFromTouchEvent(event, this.palmRejectionEnabled)
+        if (xy == null) break
         event.preventDefault()
         this.drawingService.handlePenDown({
           color: '#000',
           width: 3,
-          ...getXYFromTouchEvent(event)
+          ...xy
         })
         break
+      }
 
-      case 'eraser':
+      case 'eraser': {
+        const xy = getXYFromTouchEvent(event, this.palmRejectionEnabled)
+        if (xy == null) break
         event.preventDefault()
-        this.drawingService.handleEraserDown(getXYFromTouchEvent(event))
+        this.drawingService.handleEraserDown(xy)
         break
+      }
     }
   }
 
   onTouchMove(event: TouchEvent) {
     switch (this.selectedTool) {
-      case 'pen':
+      case 'pen': {
+        const xy = getXYFromTouchEvent(event, this.palmRejectionEnabled)
+        if (xy == null) break
         event.preventDefault()
-        this.drawingService.handlePenMove(getXYFromTouchEvent(event))
+        this.drawingService.handlePenMove(xy)
         break
+      }
 
-      case 'eraser':
+      case 'eraser': {
+        const xy = getXYFromTouchEvent(event, this.palmRejectionEnabled)
+        if (xy == null) break
         event.preventDefault()
-        this.drawingService.handleEraserMove(getXYFromTouchEvent(event))
+        this.drawingService.handleEraserMove(xy)
         break
+      }
     }
   }
 
   onTouchEnd(event: TouchEvent) {
     switch (this.selectedTool) {
       case 'pen':
-        event.preventDefault()
-        this.drawingService.handlePenUp()
+        if (getTouch(event, this.palmRejectionEnabled) != null) {
+          event.preventDefault()
+          this.drawingService.handlePenUp()
+        }
         break
 
       case 'eraser':
-        event.preventDefault()
-        this.drawingService.handleEraserUp()
+        if (getTouch(event, this.palmRejectionEnabled) != null) {
+          event.preventDefault()
+          this.drawingService.handleEraserUp()
+        }
         break
     }
   }
@@ -171,9 +189,24 @@ function getXYFromMouseEvent(event: MouseEvent): Point {
   return { x: event.offsetX, y: event.offsetY }
 }
 
-function getXYFromTouchEvent(event: TouchEvent): Point {
+function getXYFromTouchEvent(event: TouchEvent, palmRejection: boolean): Point | null {
   const rect = (event.target as Element).getBoundingClientRect()
-  const x = event.touches[0].clientX - window.pageXOffset - rect.left
-  const y = event.touches[0].clientY - window.pageYOffset - rect.top
+  const touch = getTouch(event, palmRejection)
+  if (touch == null) return null
+  const x = touch.clientX - window.pageXOffset - rect.left
+  const y = touch.clientY - window.pageYOffset - rect.top
   return { x, y }
+}
+
+function getTouch(event: TouchEvent, palmRejection: boolean): Touch | null {
+  if (!palmRejection) {
+    return event.changedTouches[0]
+  }
+
+  for (const changedTouch of Array.from(event.changedTouches)) {
+    if (changedTouch.touchType === 'stylus') {
+      return changedTouch
+    }
+  }
+  return null
 }

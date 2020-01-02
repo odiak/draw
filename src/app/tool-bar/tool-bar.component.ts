@@ -1,4 +1,5 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core'
+import { faHandPointUp, faSlash } from '@fortawesome/free-solid-svg-icons'
 
 export type Tool = 'pen' | 'hand' | 'eraser'
 
@@ -14,6 +15,12 @@ export class ToolBarComponent implements OnInit {
   @Input() selectedTool: Tool = 'pen'
   @Output() selectedToolChange = new EventEmitter<Tool>()
 
+  @Input() palmRejectionEnabled = false
+  @Output() palmRejectionEnabledChange = new EventEmitter<boolean>()
+
+  faHandPointUp = faHandPointUp
+  faSlash = faSlash
+
   constructor() {}
 
   ngOnInit() {}
@@ -24,5 +31,9 @@ export class ToolBarComponent implements OnInit {
 
   set selectedTool_(tool: Tool) {
     this.selectedToolChange.next(tool)
+  }
+
+  togglePalmRejection() {
+    this.palmRejectionEnabledChange.next(!this.palmRejectionEnabled)
   }
 }
