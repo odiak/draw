@@ -190,7 +190,7 @@ function getXYFromMouseEvent(event: MouseEvent): Point {
 }
 
 function getXYFromTouchEvent(event: TouchEvent, palmRejection: boolean): Point | null {
-  const rect = (event.target as Element).getBoundingClientRect()
+  const rect = (event.target as Element).closest('svg')!.getBoundingClientRect()
   const touch = getTouch(event, palmRejection)
   if (touch == null) return null
   const x = touch.clientX - window.pageXOffset - rect.left
