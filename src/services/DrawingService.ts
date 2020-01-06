@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core'
-import { Picture, PictureService, Path } from './picture.service'
-import { Subject } from 'rxjs'
+import { Picture, PictureService, Path } from './PictureService'
+import { Subject } from '../utils/Subject'
+import { memo } from '../utils/memo'
 
 type PenEvent = {
   x: number
@@ -11,17 +11,16 @@ type PenEvent = {
 
 type PictureWithNullableId = Omit<Picture, 'id'> & { id: string | null }
 
-@Injectable({
-  providedIn: 'root'
-})
 export class DrawingService {
+  static instantiate = memo(() => new DrawingService())
+
+  pictureService = PictureService.instantiate()
+
   picture: PictureWithNullableId | null = null
   private currentlyDrawingPath: Path | null = null
   private isErasing = false
 
   readonly onSave = new Subject<{ pictureId: string }>()
-
-  constructor(private pictureService: PictureService) {}
 
   clean() {
     this.picture = null
@@ -55,14 +54,17 @@ export class DrawingService {
     if (path == null) return
 
     const len = path.points.length
-    if (len != null) {
-      const point = path.points[len - 1]
-      if (point.x === x || point.y === y) {
+    if (len !== 0) {
+      const lastPoint = path.points[len - 1]
+      if (lastPoint.x === x || lastPoint.y === y) {
         return
       }
     }
 
     path.points.push({ x, y })
+
+    const picture = this.picture!
+    picture.paths = picture.paths.slice()
   }
 
   handlePenUp() {

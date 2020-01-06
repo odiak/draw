@@ -1,8 +1,7 @@
 # example netlify.toml
 [build]
-  command = "yarn run build --prod"
-  functions = "functions"
-  publish = "dist/draw"
+  command = "yarn run build --config webpack.config.production.ts"
+  publish = "dist"
 
   ## Uncomment to use this redirect for Single Page Applications like create-react-app. 
   ## Not needed for static site generators.

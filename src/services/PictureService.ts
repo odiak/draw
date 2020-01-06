@@ -1,6 +1,4 @@
-import { Injectable } from '@angular/core'
-import { environment } from 'src/environments/environment'
-import { HttpClient } from '@angular/common/http'
+import { memo } from '../utils/memo'
 import io from 'socket.io-client'
 
 export type Point = { x: number; y: number }
@@ -11,21 +9,18 @@ export type Picture = {
   paths: Path[]
 }
 
-@Injectable({
-  providedIn: 'root'
-})
 export class PictureService {
+  static instantiate = memo(() => new PictureService())
+
   private socketIOClient: ReturnType<typeof io>
 
-  constructor(private http: HttpClient) {
-    this.socketIOClient = io(`${environment.SERVER_URL}`)
+  constructor() {
+    this.socketIOClient = io(SERVER_URL)
   }
 
   async fetchPicture(pictureId: string): Promise<Picture> {
-    const res = await this.http
-      .get(`${environment.SERVER_URL}/pictures/${pictureId}`, { observe: 'body' })
-      .toPromise()
-    return res as Picture
+    const res = await fetch(`${SERVER_URL}/pictures/${pictureId}`)
+    return (await res.json()) as Picture
   }
 
   async savePicture(
