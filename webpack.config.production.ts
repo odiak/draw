@@ -9,7 +9,7 @@ const config: webpack.Configuration = {
   ...defaultConfig,
 
   mode: 'production',
-  plugins: defaultConfig.plugins!.filter((p) => {
+  plugins: defaultConfig.plugins!.map((p) => {
     if (p instanceof webpack.DefinePlugin) {
       return def
     }
