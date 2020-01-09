@@ -1,4 +1,12 @@
-import React, { useEffect, useState, useCallback, useLayoutEffect, useRef } from 'react'
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  MouseEvent,
+  WheelEvent
+} from 'react'
 import { ToolBar } from './ToolBar'
 import { DrawingService } from '../services/DrawingService'
 import { useParams, useHistory } from 'react-router-dom'
@@ -18,7 +26,19 @@ export function DrawingScreen({}: Props) {
   const [selectedTool, setSelectedTool] = useState('pen' as Tool)
   const [palmRejectionEnabled, setPalmRejectionEnabled] = useState(false)
 
-  const internals = useRef({ animationRequestId: null as number | null }).current
+  const [offset, setOffset] = useState<[number, number]>([0, 0])
+
+  const internals = useRef({
+    prevX: 0,
+    prevY: 0,
+    drawTicking: false,
+    scrollTicking: false,
+    offsetX: 0,
+    offsetY: 0,
+    handScrollingByMouse: false
+  }).current
+
+  const svgWrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     drawingService.clean()
@@ -41,13 +61,35 @@ export function DrawingScreen({}: Props) {
     })
   }, [pictureId])
 
-  const animationFrameFunction = useCallback(() => {
-    if (paths !== drawingService.picture?.paths) {
-      setPaths(drawingService.picture?.paths)
-    }
+  const tickDraw = useCallback(() => {
+    if (internals.drawTicking) return
 
-    internals.animationRequestId = requestAnimationFrame(animationFrameFunction)
-  }, [paths, drawingService, internals])
+    internals.drawTicking = true
+    requestAnimationFrame(() => {
+      setPaths(drawingService.picture?.paths)
+      internals.drawTicking = false
+    })
+  }, [internals])
+
+  const tickScroll = useCallback(() => {
+    if (internals.scrollTicking) return
+
+    internals.scrollTicking = true
+    requestAnimationFrame(() => {
+      setOffset([internals.offsetX, internals.offsetY])
+      internals.scrollTicking = false
+    })
+  }, [internals])
+
+  const onWheel = useCallback(
+    (event: WheelEvent) => {
+      internals.offsetX += event.deltaX
+      internals.offsetY += event.deltaY
+
+      tickScroll()
+    },
+    [internals]
+  )
 
   const onMouseDown = useCallback(
     (event: React.MouseEvent) => {
@@ -56,36 +98,55 @@ export function DrawingScreen({}: Props) {
           drawingService.handlePenDown({
             color: '#000',
             width: 3,
-            ...getXYFromMouseEvent(event)
+            ...getXYFromMouseEvent(event, offset)
           })
+          tickDraw()
           break
-
-        case 'hand':
-          return
 
         case 'eraser':
-          drawingService.handleEraserDown(getXYFromMouseEvent(event))
+          drawingService.handleEraserDown(getXYFromMouseEvent(event, offset))
+          tickDraw()
           break
-      }
 
-      animationFrameFunction()
+        case 'hand': {
+          const xy = getXYFromMouseEvent(event)
+          internals.prevX = xy.x
+          internals.prevY = xy.y
+          internals.handScrollingByMouse = true
+          break
+        }
+      }
     },
-    [drawingService, selectedTool, animationFrameFunction]
+    [drawingService, selectedTool, tickDraw, offset]
   )
 
   const onMouseMove = useCallback(
     (event: React.MouseEvent) => {
       switch (selectedTool) {
         case 'pen':
-          drawingService.handlePenMove(getXYFromMouseEvent(event))
+          drawingService.handlePenMove(getXYFromMouseEvent(event, offset))
+          tickDraw()
           break
 
         case 'eraser':
-          drawingService.handleEraserMove(getXYFromMouseEvent(event))
+          drawingService.handleEraserMove(getXYFromMouseEvent(event, offset))
+          tickDraw()
           break
+
+        case 'hand': {
+          if (internals.handScrollingByMouse) {
+            const xy = getXYFromMouseEvent(event)
+            internals.offsetX += internals.prevX - xy.x
+            internals.offsetY += internals.prevY - xy.y
+            internals.prevX = xy.x
+            internals.prevY = xy.y
+            tickScroll()
+          }
+          break
+        }
       }
     },
-    [selectedTool, drawingService]
+    [selectedTool, drawingService, offset]
   )
 
   useLayoutEffect(() => {
@@ -98,12 +159,10 @@ export function DrawingScreen({}: Props) {
         case 'eraser':
           drawingService.handleEraserUp()
           break
-      }
 
-      const { animationRequestId } = internals
-      if (animationRequestId != null) {
-        cancelAnimationFrame(animationRequestId)
-        internals.animationRequestId = null
+        case 'hand':
+          internals.handScrollingByMouse = false
+          break
       }
     }
     document.addEventListener('mouseup', onMouseUpGlobal)
@@ -117,73 +176,115 @@ export function DrawingScreen({}: Props) {
     (event: React.TouchEvent) => {
       switch (selectedTool) {
         case 'pen': {
-          const xy = getXYFromTouchEvent(event, palmRejectionEnabled)
-          if (xy == null) break
-          drawingService.handlePenDown({
-            color: '#000',
-            width: 3,
-            ...xy
-          })
-          break
+          const xy = getXYFromTouchEvent(event, getTouchType(palmRejectionEnabled), offset)
+          if (xy != null) {
+            drawingService.handlePenDown({
+              color: '#000',
+              width: 3,
+              ...xy
+            })
+            break
+          }
+
+          // fall through
         }
 
         case 'eraser': {
-          const xy = getXYFromTouchEvent(event, palmRejectionEnabled)
+          const xy = getXYFromTouchEvent(event, getTouchType(palmRejectionEnabled), offset)
+          if (xy != null) {
+            drawingService.handleEraserDown(xy)
+            break
+          }
+
+          // fall through
+        }
+
+        default: {
+          const xy = getXYFromTouchEvent(event, null)
           if (xy == null) break
-          drawingService.handleEraserDown(xy)
+          internals.prevX = xy.x
+          internals.prevY = xy.y
           break
         }
       }
-
-      animationFrameFunction()
     },
-    [selectedTool, drawingService, palmRejectionEnabled, animationFrameFunction]
+    [selectedTool, drawingService, palmRejectionEnabled, offset]
   )
 
   const onTouchMove = useCallback(
     (event: React.TouchEvent) => {
       switch (selectedTool) {
         case 'pen': {
-          const xy = getXYFromTouchEvent(event, palmRejectionEnabled)
-          if (xy == null) break
-          drawingService.handlePenMove(xy)
-          break
+          const xy = getXYFromTouchEvent(event, getTouchType(palmRejectionEnabled), offset)
+          if (xy != null) {
+            drawingService.handlePenMove(xy)
+            tickDraw()
+            break
+          }
+
+          // fall through
         }
 
         case 'eraser': {
-          const xy = getXYFromTouchEvent(event, palmRejectionEnabled)
+          const xy = getXYFromTouchEvent(event, getTouchType(palmRejectionEnabled), offset)
+          if (xy != null) {
+            drawingService.handleEraserMove(xy)
+            tickDraw()
+            break
+          }
+
+          // fall through
+        }
+
+        default: {
+          const xy = getXYFromTouchEvent(event, null)
           if (xy == null) break
-          drawingService.handleEraserMove(xy)
+          internals.offsetX += internals.prevX - xy.x
+          internals.offsetY += internals.prevY - xy.y
+          internals.prevX = xy.x
+          internals.prevY = xy.y
+
+          tickScroll()
           break
         }
       }
     },
-    [selectedTool, drawingService, palmRejectionEnabled]
+    [selectedTool, drawingService, palmRejectionEnabled, offset, tickDraw]
   )
 
   const onTouchEnd = useCallback(
     (event: React.TouchEvent) => {
       switch (selectedTool) {
         case 'pen':
-          if (getTouch(event.nativeEvent, palmRejectionEnabled) != null) {
+          if (getTouch(event.nativeEvent, getTouchType(palmRejectionEnabled)) != null) {
             drawingService.handlePenUp()
+            tickDraw()
+            break
           }
-          break
+        // fall through
 
         case 'eraser':
-          if (getTouch(event.nativeEvent, palmRejectionEnabled) != null) {
+          if (getTouch(event.nativeEvent, getTouchType(palmRejectionEnabled)) != null) {
             drawingService.handleEraserUp()
+            tickDraw()
+            break
           }
-          break
-      }
+        // fall through
 
-      const { animationRequestId } = internals
-      if (animationRequestId != null) {
-        cancelAnimationFrame(animationRequestId)
-        internals.animationRequestId = null
+        default: {
+          const xy = getXYFromTouchEvent(event, null)
+          if (xy == null) break
+          internals.offsetX += internals.prevX - xy.x
+          internals.offsetY += internals.prevY - xy.y
+          internals.prevX = xy.x
+          internals.prevY = xy.y
+
+          tickScroll()
+          break
+        }
       }
     },
-    [selectedTool, drawingService, palmRejectionEnabled, internals]
+    [selectedTool, drawingService, palmRejectionEnabled, internals, tickDraw]
   )
 
   return (
@@ -196,8 +297,9 @@ export function DrawingScreen({}: Props) {
         palmRejectionEnabled={palmRejectionEnabled}
         onPalmRejectionEnabledChange={setPalmRejectionEnabled}
       />
-      <div className="svg-wrapper">
+      <div ref={svgWrapperRef} className="svg-wrapper">
         <svg
+          onWheel={onWheel}
           onMouseDown={onMouseDown}
           onMouseMove={onMouseMove}
           onTouchStart={onTouchStart}
@@ -213,9 +315,9 @@ export function DrawingScreen({}: Props) {
               d={points
                 .map(({ x, y }, i) => {
                   if (i === 0) {
-                    return `M ${x},${y}`
+                    return `M ${x - offset[0]},${y - offset[1]}`
                   } else {
-                    return `L ${x},${y}`
+                    return `L ${x - offset[0]},${y - offset[1]}`
                   }
                 })
                 .join(' ')}
@@ -236,39 +338,52 @@ const Container = styled.div`
   .svg-wrapper {
     width: 100%;
     height: 100%;
-    overflow: scroll;
 
     > svg {
       display: block;
-      width: 2000px;
-      height: 2000px;
+      width: 100%;
+      height: 100%;
       touch-action: none;
     }
   }
 `
 
-function getXYFromMouseEvent(event: React.MouseEvent): Point {
-  return { x: event.nativeEvent.offsetX, y: event.nativeEvent.offsetY }
+function getXYFromMouseEvent(
+  event: React.MouseEvent,
+  [offsetX, offsetY]: [number, number] = [0, 0]
+): Point {
+  return { x: event.nativeEvent.offsetX + offsetX, y: event.nativeEvent.offsetY + offsetY }
 }
 
-function getXYFromTouchEvent(event: React.TouchEvent, palmRejection: boolean): Point | null {
+function getXYFromTouchEvent(
+  event: React.TouchEvent,
+  touchType: TouchType | null,
+  [offsetX, offsetY]: [number, number] = [0, 0]
+): Point | null {
   const rect = (event.target as Element).closest('svg')!.getBoundingClientRect()
-  const touch = getTouch(event.nativeEvent, palmRejection)
+  const touch = getTouch(event.nativeEvent, touchType)
   if (touch == null) return null
-  const x = touch.clientX - window.pageXOffset - rect.left
-  const y = touch.clientY - window.pageYOffset - rect.top
+  const x = touch.clientX - window.pageXOffset - rect.left + offsetX
+  const y = touch.clientY - window.pageYOffset - rect.top + offsetY
   return { x, y }
 }
 
-function getTouch(event: TouchEvent, palmRejection: boolean): Touch | null {
-  if (!palmRejection) {
-    return event.changedTouches[0]
-  }
-
+function getTouch(event: TouchEvent, touchType: TouchType | null): Touch | null {
   for (const changedTouch of Array.from(event.changedTouches)) {
-    if (changedTouch.touchType === 'stylus') {
+    if (touchType == null || compareTouchType(changedTouch, touchType)) {
       return changedTouch
     }
   }
   return null
+}
+
+function compareTouchType(touch: Touch, touchType: TouchType): boolean {
+  if (!('touchType' in touch) && touchType === 'direct') {
+    return true
+  }
+  return touch.touchType === touchType
+}
+
+function getTouchType(palmRejectionEnabled: boolean): TouchType {
+  return palmRejectionEnabled ? 'stylus' : 'direct'
 }
