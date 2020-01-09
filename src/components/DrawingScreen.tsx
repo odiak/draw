@@ -56,7 +56,7 @@ export function DrawingScreen({}: Props) {
 
     return drawingService.onSave.subscribe(({ pictureId: newPictureId }) => {
       if (newPictureId !== pictureId) {
-        history.push(`/p/${pictureId}`)
+        history.push(`/${newPictureId}`)
       }
     })
   }, [pictureId])
