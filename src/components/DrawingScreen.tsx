@@ -380,6 +380,7 @@ const Container = styled.div`
       height: 100%;
       touch-action: none;
       user-select: none;
+      -webkit-user-select: none;
     }
   }
 `
