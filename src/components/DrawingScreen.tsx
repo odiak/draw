@@ -421,6 +421,6 @@ function compareTouchType(touch: Touch, touchType: TouchType): boolean {
   return touch.touchType === touchType
 }
 
-function getTouchType(palmRejectionEnabled: boolean): TouchType {
-  return palmRejectionEnabled ? 'stylus' : 'direct'
+function getTouchType(palmRejectionEnabled: boolean): TouchType | null {
+  return palmRejectionEnabled ? 'stylus' : null
 }
