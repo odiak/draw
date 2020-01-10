@@ -35,9 +35,11 @@ export function DrawingScreen({}: Props) {
     scrollTicking: false,
     offsetX: 0,
     offsetY: 0,
-    handScrollingByMouse: false
+    handScrollingByMouse: false,
+    svgElementOffset: [0, 0] as [number, number]
   }).current
 
+  const svgRef = useRef<SVGSVGElement>(null)
   const svgWrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -93,23 +95,28 @@ export function DrawingScreen({}: Props) {
 
   const onMouseDown = useCallback(
     (event: React.MouseEvent) => {
+      const { left, top } = svgRef.current!.getBoundingClientRect()
+      internals.svgElementOffset = [left, top]
+
       switch (selectedTool) {
         case 'pen':
           drawingService.handlePenDown({
             color: '#000',
             width: 3,
-            ...getXYFromMouseEvent(event, offset)
+            ...getXYFromMouseEvent(event, internals.svgElementOffset, offset)
           })
           tickDraw()
           break
 
         case 'eraser':
-          drawingService.handleEraserDown(getXYFromMouseEvent(event, offset))
+          drawingService.handleEraserDown(
+            getXYFromMouseEvent(event, internals.svgElementOffset, offset)
+          )
           tickDraw()
           break
 
         case 'hand': {
-          const xy = getXYFromMouseEvent(event)
+          const xy = getXYFromMouseEvent(event, internals.svgElementOffset)
           internals.prevX = xy.x
           internals.prevY = xy.y
           internals.handScrollingByMouse = true
@@ -124,18 +131,22 @@ export function DrawingScreen({}: Props) {
     (event: React.MouseEvent) => {
       switch (selectedTool) {
         case 'pen':
-          drawingService.handlePenMove(getXYFromMouseEvent(event, offset))
+          drawingService.handlePenMove(
+            getXYFromMouseEvent(event, internals.svgElementOffset, offset)
+          )
           tickDraw()
           break
 
         case 'eraser':
-          drawingService.handleEraserMove(getXYFromMouseEvent(event, offset))
+          drawingService.handleEraserMove(
+            getXYFromMouseEvent(event, internals.svgElementOffset, offset)
+          )
           tickDraw()
           break
 
         case 'hand': {
           if (internals.handScrollingByMouse) {
-            const xy = getXYFromMouseEvent(event)
+            const xy = getXYFromMouseEvent(event, internals.svgElementOffset)
             internals.offsetX += internals.prevX - xy.x
             internals.offsetY += internals.prevY - xy.y
             internals.prevX = xy.x
@@ -174,9 +185,17 @@ export function DrawingScreen({}: Props) {
 
   const onTouchStart = useCallback(
     (event: React.TouchEvent) => {
+      const { left, top } = svgRef.current!.getBoundingClientRect()
+      internals.svgElementOffset = [left, top]
+
       switch (selectedTool) {
         case 'pen': {
-          const xy = getXYFromTouchEvent(event, getTouchType(palmRejectionEnabled), offset)
+          const xy = getXYFromTouchEvent(
+            event,
+            internals.svgElementOffset,
+            getTouchType(palmRejectionEnabled),
+            offset
+          )
           if (xy != null) {
             drawingService.handlePenDown({
               color: '#000',
@@ -190,7 +209,12 @@ export function DrawingScreen({}: Props) {
         }
 
         case 'eraser': {
-          const xy = getXYFromTouchEvent(event, getTouchType(palmRejectionEnabled), offset)
+          const xy = getXYFromTouchEvent(
+            event,
+            internals.svgElementOffset,
+            getTouchType(palmRejectionEnabled),
+            offset
+          )
           if (xy != null) {
             drawingService.handleEraserDown(xy)
             break
@@ -200,7 +224,7 @@ export function DrawingScreen({}: Props) {
         }
 
         default: {
-          const xy = getXYFromTouchEvent(event, null)
+          const xy = getXYFromTouchEvent(event, internals.svgElementOffset, null)
           if (xy == null) break
           internals.prevX = xy.x
           internals.prevY = xy.y
@@ -215,7 +239,12 @@ export function DrawingScreen({}: Props) {
     (event: React.TouchEvent) => {
       switch (selectedTool) {
         case 'pen': {
-          const xy = getXYFromTouchEvent(event, getTouchType(palmRejectionEnabled), offset)
+          const xy = getXYFromTouchEvent(
+            event,
+            internals.svgElementOffset,
+            getTouchType(palmRejectionEnabled),
+            offset
+          )
           if (xy != null) {
             drawingService.handlePenMove(xy)
             tickDraw()
@@ -226,7 +255,12 @@ export function DrawingScreen({}: Props) {
         }
 
         case 'eraser': {
-          const xy = getXYFromTouchEvent(event, getTouchType(palmRejectionEnabled), offset)
+          const xy = getXYFromTouchEvent(
+            event,
+            internals.svgElementOffset,
+            getTouchType(palmRejectionEnabled),
+            offset
+          )
           if (xy != null) {
             drawingService.handleEraserMove(xy)
             tickDraw()
@@ -237,7 +271,7 @@ export function DrawingScreen({}: Props) {
         }
 
         default: {
-          const xy = getXYFromTouchEvent(event, null)
+          const xy = getXYFromTouchEvent(event, internals.svgElementOffset, null)
           if (xy == null) break
           internals.offsetX += internals.prevX - xy.x
           internals.offsetY += internals.prevY - xy.y
@@ -272,7 +306,7 @@ export function DrawingScreen({}: Props) {
         // fall through
 
         default: {
-          const xy = getXYFromTouchEvent(event, null)
+          const xy = getXYFromTouchEvent(event, internals.svgElementOffset, null)
           if (xy == null) break
           internals.offsetX += internals.prevX - xy.x
           internals.offsetY += internals.prevY - xy.y
@@ -299,6 +333,7 @@ export function DrawingScreen({}: Props) {
       />
       <div ref={svgWrapperRef} className="svg-wrapper">
         <svg
+          ref={svgRef}
           onWheel={onWheel}
           onMouseDown={onMouseDown}
           onMouseMove={onMouseMove}
@@ -344,27 +379,29 @@ const Container = styled.div`
       width: 100%;
       height: 100%;
       touch-action: none;
+      user-select: none;
     }
   }
 `
 
 function getXYFromMouseEvent(
   event: React.MouseEvent,
+  [left, top]: [number, number],
   [offsetX, offsetY]: [number, number] = [0, 0]
 ): Point {
-  return { x: event.nativeEvent.offsetX + offsetX, y: event.nativeEvent.offsetY + offsetY }
+  return { x: event.clientX - left + offsetX, y: event.clientY - top + offsetY }
 }
 
 function getXYFromTouchEvent(
   event: React.TouchEvent,
+  [left, top]: [number, number],
   touchType: TouchType | null,
   [offsetX, offsetY]: [number, number] = [0, 0]
 ): Point | null {
-  const rect = (event.target as Element).closest('svg')!.getBoundingClientRect()
   const touch = getTouch(event.nativeEvent, touchType)
   if (touch == null) return null
-  const x = touch.clientX - window.pageXOffset - rect.left + offsetX
-  const y = touch.clientY - window.pageYOffset - rect.top + offsetY
+  const x = touch.clientX - left + offsetX
+  const y = touch.clientY - top + offsetY
   return { x, y }
 }
 
