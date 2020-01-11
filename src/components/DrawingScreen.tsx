@@ -68,7 +68,7 @@ export function DrawingScreen({}: Props) {
 
     internals.drawTicking = true
     requestAnimationFrame(() => {
-      setPaths(drawingService.picture?.paths)
+      setPaths(drawingService.picture?.paths.slice())
       internals.drawTicking = false
     })
   }, [internals])
@@ -300,7 +300,7 @@ export function DrawingScreen({}: Props) {
             break
           }
 
-        // fall through
+          // fall through
         }
 
         case 'eraser': {
@@ -317,7 +317,7 @@ export function DrawingScreen({}: Props) {
             break
           }
 
-        // fall through
+          // fall through
         }
 
         default: {
