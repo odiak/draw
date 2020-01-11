@@ -183,8 +183,11 @@ export function DrawingScreen({}: Props) {
     }
   }, [selectedTool, drawingService, internals])
 
-  const onTouchStart = useCallback(
-    (event: React.TouchEvent) => {
+  useLayoutEffect(() => {
+    const svg = svgRef.current
+    if (svg == null) return
+
+    const onTouchStart = (event: TouchEvent) => {
       const { left, top } = svgRef.current!.getBoundingClientRect()
       internals.svgElementOffset = [left, top]
 
@@ -231,12 +234,9 @@ export function DrawingScreen({}: Props) {
           break
         }
       }
-    },
-    [selectedTool, drawingService, palmRejectionEnabled, offset]
-  )
+    }
 
-  const onTouchMove = useCallback(
-    (event: React.TouchEvent) => {
+    const onTouchMove = (event: TouchEvent) => {
       switch (selectedTool) {
         case 'pen': {
           const xy = getXYFromTouchEvent(
@@ -282,28 +282,43 @@ export function DrawingScreen({}: Props) {
           break
         }
       }
-    },
-    [selectedTool, drawingService, palmRejectionEnabled, offset, tickDraw]
-  )
+    }
 
-  const onTouchEnd = useCallback(
-    (event: React.TouchEvent) => {
+    const onTouchEnd = (event: TouchEvent) => {
       switch (selectedTool) {
-        case 'pen':
-          if (getTouch(event.nativeEvent, getTouchType(palmRejectionEnabled)) != null) {
+        case 'pen': {
+          const xy = getXYFromTouchEvent(
+            event,
+            internals.svgElementOffset,
+            getTouchType(palmRejectionEnabled),
+            offset
+          )
+          if (xy != null) {
+            drawingService.handlePenMove(xy)
             drawingService.handlePenUp()
             tickDraw()
             break
           }
-        // fall through
 
-        case 'eraser':
-          if (getTouch(event.nativeEvent, getTouchType(palmRejectionEnabled)) != null) {
+        // fall through
+        }
+
+        case 'eraser': {
+          const xy = getXYFromTouchEvent(
+            event,
+            internals.svgElementOffset,
+            getTouchType(palmRejectionEnabled),
+            offset
+          )
+          if (xy != null) {
+            drawingService.handleEraserMove(xy)
             drawingService.handleEraserUp()
             tickDraw()
             break
           }
+
         // fall through
+        }
 
         default: {
           const xy = getXYFromTouchEvent(event, internals.svgElementOffset, null)
@@ -317,9 +332,27 @@ export function DrawingScreen({}: Props) {
           break
         }
       }
-    },
-    [selectedTool, drawingService, palmRejectionEnabled, internals, tickDraw]
-  )
+    }
+
+    svg.addEventListener('touchstart', onTouchStart, { passive: true })
+    svg.addEventListener('touchmove', onTouchMove, { passive: true })
+    svg.addEventListener('touchend', onTouchEnd, { passive: true })
+
+    return () => {
+      svg.removeEventListener('touchstart', onTouchStart)
+      svg.removeEventListener('touchmove', onTouchMove)
+      svg.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [
+    internals,
+    palmRejectionEnabled,
+    drawingService,
+    tickDraw,
+    tickScroll,
+    svgRef,
+    offset,
+    selectedTool
+  ])
 
   return (
     <Container>
@@ -332,15 +365,7 @@ export function DrawingScreen({}: Props) {
         onPalmRejectionEnabledChange={setPalmRejectionEnabled}
       />
       <div ref={svgWrapperRef} className="svg-wrapper">
-        <svg
-          ref={svgRef}
-          onWheel={onWheel}
-          onMouseDown={onMouseDown}
-          onMouseMove={onMouseMove}
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-        >
+        <svg ref={svgRef} onWheel={onWheel} onMouseDown={onMouseDown} onMouseMove={onMouseMove}>
           {paths?.map(({ points, color, width }, i) => (
             <path
               key={i}
@@ -369,6 +394,8 @@ const Container = styled.div`
   height: 100%;
   width: 100%;
   flex-direction: column;
+  user-select: none;
+  -webkit-user-select: none;
 
   .svg-wrapper {
     width: 100%;
@@ -394,12 +421,12 @@ function getXYFromMouseEvent(
 }
 
 function getXYFromTouchEvent(
-  event: React.TouchEvent,
+  event: TouchEvent,
   [left, top]: [number, number],
   touchType: TouchType | null,
   [offsetX, offsetY]: [number, number] = [0, 0]
 ): Point | null {
-  const touch = getTouch(event.nativeEvent, touchType)
+  const touch = getTouch(event, touchType)
   if (touch == null) return null
   const x = touch.clientX - left + offsetX
   const y = touch.clientY - top + offsetY
@@ -408,7 +435,7 @@ function getXYFromTouchEvent(
 
 function getTouch(event: TouchEvent, touchType: TouchType | null): Touch | null {
   for (const changedTouch of Array.from(event.changedTouches)) {
-    if (touchType == null || compareTouchType(changedTouch, touchType)) {
+    if (touchType == null || changedTouch.touchType === touchType) {
       return changedTouch
     }
   }
