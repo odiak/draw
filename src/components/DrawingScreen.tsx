@@ -8,20 +8,20 @@ import React, {
   WheelEvent
 } from 'react'
 import { ToolBar } from './ToolBar'
-import { DrawingService } from '../services/DrawingService'
 import { useParams, useHistory } from 'react-router-dom'
 import styled from '@emotion/styled'
-import { Point } from '../services/PictureService'
+import { Point, Path, PictureService } from '../services/PictureService'
 import { Tool } from '../types/Tool'
 
 type Props = {}
 
 export function DrawingScreen({}: Props) {
-  const drawingService = DrawingService.instantiate()
+  const pictureService = PictureService.instantiate()
   const { pictureId } = useParams()
   const history = useHistory()
 
-  const [paths, setPaths] = useState(drawingService.picture?.paths)
+  const [title, setTitle] = useState('Untitled')
+  const [paths, setPaths] = useState([] as Path[])
 
   const [selectedTool, setSelectedTool] = useState('pen' as Tool)
   const [palmRejectionEnabled, setPalmRejectionEnabled] = useState(false)
@@ -36,42 +36,87 @@ export function DrawingScreen({}: Props) {
     offsetX: 0,
     offsetY: 0,
     handScrollingByMouse: false,
-    svgElementOffset: [0, 0] as [number, number]
+    canvasElementOffset: [0, 0] as [number, number],
+    canvasWidth: 0,
+    canvasHeight: 0,
+    drawingPath: null as Path | null,
+    dpr: devicePixelRatio,
+    ctx: null as CanvasRenderingContext2D | null,
+    paths
   }).current
+  internals.paths = paths
 
-  const svgRef = useRef<SVGSVGElement>(null)
-  const svgWrapperRef = useRef<HTMLDivElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  useEffect(() => {
-    drawingService.clean()
-
-    if (typeof pictureId === 'string') {
-      drawingService.loadPicture(pictureId).then(() => {
-        // titleAdapterService.title.next(this.title)
-        setPaths(drawingService.picture?.paths)
-      })
-    } else {
-      drawingService.init()
-      setPaths(drawingService.picture?.paths)
-      // titleAdapterService.title.next(this.title)
+  useLayoutEffect(() => {
+    const elem = canvasRef.current
+    if (elem == null) {
+      internals.ctx = null
+      return
     }
 
-    return drawingService.onSave.subscribe(({ pictureId: newPictureId }) => {
-      if (newPictureId !== pictureId) {
-        history.push(`/${newPictureId}`)
-      }
-    })
-  }, [pictureId])
+    const rect = elem.getBoundingClientRect()
+    internals.canvasElementOffset = [rect.left, rect.top]
+    const width = rect.width * internals.dpr
+    const height = rect.height * internals.dpr
+    elem.width = width
+    elem.height = height
+    internals.canvasWidth = width
+    internals.canvasHeight = height
+    internals.ctx = elem.getContext('2d')
+  }, [canvasRef, internals])
+
+  const draw = useCallback(() => {
+    const { ctx, dpr, offsetX, offsetY, canvasWidth, canvasHeight, drawingPath, paths } = internals
+    if (ctx == null) return
+    if (paths == null) return
+
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight)
+
+    for (const path of paths) {
+      drawPath(ctx, path, offsetX, offsetY, dpr)
+    }
+
+    if (drawingPath != null) {
+      drawPath(ctx, drawingPath, offsetX, offsetY, dpr)
+    }
+  }, [internals])
+
+  const savePicture = useCallback(
+    (newPaths?: Path[]) => {
+      pictureService
+        .savePicture({ id: pictureId || null, title, paths: newPaths || paths })
+        .then(({ pictureId: newPictureId }) => {
+          if (pictureId == null) {
+            history.push(`/${newPictureId}`)
+          }
+        })
+    },
+    [paths, pictureId, title, history, pictureService]
+  )
+
+  useLayoutEffect(() => {
+    draw()
+  }, [paths, offset, draw])
+
+  useEffect(() => {
+    if (typeof pictureId === 'string') {
+      pictureService.fetchPicture(pictureId).then(({ title, paths }) => {
+        setTitle(title)
+        setPaths(paths)
+      })
+    }
+  }, [pictureId, pictureService])
 
   const tickDraw = useCallback(() => {
     if (internals.drawTicking) return
 
     internals.drawTicking = true
     requestAnimationFrame(() => {
-      setPaths(drawingService.picture?.paths.slice())
+      draw()
       internals.drawTicking = false
     })
-  }, [internals])
+  }, [internals, draw])
 
   const tickScroll = useCallback(() => {
     if (internals.scrollTicking) return
@@ -90,33 +135,32 @@ export function DrawingScreen({}: Props) {
 
       tickScroll()
     },
-    [internals]
+    [internals, tickScroll]
   )
 
   const onMouseDown = useCallback(
     (event: React.MouseEvent) => {
-      const { left, top } = svgRef.current!.getBoundingClientRect()
-      internals.svgElementOffset = [left, top]
+      const { left, top } = canvasRef.current!.getBoundingClientRect()
+      internals.canvasElementOffset = [left, top]
 
       switch (selectedTool) {
         case 'pen':
-          drawingService.handlePenDown({
+          internals.drawingPath = {
             color: '#000',
             width: 3,
-            ...getXYFromMouseEvent(event, internals.svgElementOffset, offset)
-          })
-          tickDraw()
+            points: [getXYFromMouseEvent(event, internals.canvasElementOffset, offset)]
+          }
           break
 
         case 'eraser':
-          drawingService.handleEraserDown(
-            getXYFromMouseEvent(event, internals.svgElementOffset, offset)
-          )
+          // drawingService.handleEraserDown(
+          //   getXYFromMouseEvent(event, internals.canvasElementOffset, offset)
+          // )
           tickDraw()
           break
 
         case 'hand': {
-          const xy = getXYFromMouseEvent(event, internals.svgElementOffset)
+          const xy = getXYFromMouseEvent(event, internals.canvasElementOffset)
           internals.prevX = xy.x
           internals.prevY = xy.y
           internals.handScrollingByMouse = true
@@ -124,29 +168,30 @@ export function DrawingScreen({}: Props) {
         }
       }
     },
-    [drawingService, selectedTool, tickDraw, offset]
+    [selectedTool, tickDraw, offset, internals]
   )
 
   const onMouseMove = useCallback(
     (event: React.MouseEvent) => {
       switch (selectedTool) {
         case 'pen':
-          drawingService.handlePenMove(
-            getXYFromMouseEvent(event, internals.svgElementOffset, offset)
+          pushPoint(
+            internals.drawingPath?.points,
+            getXYFromMouseEvent(event, internals.canvasElementOffset, offset)
           )
           tickDraw()
           break
 
         case 'eraser':
-          drawingService.handleEraserMove(
-            getXYFromMouseEvent(event, internals.svgElementOffset, offset)
-          )
+          // drawingService.handleEraserMove(
+          //   getXYFromMouseEvent(event, internals.canvasElementOffset, offset)
+          // )
           tickDraw()
           break
 
         case 'hand': {
           if (internals.handScrollingByMouse) {
-            const xy = getXYFromMouseEvent(event, internals.svgElementOffset)
+            const xy = getXYFromMouseEvent(event, internals.canvasElementOffset)
             internals.offsetX += internals.prevX - xy.x
             internals.offsetY += internals.prevY - xy.y
             internals.prevX = xy.x
@@ -157,18 +202,27 @@ export function DrawingScreen({}: Props) {
         }
       }
     },
-    [selectedTool, drawingService, offset]
+    [selectedTool, offset, internals, tickDraw, tickScroll]
   )
 
   useLayoutEffect(() => {
     const onMouseUpGlobal = () => {
       switch (selectedTool) {
-        case 'pen':
-          drawingService.handlePenUp()
+        case 'pen': {
+          const { drawingPath } = internals
+          if (drawingPath != null) {
+            if (drawingPath.points.length > 1) {
+              const newPaths = paths.concat([drawingPath])
+              setPaths(newPaths)
+              savePicture(newPaths)
+            }
+            internals.drawingPath = null
+          }
           break
+        }
 
         case 'eraser':
-          drawingService.handleEraserUp()
+          // drawingService.handleEraserUp()
           break
 
         case 'hand':
@@ -181,53 +235,47 @@ export function DrawingScreen({}: Props) {
     return () => {
       document.removeEventListener('mouseup', onMouseUpGlobal)
     }
-  }, [selectedTool, drawingService, internals])
+  }, [selectedTool, internals, pictureService, paths, savePicture])
 
   useLayoutEffect(() => {
-    const svg = svgRef.current
-    if (svg == null) return
+    const canvas = canvasRef.current
+    if (canvas == null) return
 
     const onTouchStart = (event: TouchEvent) => {
-      const { left, top } = svgRef.current!.getBoundingClientRect()
-      internals.svgElementOffset = [left, top]
+      const { left, top } = canvasRef.current!.getBoundingClientRect()
+      internals.canvasElementOffset = [left, top]
 
       switch (selectedTool) {
         case 'pen': {
           const xy = getXYFromTouchEvent(
             event,
-            internals.svgElementOffset,
+            internals.canvasElementOffset,
             getTouchType(palmRejectionEnabled),
             offset
           )
           if (xy != null) {
-            drawingService.handlePenDown({
-              color: '#000',
-              width: 3,
-              ...xy
-            })
+            internals.drawingPath = { color: '#000', width: 3, points: [xy] }
             break
           }
-
-          // fall through
         }
+        // fall through
 
         case 'eraser': {
           const xy = getXYFromTouchEvent(
             event,
-            internals.svgElementOffset,
+            internals.canvasElementOffset,
             getTouchType(palmRejectionEnabled),
             offset
           )
           if (xy != null) {
-            drawingService.handleEraserDown(xy)
+            // drawingService.handleEraserDown(xy)
             break
           }
-
-          // fall through
         }
+        // fall through
 
         default: {
-          const xy = getXYFromTouchEvent(event, internals.svgElementOffset, null)
+          const xy = getXYFromTouchEvent(event, internals.canvasElementOffset, null)
           if (xy == null) break
           internals.prevX = xy.x
           internals.prevY = xy.y
@@ -241,37 +289,35 @@ export function DrawingScreen({}: Props) {
         case 'pen': {
           const xy = getXYFromTouchEvent(
             event,
-            internals.svgElementOffset,
+            internals.canvasElementOffset,
             getTouchType(palmRejectionEnabled),
             offset
           )
           if (xy != null) {
-            drawingService.handlePenMove(xy)
+            pushPoint(internals.drawingPath?.points, xy)
             tickDraw()
             break
           }
-
-          // fall through
         }
+        // fall through
 
         case 'eraser': {
           const xy = getXYFromTouchEvent(
             event,
-            internals.svgElementOffset,
+            internals.canvasElementOffset,
             getTouchType(palmRejectionEnabled),
             offset
           )
           if (xy != null) {
-            drawingService.handleEraserMove(xy)
+            // drawingService.handleEraserMove(xy)
             tickDraw()
             break
           }
-
-          // fall through
         }
+        // fall through
 
         default: {
-          const xy = getXYFromTouchEvent(event, internals.svgElementOffset, null)
+          const xy = getXYFromTouchEvent(event, internals.canvasElementOffset, null)
           if (xy == null) break
           internals.offsetX += internals.prevX - xy.x
           internals.offsetY += internals.prevY - xy.y
@@ -289,39 +335,44 @@ export function DrawingScreen({}: Props) {
         case 'pen': {
           const xy = getXYFromTouchEvent(
             event,
-            internals.svgElementOffset,
+            internals.canvasElementOffset,
             getTouchType(palmRejectionEnabled),
             offset
           )
           if (xy != null) {
-            drawingService.handlePenMove(xy)
-            drawingService.handlePenUp()
-            tickDraw()
+            const { drawingPath } = internals
+            if (drawingPath != null) {
+              pushPoint(drawingPath.points, xy)
+              if (drawingPath.points.length > 1) {
+                const newPaths = paths.concat([drawingPath])
+                setPaths(newPaths)
+                savePicture(newPaths)
+              }
+              internals.drawingPath = null
+            }
             break
           }
-
-          // fall through
         }
+        // fall through
 
         case 'eraser': {
           const xy = getXYFromTouchEvent(
             event,
-            internals.svgElementOffset,
+            internals.canvasElementOffset,
             getTouchType(palmRejectionEnabled),
             offset
           )
           if (xy != null) {
-            drawingService.handleEraserMove(xy)
-            drawingService.handleEraserUp()
+            // drawingService.handleEraserMove(xy)
+            // drawingService.handleEraserUp()
             tickDraw()
             break
           }
-
-          // fall through
         }
+        // fall through
 
         default: {
-          const xy = getXYFromTouchEvent(event, internals.svgElementOffset, null)
+          const xy = getXYFromTouchEvent(event, internals.canvasElementOffset, null)
           if (xy == null) break
           internals.offsetX += internals.prevX - xy.x
           internals.offsetY += internals.prevY - xy.y
@@ -334,24 +385,28 @@ export function DrawingScreen({}: Props) {
       }
     }
 
-    svg.addEventListener('touchstart', onTouchStart, { passive: true })
-    svg.addEventListener('touchmove', onTouchMove, { passive: true })
-    svg.addEventListener('touchend', onTouchEnd, { passive: true })
+    canvas.addEventListener('touchstart', onTouchStart, { passive: true })
+    canvas.addEventListener('touchmove', onTouchMove, { passive: true })
+    canvas.addEventListener('touchend', onTouchEnd, { passive: true })
 
     return () => {
-      svg.removeEventListener('touchstart', onTouchStart)
-      svg.removeEventListener('touchmove', onTouchMove)
-      svg.removeEventListener('touchend', onTouchEnd)
+      canvas.removeEventListener('touchstart', onTouchStart)
+      canvas.removeEventListener('touchmove', onTouchMove)
+      canvas.removeEventListener('touchend', onTouchEnd)
     }
   }, [
     internals,
     palmRejectionEnabled,
-    drawingService,
     tickDraw,
     tickScroll,
-    svgRef,
+    canvasRef,
     offset,
-    selectedTool
+    selectedTool,
+    pictureService,
+    title,
+    paths,
+    pictureId,
+    savePicture
   ])
 
   return (
@@ -364,26 +419,13 @@ export function DrawingScreen({}: Props) {
         palmRejectionEnabled={palmRejectionEnabled}
         onPalmRejectionEnabledChange={setPalmRejectionEnabled}
       />
-      <div ref={svgWrapperRef} className="svg-wrapper">
-        <svg ref={svgRef} onWheel={onWheel} onMouseDown={onMouseDown} onMouseMove={onMouseMove}>
-          {paths?.map(({ points, color, width }, i) => (
-            <path
-              key={i}
-              fill="none"
-              stroke={color}
-              strokeWidth={width}
-              d={points
-                .map(({ x, y }, i) => {
-                  if (i === 0) {
-                    return `M ${x - offset[0]},${y - offset[1]}`
-                  } else {
-                    return `L ${x - offset[0]},${y - offset[1]}`
-                  }
-                })
-                .join(' ')}
-            />
-          ))}
-        </svg>
+      <div className="canvas-wrapper">
+        <canvas
+          ref={canvasRef}
+          onWheel={onWheel}
+          onMouseDown={onMouseDown}
+          onMouseMove={onMouseMove}
+        ></canvas>
       </div>
     </Container>
   )
@@ -397,17 +439,14 @@ const Container = styled.div`
   user-select: none;
   -webkit-user-select: none;
 
-  .svg-wrapper {
+  > .canvas-wrapper {
     width: 100%;
     height: 100%;
 
-    > svg {
-      display: block;
+    > canvas {
       width: 100%;
       height: 100%;
       touch-action: none;
-      user-select: none;
-      -webkit-user-select: none;
     }
   }
 `
@@ -442,13 +481,48 @@ function getTouch(event: TouchEvent, touchType: TouchType | null): Touch | null 
   return null
 }
 
-function compareTouchType(touch: Touch, touchType: TouchType): boolean {
-  if (!('touchType' in touch) && touchType === 'direct') {
-    return true
-  }
-  return touch.touchType === touchType
-}
-
 function getTouchType(palmRejectionEnabled: boolean): TouchType | null {
   return palmRejectionEnabled ? 'stylus' : null
+}
+
+function drawPath(
+  ctx: CanvasRenderingContext2D,
+  { width, color, points }: Path,
+  scrollLeft: number,
+  scrollTop: number,
+  dpr: number
+) {
+  if (points.length === 0) {
+    return
+  }
+
+  ctx.lineWidth = width * dpr
+  ctx.strokeStyle = color
+  let first = true
+  ctx.beginPath()
+  for (const { x, y } of points) {
+    const realX = (x - scrollLeft) * dpr
+    const realY = (y - scrollTop) * dpr
+    if (first) {
+      ctx.moveTo(realX, realY)
+      first = false
+    } else {
+      ctx.lineTo(realX, realY)
+    }
+  }
+  ctx.stroke()
+}
+
+function pushPoint(points: Point[] | null | undefined, point: Point) {
+  if (points == null) return
+
+  if (points.length > 0) {
+    const { x, y } = point
+    const { x: lastX, y: lastY } = points[points.length - 1]
+    if (lastX === x && lastY === y) {
+      return
+    }
+  }
+
+  points.push(point)
 }
