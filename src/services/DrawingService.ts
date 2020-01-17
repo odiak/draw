@@ -62,9 +62,6 @@ export class DrawingService {
     }
 
     path.points.push({ x, y })
-
-    const picture = this.picture!
-    picture.paths = picture.paths.slice()
   }
 
   handlePenUp() {
