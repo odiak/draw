@@ -42,7 +42,8 @@ export function DrawingScreen({}: Props) {
     drawingPath: null as Path | null,
     dpr: devicePixelRatio,
     ctx: null as CanvasRenderingContext2D | null,
-    paths
+    paths,
+    erasingPaths: null as Set<Path> | null
   }).current
   internals.paths = paths
 
@@ -67,14 +68,32 @@ export function DrawingScreen({}: Props) {
   }, [canvasRef, internals])
 
   const draw = useCallback(() => {
-    const { ctx, dpr, offsetX, offsetY, canvasWidth, canvasHeight, drawingPath, paths } = internals
+    const {
+      ctx,
+      dpr,
+      offsetX,
+      offsetY,
+      canvasWidth,
+      canvasHeight,
+      drawingPath,
+      paths,
+      erasingPaths
+    } = internals
     if (ctx == null) return
     if (paths == null) return
 
     ctx.clearRect(0, 0, canvasWidth, canvasHeight)
 
-    for (const path of paths) {
-      drawPath(ctx, path, offsetX, offsetY, dpr)
+    if (erasingPaths == null) {
+      for (const path of paths) {
+        drawPath(ctx, path, offsetX, offsetY, dpr)
+      }
+    } else {
+      for (const path of paths) {
+        if (!erasingPaths.has(path)) {
+          drawPath(ctx, path, offsetX, offsetY, dpr)
+        }
+      }
     }
 
     if (drawingPath != null) {
@@ -152,12 +171,13 @@ export function DrawingScreen({}: Props) {
           }
           break
 
-        case 'eraser':
-          // drawingService.handleEraserDown(
-          //   getXYFromMouseEvent(event, internals.canvasElementOffset, offset)
-          // )
+        case 'eraser': {
+          const xy = getXYFromMouseEvent(event, internals.canvasElementOffset, offset)
+          const pathsToRemove = erase(internals.paths, xy)
+          internals.erasingPaths = new Set(pathsToRemove)
           tickDraw()
           break
+        }
 
         case 'hand': {
           const xy = getXYFromMouseEvent(event, internals.canvasElementOffset)
@@ -182,12 +202,19 @@ export function DrawingScreen({}: Props) {
           tickDraw()
           break
 
-        case 'eraser':
-          // drawingService.handleEraserMove(
-          //   getXYFromMouseEvent(event, internals.canvasElementOffset, offset)
-          // )
-          tickDraw()
+        case 'eraser': {
+          const { erasingPaths } = internals
+          if (erasingPaths != null) {
+            const xy = getXYFromMouseEvent(event, internals.canvasElementOffset, offset)
+            const pathsToRemove = erase(internals.paths, xy)
+            for (const path of pathsToRemove) {
+              erasingPaths.add(path)
+            }
+            tickDraw()
+          }
+
           break
+        }
 
         case 'hand': {
           if (internals.handScrollingByMouse) {
@@ -221,9 +248,18 @@ export function DrawingScreen({}: Props) {
           break
         }
 
-        case 'eraser':
-          // drawingService.handleEraserUp()
+        case 'eraser': {
+          const { erasingPaths, paths } = internals
+          if (erasingPaths != null) {
+            const newPaths = removePaths(paths, erasingPaths)
+            if (newPaths !== paths) {
+              setPaths(newPaths)
+              savePicture(newPaths)
+            }
+            internals.erasingPaths = null
+          }
           break
+        }
 
         case 'hand':
           internals.handScrollingByMouse = false
@@ -268,7 +304,16 @@ export function DrawingScreen({}: Props) {
             offset
           )
           if (xy != null) {
-            // drawingService.handleEraserDown(xy)
+            const { erasingPaths, paths } = internals
+            const pathsToRemove = erase(paths, xy)
+            if (erasingPaths != null) {
+              for (const path of pathsToRemove) {
+                erasingPaths.add(path)
+              }
+            } else {
+              internals.erasingPaths = new Set(pathsToRemove)
+            }
+            tickDraw()
             break
           }
         }
@@ -309,8 +354,14 @@ export function DrawingScreen({}: Props) {
             offset
           )
           if (xy != null) {
-            // drawingService.handleEraserMove(xy)
-            tickDraw()
+            const { erasingPaths, paths } = internals
+            if (erasingPaths != null) {
+              const pathsToRemove = erase(paths, xy)
+              for (const path of pathsToRemove) {
+                erasingPaths.add(path)
+              }
+              tickDraw()
+            }
             break
           }
         }
@@ -363,9 +414,20 @@ export function DrawingScreen({}: Props) {
             offset
           )
           if (xy != null) {
-            // drawingService.handleEraserMove(xy)
-            // drawingService.handleEraserUp()
-            tickDraw()
+            const { erasingPaths, paths } = internals
+            if (erasingPaths != null) {
+              const pathsToRemove = erase(paths, xy)
+              for (const path of pathsToRemove) {
+                erasingPaths.add(path)
+              }
+
+              const newPaths = removePaths(paths, erasingPaths)
+              if (newPaths !== paths) {
+                setPaths(newPaths)
+                savePicture(newPaths)
+              }
+              internals.erasingPaths = null
+            }
             break
           }
         }
@@ -526,3 +588,55 @@ function pushPoint(points: Point[] | null | undefined, point: Point) {
 
   points.push(point)
 }
+
+function erase(paths: Path[], p1: Point): Path[] {
+  const pathsToRemove = paths.filter((path) => {
+    return path.points.some((p2) => {
+      return isCloser(p1, p2, 3)
+    })
+  })
+  return pathsToRemove
+}
+
+function isCloser({ x: x1, y: y1 }: Point, { x: x2, y: y2 }: Point, r: number): boolean {
+  const d = (x1 - x2) ** 2 + (y1 - y2) ** 2
+  return d <= r ** 2
+}
+
+function removePaths(paths: Path[], pathsToRemove: Set<Path>): Path[] {
+  const newPaths = paths.filter((path) => !pathsToRemove.has(path))
+  if (newPaths.length === paths.length) {
+    return paths
+  }
+  return newPaths
+}
+
+// function isIntersect(p1: Point, p2: Point, p3: Point, p4: Point): boolean {
+//   return bothSides(p1, p2, p3, p4) && bothSides(p3, p4, p1, p2)
+// }
+
+// function bothSides(p1: Point, p2: Point, p3: Point, p4: Point): boolean {
+//   const ccw1 = ccw(p1, p3, p2)
+//   const ccw2 = ccw(p1, p4, p2)
+//   if (ccw1 === 0 && ccw2 === 0) {
+//     return isInternal(p1, p2, p3) || isInternal(p1, p2, p4)
+//   } else {
+//     return ccw1 * ccw2 <= 0
+//   }
+// }
+
+// function ccw(p1: Point, p2: Point, p3: Point): number {
+//   return cross(p2.x - p1.x, p2.y - p1.y, p3.x - p2.x, p3.y - p2.y)
+// }
+
+// function cross(x1: number, y1: number, x2: number, y2: number): number {
+//   return x1 * y2 - x2 * y1
+// }
+
+// function isInternal(p1: Point, p2: Point, p3: Point): boolean {
+//   return dot(p1.x - p3.x, p1.y - p3.y, p2.x - p3.x, p2.x - p3.y) <= 0
+// }
+
+// function dot(x1: number, y1: number, x2: number, y2: number): number {
+//   return x1 * x2 + y1 * y2
+// }
