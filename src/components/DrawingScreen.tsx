@@ -43,7 +43,9 @@ export function DrawingScreen({}: Props) {
     dpr: devicePixelRatio,
     ctx: null as CanvasRenderingContext2D | null,
     paths,
-    erasingPaths: null as Set<Path> | null
+    erasingPaths: null as Set<Path> | null,
+    handleResize: () => {},
+    resizeTicking: false
   }).current
   internals.paths = paths
 
@@ -56,14 +58,18 @@ export function DrawingScreen({}: Props) {
       return
     }
 
-    const rect = elem.getBoundingClientRect()
-    internals.canvasElementOffset = [rect.left, rect.top]
-    const width = rect.width * internals.dpr
-    const height = rect.height * internals.dpr
-    elem.width = width
-    elem.height = height
-    internals.canvasWidth = width
-    internals.canvasHeight = height
+    internals.handleResize = () => {
+      const rect = elem.getBoundingClientRect()
+      internals.canvasElementOffset = [rect.left, rect.top]
+      internals.dpr = devicePixelRatio
+      const width = rect.width * internals.dpr
+      const height = rect.height * internals.dpr
+      elem.width = width
+      elem.height = height
+      internals.canvasWidth = width
+      internals.canvasHeight = height
+    }
+    internals.handleResize()
     internals.ctx = elem.getContext('2d')
   }, [canvasRef, internals])
 
@@ -135,6 +141,26 @@ export function DrawingScreen({}: Props) {
       draw()
       internals.drawTicking = false
     })
+  }, [internals, draw])
+
+  useLayoutEffect(() => {
+    const elem = canvasRef.current
+    if (elem == null) return
+
+    const onResize = () => {
+      if (internals.resizeTicking) return
+
+      requestAnimationFrame(() => {
+        internals.handleResize()
+        draw()
+      })
+    }
+
+    window.addEventListener('resize', onResize)
+
+    return () => {
+      window.removeEventListener('resize', onResize)
+    }
   }, [internals, draw])
 
   const tickScroll = useCallback(() => {
@@ -504,6 +530,7 @@ const Container = styled.div`
   > .canvas-wrapper {
     width: 100%;
     height: 100%;
+    overflow: hidden;
 
     > canvas {
       width: 100%;
