@@ -111,9 +111,9 @@ export function DrawingScreen({}: Props) {
   }, [internals])
 
   const savePicture = useCallback(
-    (newPaths?: Path[]) => {
+    (p: { paths?: Path[]; title?: string }) => {
       pictureService
-        .savePicture({ id: pictureId || null, title, paths: newPaths || paths })
+        .savePicture({ id: pictureId || null, title, paths, ...p })
         .then(({ pictureId: newPictureId }) => {
           if (pictureId == null) {
             history.push(`/${newPictureId}`)
@@ -121,6 +121,14 @@ export function DrawingScreen({}: Props) {
         })
     },
     [paths, pictureId, title, history, pictureService]
+  )
+
+  const setTitleWrapper = useCallback(
+    (title: string) => {
+      setTitle(title)
+      savePicture({ title })
+    },
+    [setTitle, savePicture]
   )
 
   useLayoutEffect(() => {
@@ -270,7 +278,7 @@ export function DrawingScreen({}: Props) {
             if (drawingPath.points.length > 1) {
               const newPaths = paths.concat([drawingPath])
               setPaths(newPaths)
-              savePicture(newPaths)
+              savePicture({ paths: newPaths })
             }
             internals.drawingPath = null
           }
@@ -426,7 +434,7 @@ export function DrawingScreen({}: Props) {
               if (drawingPath.points.length > 1) {
                 const newPaths = paths.concat([drawingPath])
                 setPaths(newPaths)
-                savePicture(newPaths)
+                savePicture({ paths: newPaths })
               }
               internals.drawingPath = null
             }
@@ -453,7 +461,7 @@ export function DrawingScreen({}: Props) {
               const newPaths = removePaths(paths, erasingPaths)
               if (newPaths !== paths) {
                 setPaths(newPaths)
-                savePicture(newPaths)
+                savePicture({ paths: newPaths })
               }
               internals.erasingPaths = null
             }
@@ -503,8 +511,8 @@ export function DrawingScreen({}: Props) {
   return (
     <Container>
       <ToolBar
-        title="Untitled"
-        onTitleChange={() => {}}
+        title={title}
+        onTitleChange={setTitleWrapper}
         selectedTool={selectedTool}
         onSelectedToolChange={setSelectedTool}
         palmRejectionEnabled={palmRejectionEnabled}
