@@ -291,7 +291,7 @@ export function DrawingScreen({}: Props) {
             const newPaths = removePaths(paths, erasingPaths)
             if (newPaths !== paths) {
               setPaths(newPaths)
-              savePicture(newPaths)
+              savePicture({ paths: newPaths })
             }
             internals.erasingPaths = null
           }
