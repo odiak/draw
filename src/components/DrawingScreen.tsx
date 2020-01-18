@@ -640,33 +640,3 @@ function removePaths(paths: Path[], pathsToRemove: Set<Path>): Path[] {
   }
   return newPaths
 }
-
-// function isIntersect(p1: Point, p2: Point, p3: Point, p4: Point): boolean {
-//   return bothSides(p1, p2, p3, p4) && bothSides(p3, p4, p1, p2)
-// }
-
-// function bothSides(p1: Point, p2: Point, p3: Point, p4: Point): boolean {
-//   const ccw1 = ccw(p1, p3, p2)
-//   const ccw2 = ccw(p1, p4, p2)
-//   if (ccw1 === 0 && ccw2 === 0) {
-//     return isInternal(p1, p2, p3) || isInternal(p1, p2, p4)
-//   } else {
-//     return ccw1 * ccw2 <= 0
-//   }
-// }
-
-// function ccw(p1: Point, p2: Point, p3: Point): number {
-//   return cross(p2.x - p1.x, p2.y - p1.y, p3.x - p2.x, p3.y - p2.y)
-// }
-
-// function cross(x1: number, y1: number, x2: number, y2: number): number {
-//   return x1 * y2 - x2 * y1
-// }
-
-// function isInternal(p1: Point, p2: Point, p3: Point): boolean {
-//   return dot(p1.x - p3.x, p1.y - p3.y, p2.x - p3.x, p2.x - p3.y) <= 0
-// }
-
-// function dot(x1: number, y1: number, x2: number, y2: number): number {
-//   return x1 * x2 + y1 * y2
-// }
