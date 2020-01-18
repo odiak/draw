@@ -90,6 +90,9 @@ export function DrawingScreen({}: Props) {
 
     ctx.clearRect(0, 0, canvasWidth, canvasHeight)
 
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+
     if (erasingPaths == null) {
       for (const path of paths) {
         drawPath(ctx, path, offsetX, offsetY, dpr)
