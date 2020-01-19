@@ -102,19 +102,12 @@ export function DrawingScreen({}: Props) {
     }
   }, [internals])
 
-  const savePicture = useCallback(
-    (p: { paths?: Path[]; title?: string }) => {
-      pictureService.savePicture({ id: pictureId, title, paths, ...p })
-    },
-    [paths, pictureId, title, pictureService]
-  )
-
   const setTitleWrapper = useCallback(
     (title: string) => {
       setTitle(title)
-      savePicture({ title })
+      pictureService.setTitle(pictureId, title)
     },
-    [setTitle, savePicture]
+    [setTitle, pictureService, pictureId]
   )
 
   useLayoutEffect(() => {
@@ -188,6 +181,7 @@ export function DrawingScreen({}: Props) {
       switch (selectedTool) {
         case 'pen':
           internals.drawingPath = {
+            id: generateId(),
             color: '#000',
             width: 3,
             points: [getXYFromMouseEvent(event, internals.canvasElementOffset, offset)]
@@ -262,10 +256,9 @@ export function DrawingScreen({}: Props) {
           const { drawingPath } = internals
           if (drawingPath != null) {
             if (drawingPath.points.length > 1) {
-              drawingPath.id = generateId()
               const newPaths = paths.concat([drawingPath])
               setPaths(newPaths)
-              savePicture({ paths: newPaths })
+              pictureService.addAndRemovePaths(pictureId, [drawingPath], null)
             }
             internals.drawingPath = null
           }
@@ -278,7 +271,7 @@ export function DrawingScreen({}: Props) {
             const newPaths = removePaths(paths, erasingPaths)
             if (newPaths !== paths) {
               setPaths(newPaths)
-              savePicture({ paths: newPaths })
+              pictureService.addAndRemovePaths(pictureId, null, pathsSetToIds(erasingPaths))
             }
             internals.erasingPaths = null
           }
@@ -295,7 +288,7 @@ export function DrawingScreen({}: Props) {
     return () => {
       document.removeEventListener('mouseup', onMouseUpGlobal)
     }
-  }, [selectedTool, internals, pictureService, paths, savePicture])
+  }, [selectedTool, internals, pictureService, paths, pictureId])
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current
@@ -314,7 +307,7 @@ export function DrawingScreen({}: Props) {
             offset
           )
           if (xy != null) {
-            internals.drawingPath = { color: '#000', width: 3, points: [xy] }
+            internals.drawingPath = { id: generateId(), color: '#000', width: 3, points: [xy] }
             break
           }
         }
@@ -419,10 +412,9 @@ export function DrawingScreen({}: Props) {
             if (drawingPath != null) {
               pushPoint(drawingPath.points, xy)
               if (drawingPath.points.length > 1) {
-                drawingPath.id = generateId()
                 const newPaths = paths.concat([drawingPath])
                 setPaths(newPaths)
-                savePicture({ paths: newPaths })
+                pictureService.addAndRemovePaths(pictureId, [drawingPath], null)
               }
               internals.drawingPath = null
             }
@@ -449,7 +441,7 @@ export function DrawingScreen({}: Props) {
               const newPaths = removePaths(paths, erasingPaths)
               if (newPaths !== paths) {
                 setPaths(newPaths)
-                savePicture({ paths: newPaths })
+                pictureService.addAndRemovePaths(pictureId, null, pathsSetToIds(erasingPaths))
               }
               internals.erasingPaths = null
             }
@@ -492,7 +484,7 @@ export function DrawingScreen({}: Props) {
     pictureService,
     title,
     paths,
-    savePicture
+    pictureId
   ])
 
   return (
@@ -634,4 +626,8 @@ function removePaths(paths: Path[], pathsToRemove: Set<Path>): Path[] {
     return paths
   }
   return newPaths
+}
+
+function pathsSetToIds(paths: Set<Path>): string[] {
+  return Array.from(paths).map(({ id }) => id)
 }

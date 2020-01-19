@@ -2,7 +2,7 @@ import { memo } from '../utils/memo'
 import io from 'socket.io-client'
 
 export type Point = { x: number; y: number }
-export type Path = { color: string; width: number; points: Point[]; id?: string }
+export type Path = { color: string; width: number; points: Point[]; id: string }
 export type Picture = {
   id: string
   title: string
@@ -26,17 +26,15 @@ export class PictureService {
     return (await res.json()) as Picture
   }
 
-  async savePicture(
-    picture: Omit<Picture, 'id'> & { id: string | null }
-  ): Promise<{ pictureId: string }> {
-    return new Promise((resolve, reject) => {
-      try {
-        this.socketIOClient.emit('savePicture', picture, (pictureId: string) => {
-          resolve({ pictureId })
-        })
-      } catch (e) {
-        reject(e)
-      }
-    })
+  setTitle(pictureId: string, title: string) {
+    this.socketIOClient.emit('setTitle', { pictureId, title })
+  }
+
+  addAndRemovePaths(
+    pictureId: string,
+    pathsToAdd: Path[] | null,
+    pathIdsToRemove: string[] | null
+  ) {
+    this.socketIOClient.emit('addAndRemovePaths', { pictureId, pathsToAdd, pathIdsToRemove })
   }
 }
