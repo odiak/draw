@@ -5,9 +5,15 @@ export type Point = { x: number; y: number }
 export type Path = { color: string; width: number; points: Point[]; id: string }
 export type Picture = {
   id: string
-  title: string
-  paths: Path[]
+  title?: string
+  paths?: Path[]
 }
+
+export type PictureUpdate = { pictureId: string } & Partial<{
+  title: string
+  pathsToAdd: Path[]
+  pathIdsToRemove: string[]
+}>
 
 export class PictureService {
   static instantiate = memo(() => new PictureService())
@@ -27,7 +33,7 @@ export class PictureService {
   }
 
   setTitle(pictureId: string, title: string) {
-    this.socketIOClient.emit('setTitle', { pictureId, title })
+    this.socketIOClient.emit('updatePicture', { pictureId, title })
   }
 
   addAndRemovePaths(
@@ -35,6 +41,16 @@ export class PictureService {
     pathsToAdd: Path[] | null,
     pathIdsToRemove: string[] | null
   ) {
-    this.socketIOClient.emit('addAndRemovePaths', { pictureId, pathsToAdd, pathIdsToRemove })
+    this.socketIOClient.emit('updatePicture', { pictureId, pathsToAdd, pathIdsToRemove })
+  }
+
+  watchPicture(pictureId: string, onUpdate: (update: PictureUpdate) => void) {
+    this.socketIOClient.emit('watchPicture', { pictureId })
+    this.socketIOClient.on('pictureUpdated', onUpdate)
+  }
+
+  unwatchPicture(pictureId: string) {
+    this.socketIOClient.emit('unwatchPicture', { pictureId })
+    this.socketIOClient.off('pictureUpdated')
   }
 }

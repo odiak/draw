@@ -117,11 +117,39 @@ export function DrawingScreen({}: Props) {
   useEffect(() => {
     pictureService.fetchPicture(pictureId).then((picture) => {
       if (picture != null) {
-        setTitle(picture.title)
-        setPaths(picture.paths)
+        const { title, paths } = picture
+        if (title != null) setTitle(title)
+        if (paths != null) setPaths(paths)
       }
     })
-  }, [pictureId, pictureService])
+
+    pictureService.watchPicture(
+      pictureId,
+      ({ pictureId: targetPictureId, title: newTitle, pathsToAdd, pathIdsToRemove }) => {
+        if (targetPictureId !== pictureId) return
+
+        if (newTitle != null) {
+          setTitle(newTitle)
+        }
+
+        let newPaths = internals.paths
+        if (pathsToAdd != null && pathsToAdd.length !== 0) {
+          newPaths = addPaths(newPaths, pathsToAdd)
+        }
+        if (pathIdsToRemove != null && pathIdsToRemove.length !== 0) {
+          newPaths = removePathsByIds(newPaths, pathIdsToRemove)
+        }
+
+        if (newPaths !== internals.paths) {
+          setPaths(newPaths)
+        }
+      }
+    )
+
+    return () => {
+      pictureService.unwatchPicture(pictureId)
+    }
+  }, [pictureId, pictureService, internals])
 
   const tickDraw = useCallback(() => {
     if (internals.drawTicking) return
@@ -630,4 +658,22 @@ function removePaths(paths: Path[], pathsToRemove: Set<Path>): Path[] {
 
 function pathsSetToIds(paths: Set<Path>): string[] {
   return Array.from(paths).map(({ id }) => id)
+}
+
+function addPaths(paths: Path[], pathsToAdd: Path[]): Path[] {
+  const idSet = new Set(paths.map(({ id }) => id))
+  const pathsToReallyAdd = pathsToAdd.filter(({ id }) => {
+    if (idSet.has(id)) return false
+    idSet.add(id)
+    return true
+  })
+  if (pathsToReallyAdd.length === 0) return paths
+  return paths.concat(pathsToReallyAdd)
+}
+
+function removePathsByIds(paths: Path[], pathIdsToRemove: string[]): Path[] {
+  const pathIdsSetToRemove = new Set(pathIdsToRemove)
+  const newPaths = paths.filter(({ id }) => !pathIdsSetToRemove.has(id))
+  if (newPaths.length === paths.length) return paths
+  return newPaths
 }
