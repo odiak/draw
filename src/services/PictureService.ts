@@ -2,7 +2,7 @@ import { memo } from '../utils/memo'
 import io from 'socket.io-client'
 
 export type Point = { x: number; y: number }
-export type Path = { color: string; width: number; points: Point[] }
+export type Path = { color: string; width: number; points: Point[]; id?: string }
 export type Picture = {
   id: string
   title: string

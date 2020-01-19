@@ -276,6 +276,7 @@ export function DrawingScreen({}: Props) {
           const { drawingPath } = internals
           if (drawingPath != null) {
             if (drawingPath.points.length > 1) {
+              drawingPath.id = generateId()
               const newPaths = paths.concat([drawingPath])
               setPaths(newPaths)
               savePicture({ paths: newPaths })
@@ -432,6 +433,7 @@ export function DrawingScreen({}: Props) {
             if (drawingPath != null) {
               pushPoint(drawingPath.points, xy)
               if (drawingPath.points.length > 1) {
+                drawingPath.id = generateId()
                 const newPaths = paths.concat([drawingPath])
                 setPaths(newPaths)
                 savePicture({ paths: newPaths })
@@ -647,4 +649,10 @@ function removePaths(paths: Path[], pathsToRemove: Set<Path>): Path[] {
     return paths
   }
   return newPaths
+}
+
+function generateId(): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)))
+    .map((n) => n.toString(16).padStart(2, '0'))
+    .join('')
 }
