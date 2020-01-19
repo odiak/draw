@@ -12,12 +12,13 @@ import { useParams, useHistory } from 'react-router-dom'
 import styled from '@emotion/styled'
 import { Point, Path, PictureService } from '../services/PictureService'
 import { Tool } from '../types/Tool'
+import { generateId } from '../utils/generateId'
 
 type Props = {}
 
 export function DrawingScreen({}: Props) {
   const pictureService = PictureService.instantiate()
-  const { pictureId } = useParams()
+  const { pictureId } = useParams<{ pictureId: string }>()
   const history = useHistory()
 
   const [title, setTitle] = useState('Untitled')
@@ -112,15 +113,9 @@ export function DrawingScreen({}: Props) {
 
   const savePicture = useCallback(
     (p: { paths?: Path[]; title?: string }) => {
-      pictureService
-        .savePicture({ id: pictureId || null, title, paths, ...p })
-        .then(({ pictureId: newPictureId }) => {
-          if (pictureId == null) {
-            history.push(`/${newPictureId}`)
-          }
-        })
+      pictureService.savePicture({ id: pictureId, title, paths, ...p })
     },
-    [paths, pictureId, title, history, pictureService]
+    [paths, pictureId, title, pictureService]
   )
 
   const setTitleWrapper = useCallback(
@@ -136,12 +131,12 @@ export function DrawingScreen({}: Props) {
   }, [paths, offset, draw])
 
   useEffect(() => {
-    if (typeof pictureId === 'string') {
-      pictureService.fetchPicture(pictureId).then(({ title, paths }) => {
-        setTitle(title)
-        setPaths(paths)
-      })
-    }
+    pictureService.fetchPicture(pictureId).then((picture) => {
+      if (picture != null) {
+        setTitle(picture.title)
+        setPaths(picture.paths)
+      }
+    })
   }, [pictureId, pictureService])
 
   const tickDraw = useCallback(() => {
@@ -506,7 +501,6 @@ export function DrawingScreen({}: Props) {
     pictureService,
     title,
     paths,
-    pictureId,
     savePicture
   ])
 
@@ -649,10 +643,4 @@ function removePaths(paths: Path[], pathsToRemove: Set<Path>): Path[] {
     return paths
   }
   return newPaths
-}
-
-function generateId(): string {
-  return Array.from(crypto.getRandomValues(new Uint8Array(16)))
-    .map((n) => n.toString(16).padStart(2, '0'))
-    .join('')
 }

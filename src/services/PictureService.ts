@@ -18,8 +18,11 @@ export class PictureService {
     this.socketIOClient = io(SERVER_URL)
   }
 
-  async fetchPicture(pictureId: string): Promise<Picture> {
+  async fetchPicture(pictureId: string): Promise<Picture | null> {
     const res = await fetch(`${SERVER_URL}/pictures/${pictureId}`)
+    if (res.status === 404) {
+      return null
+    }
     return (await res.json()) as Picture
   }
 
