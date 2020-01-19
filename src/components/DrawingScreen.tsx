@@ -1,14 +1,6 @@
-import React, {
-  useEffect,
-  useState,
-  useCallback,
-  useLayoutEffect,
-  useRef,
-  MouseEvent,
-  WheelEvent
-} from 'react'
+import React, { useEffect, useState, useCallback, useLayoutEffect, useRef, WheelEvent } from 'react'
 import { ToolBar } from './ToolBar'
-import { useParams, useHistory } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import styled from '@emotion/styled'
 import { Point, Path, PictureService } from '../services/PictureService'
 import { Tool } from '../types/Tool'
@@ -19,7 +11,6 @@ type Props = {}
 export function DrawingScreen({}: Props) {
   const pictureService = PictureService.instantiate()
   const { pictureId } = useParams<{ pictureId: string }>()
-  const history = useHistory()
 
   const [title, setTitle] = useState('Untitled')
   const [paths, setPaths] = useState([] as Path[])
