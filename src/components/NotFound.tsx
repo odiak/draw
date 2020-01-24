@@ -1,5 +1,11 @@
 import React from 'react'
+import { Title } from './Title'
 
 export function NotFound() {
-  return <p>404 Not found</p>
+  return (
+    <>
+      <Title>Not Found</Title>
+      <p>404 Not found</p>
+    </>
+  )
 }

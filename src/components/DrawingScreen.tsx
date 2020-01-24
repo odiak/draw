@@ -5,6 +5,7 @@ import styled from '@emotion/styled'
 import { PictureService } from '../services/PictureService'
 import { Tool } from '../types/Tool'
 import { CanvasManager } from '../CanvasManager'
+import { Title } from './Title'
 
 type Props = {}
 
@@ -98,19 +99,22 @@ export function DrawingScreen({}: Props) {
   }, [pictureId, pictureService, canvasManager])
 
   return (
-    <Container>
-      <ToolBar
-        title={title}
-        onTitleChange={setTitleWrapper}
-        selectedTool={selectedTool}
-        onSelectedToolChange={setSelectedToolWrapper}
-        palmRejectionEnabled={palmRejectionEnabled}
-        onPalmRejectionEnabledChange={setPalmRejectionEnabledWrapper}
-      />
-      <div className="canvas-wrapper">
-        <canvas ref={canvasRef}></canvas>
-      </div>
-    </Container>
+    <>
+      <Title>{title}</Title>
+      <Container>
+        <ToolBar
+          title={title}
+          onTitleChange={setTitleWrapper}
+          selectedTool={selectedTool}
+          onSelectedToolChange={setSelectedToolWrapper}
+          palmRejectionEnabled={palmRejectionEnabled}
+          onPalmRejectionEnabledChange={setPalmRejectionEnabledWrapper}
+        />
+        <div className="canvas-wrapper">
+          <canvas ref={canvasRef}></canvas>
+        </div>
+      </Container>
+    </>
   )
 }
 
