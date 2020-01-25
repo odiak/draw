@@ -1,50 +1,28 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo, useLayoutEffect } from 'react'
+import React, { useEffect, useState, useRef, useMemo, useLayoutEffect } from 'react'
 import { ToolBar } from './ToolBar'
 import { useParams } from 'react-router-dom'
 import styled from '@emotion/styled'
 import { PictureService } from '../services/PictureService'
-import { Tool } from '../types/Tool'
 import { CanvasManager } from '../CanvasManager'
 import { Title } from './Title'
+import { useVariable } from '../utils/useVariable'
 
 type Props = {}
+
+const defaultTitle = 'Untitled'
 
 export function DrawingScreen({}: Props) {
   const pictureService = PictureService.instantiate()
   const { pictureId } = useParams<{ pictureId: string }>()
 
-  const [title, setTitle] = useState('Untitled')
-
-  const [selectedTool, setSelectedTool] = useState('pen' as Tool)
-  const [palmRejectionEnabled, setPalmRejectionEnabled] = useState(false)
-
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-
   const canvasManager = useMemo(() => new CanvasManager(pictureId), [pictureId])
 
-  const setTitleWrapper = useCallback(
-    (title: string) => {
-      setTitle(title)
-      pictureService.setTitle(pictureId, title)
-    },
-    [setTitle, pictureService, pictureId]
-  )
+  const [title, setTitle] = useState<string | null>(null)
 
-  const setSelectedToolWrapper = useCallback(
-    (tool: Tool) => {
-      setSelectedTool(tool)
-      canvasManager.setTool(tool)
-    },
-    [setSelectedTool, canvasManager]
-  )
+  const [selectedTool, setSelectedTool] = useVariable(canvasManager.tool)
+  const [palmRejectionEnabled, setPalmRejectionEnabled] = useVariable(canvasManager.palmRejection)
 
-  const setPalmRejectionEnabledWrapper = useCallback(
-    (enabled: boolean) => {
-      setPalmRejectionEnabled(enabled)
-      canvasManager.setPalmRejection(enabled)
-    },
-    [setPalmRejectionEnabled, canvasManager]
-  )
+  const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useLayoutEffect(() => {
     const e = canvasRef.current
@@ -52,6 +30,12 @@ export function DrawingScreen({}: Props) {
       canvasManager.setCanvasElement(e)
     }
   }, [canvasRef, canvasManager])
+
+  useEffect(() => {
+    if (title != null) {
+      pictureService.setTitle(pictureId, title)
+    }
+  }, [pictureService, pictureId, title])
 
   useEffect(() => {
     pictureService.fetchPicture(pictureId).then((picture) => {
@@ -100,15 +84,15 @@ export function DrawingScreen({}: Props) {
 
   return (
     <>
-      <Title>{title}</Title>
+      <Title>{title || defaultTitle}</Title>
       <Container>
         <ToolBar
-          title={title}
-          onTitleChange={setTitleWrapper}
+          title={title || defaultTitle}
+          onTitleChange={setTitle}
           selectedTool={selectedTool}
-          onSelectedToolChange={setSelectedToolWrapper}
+          onSelectedToolChange={setSelectedTool}
           palmRejectionEnabled={palmRejectionEnabled}
-          onPalmRejectionEnabledChange={setPalmRejectionEnabledWrapper}
+          onPalmRejectionEnabledChange={setPalmRejectionEnabled}
         />
         <div className="canvas-wrapper">
           <canvas ref={canvasRef}></canvas>

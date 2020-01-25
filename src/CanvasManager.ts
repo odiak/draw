@@ -2,6 +2,7 @@ import { Tool } from './types/Tool'
 import { Path, PictureService, Point } from './services/PictureService'
 import { generateId } from './utils/generateId'
 import { Subject } from './utils/Subject'
+import { Variable } from './utils/Variable'
 
 export class CanvasManager {
   private canvasElement: HTMLCanvasElement | null = null
@@ -14,8 +15,8 @@ export class CanvasManager {
   private width = 0
   private height = 0
 
-  private tool: Tool = 'pen'
-  private palmRejection = false
+  readonly tool = new Variable<Tool>('pen')
+  readonly palmRejection = new Variable(false)
 
   private paths: Path[] = []
   private drawingPath: Path | null = null
@@ -72,14 +73,6 @@ export class CanvasManager {
         f()
       }
     }
-  }
-
-  setTool(tool: Tool) {
-    this.tool = tool
-  }
-
-  setPalmRejection(palmRejection: boolean) {
-    this.palmRejection = palmRejection
   }
 
   addPaths(pathsToAdd: Path[]) {
@@ -140,7 +133,7 @@ export class CanvasManager {
   private getTouch(event: TouchEvent, dontCareTouchType: boolean): Touch | null {
     const touches = event.changedTouches
 
-    if (!this.palmRejection || dontCareTouchType) {
+    if (!this.palmRejection.value || dontCareTouchType) {
       return touches[0] || null
     }
 
@@ -171,7 +164,7 @@ export class CanvasManager {
   private handleMouseDown(event: MouseEvent) {
     this.updateOffset()
 
-    switch (this.tool) {
+    switch (this.tool.value) {
       case 'pen':
         this.drawingPath = {
           id: generateId(),
@@ -199,7 +192,7 @@ export class CanvasManager {
   }
 
   private handleMouseMove(event: MouseEvent) {
-    switch (this.tool) {
+    switch (this.tool.value) {
       case 'pen': {
         const { drawingPath } = this
         if (drawingPath != null) {
@@ -234,7 +227,7 @@ export class CanvasManager {
   }
 
   private handleGlobalMouseUp() {
-    switch (this.tool) {
+    switch (this.tool.value) {
       case 'pen': {
         const { drawingPath } = this
         if (drawingPath != null) {
@@ -269,7 +262,7 @@ export class CanvasManager {
   private handleTouchStart(event: TouchEvent) {
     this.updateOffset()
 
-    switch (this.tool) {
+    switch (this.tool.value) {
       case 'pen': {
         const p = this.getPointFromTouchEvent(event)
         if (p != null) {
@@ -306,7 +299,7 @@ export class CanvasManager {
   }
 
   private handleTouchMove(event: TouchEvent) {
-    switch (this.tool) {
+    switch (this.tool.value) {
       case 'pen': {
         const p = this.getPointFromTouchEvent(event)
         if (p != null) {
@@ -349,7 +342,7 @@ export class CanvasManager {
   }
 
   private handleTouchEnd(event: TouchEvent) {
-    switch (this.tool) {
+    switch (this.tool.value) {
       case 'pen': {
         const p = this.getPointFromTouchEvent(event)
         if (p != null) {
