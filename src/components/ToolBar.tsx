@@ -102,6 +102,7 @@ const Container = styled.div`
   .tools {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
   }
 
   .tool-group {
