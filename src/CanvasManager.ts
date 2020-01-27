@@ -15,6 +15,10 @@ export class CanvasManager {
   private width = 0
   private height = 0
 
+  // sizes in physical pixel
+  private widthPP = 0
+  private heightPP = 0
+
   readonly tool = new Variable<Tool>('pen')
   readonly palmRejection = new Variable(false)
 
@@ -46,10 +50,9 @@ export class CanvasManager {
 
   constructor(private pictureId: string) {
     this.scale.subscribe((scale, prevScale) => {
-      const { width, height, dpr } = this
       const r = scale / prevScale
-      const w2 = width / dpr / 2
-      const h2 = height / dpr / 2
+      const w2 = this.width / 2
+      const h2 = this.height / 2
       this.scrollLeft = this.bufferedScrollLeft = w2 * (r - 1) + r * this.scrollLeft
       this.scrollTop = this.bufferedScrollTop = h2 * (r - 1) + r * this.scrollTop
       this.tickDraw()
@@ -112,10 +115,12 @@ export class CanvasManager {
     const rect = ce.getBoundingClientRect()
     this.offsetLeft = rect.left
     this.offsetTop = rect.top
-    this.width = rect.width * this.dpr
-    this.height = rect.height * this.dpr
-    ce.width = this.width
-    ce.height = this.height
+    this.width = rect.width
+    this.height = rect.height
+    this.widthPP = rect.width * this.dpr
+    this.heightPP = rect.height * this.dpr
+    ce.width = this.widthPP
+    ce.height = this.heightPP
 
     this.draw()
   }
@@ -257,6 +262,7 @@ export class CanvasManager {
           if (drawingPath.points.length > 1) {
             this.paths = this.paths.concat([drawingPath])
             this.pictureService.addAndRemovePaths(this.pictureId, [drawingPath], null)
+            this.tickDraw()
           }
           this.drawingPath = null
         }
@@ -270,6 +276,7 @@ export class CanvasManager {
           if (newPaths !== paths) {
             this.paths = newPaths
             this.pictureService.addAndRemovePaths(this.pictureId, null, Array.from(erasingPathIds))
+            this.tickDraw()
           }
           this.erasingPathIds = null
         }
@@ -375,6 +382,7 @@ export class CanvasManager {
             if (drawingPath.points.length > 1) {
               this.paths = this.paths.concat([drawingPath])
               this.pictureService.addAndRemovePaths(this.pictureId, [drawingPath], null)
+              this.tickDraw()
             }
             this.drawingPath = null
           }
@@ -399,6 +407,7 @@ export class CanvasManager {
                 null,
                 Array.from(erasingPathIds)
               )
+              this.tickDraw()
             }
             this.erasingPathIds = null
           }
@@ -432,7 +441,7 @@ export class CanvasManager {
     const ctx = this.renderingContext
     if (ctx == null) return
 
-    ctx.clearRect(0, 0, this.width, this.height)
+    ctx.clearRect(0, 0, this.widthPP, this.heightPP)
 
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
@@ -460,6 +469,89 @@ export class CanvasManager {
 
     if (drawingPath != null) {
       drawPath(ctx, drawingPath, scrollLeft, scrollTop, dpr, scale)
+    }
+
+    this.drawScrollBar(ctx)
+  }
+
+  drawScrollBar(ctx: CanvasRenderingContext2D) {
+    const { min, max } = Math
+
+    let minDrawedX_ = Number.POSITIVE_INFINITY
+    let minDrawedY_ = Number.POSITIVE_INFINITY
+    let maxDrawedX_ = Number.NEGATIVE_INFINITY
+    let maxDrawedY_ = Number.NEGATIVE_INFINITY
+    for (const path of this.paths) {
+      for (const { x, y } of path.points) {
+        minDrawedX_ = min(minDrawedX_, x)
+        minDrawedY_ = min(minDrawedY_, y)
+        maxDrawedX_ = max(maxDrawedX_, x)
+        maxDrawedY_ = max(maxDrawedY_, y)
+      }
+    }
+
+    const {
+      scale: { value: scale },
+      scrollLeft,
+      scrollTop,
+      width,
+      height,
+      dpr
+    } = this
+    const minDrawedX = minDrawedX_ * scale - scrollLeft
+    const minDrawedY = minDrawedY_ * scale - scrollTop
+    const maxDrawedX = maxDrawedX_ * scale - scrollLeft
+    const maxDrawedY = maxDrawedY_ * scale - scrollTop
+
+    const barWidth1 = 6
+    const barWidth2 = 3
+    const offsetP = 10
+    const offsetO1 = 4.5
+    const offsetO2 = 6
+
+    const minViewX = 0
+    const minViewY = 0
+    const maxViewX = width
+    const maxViewY = height
+    const minX = min(minViewX, minDrawedX)
+    const minY = min(minViewY, minDrawedY)
+    const maxX = max(maxViewX, maxDrawedX)
+    const maxY = max(maxViewY, maxDrawedY)
+    const horizontalBarLength = width - offsetP * 2
+    const verticalBarLength = height - offsetP * 2
+    const shiftX = -minX
+    const shiftY = -minY
+    const scaleX = horizontalBarLength / (maxX - minX)
+    const scaleY = verticalBarLength / (maxY - minY)
+
+    ctx.fillStyle = '#0007'
+    ctx.fillRect(
+      ((minViewX + shiftX) * scaleX + offsetP) * dpr,
+      (height - offsetO1 - barWidth1) * dpr,
+      (maxViewX - minViewX) * scaleX * dpr,
+      barWidth1 * dpr
+    )
+    ctx.fillRect(
+      (width - offsetO1 - barWidth1) * dpr,
+      ((minViewY + shiftY) * scaleY + offsetP) * dpr,
+      barWidth1 * dpr,
+      (maxViewY - minViewY) * scaleY * dpr
+    )
+
+    if (Number.isFinite(minDrawedX + minDrawedY + maxDrawedX + maxDrawedY)) {
+      ctx.fillStyle = '#111a'
+      ctx.fillRect(
+        ((minDrawedX + shiftX) * scaleX + offsetP) * dpr,
+        (height - offsetO2 - barWidth2) * dpr,
+        (maxDrawedX - minDrawedX) * scaleX * dpr,
+        barWidth2 * dpr
+      )
+      ctx.fillRect(
+        (width - offsetO2 - barWidth2) * dpr,
+        ((minDrawedY + shiftY) * scaleY + offsetP) * dpr,
+        barWidth2 * dpr,
+        (maxDrawedY - minDrawedY) * scaleY * dpr
+      )
     }
   }
 
