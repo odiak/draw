@@ -21,6 +21,7 @@ export function DrawingScreen({}: Props) {
 
   const [selectedTool, setSelectedTool] = useVariable(canvasManager.tool)
   const [palmRejectionEnabled, setPalmRejectionEnabled] = useVariable(canvasManager.palmRejection)
+  const [scale] = useVariable(canvasManager.scale)
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -93,6 +94,13 @@ export function DrawingScreen({}: Props) {
           onSelectedToolChange={setSelectedTool}
           palmRejectionEnabled={palmRejectionEnabled}
           onPalmRejectionEnabledChange={setPalmRejectionEnabled}
+          onZoomIn={() => {
+            canvasManager.zoomIn()
+          }}
+          onZoomOut={() => {
+            canvasManager.zoomOut()
+          }}
+          scale={scale}
         />
         <div className="canvas-wrapper">
           <canvas ref={canvasRef}></canvas>

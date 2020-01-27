@@ -1,6 +1,11 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHandPointUp, faSlash } from '@fortawesome/free-solid-svg-icons'
+import {
+  faHandPointUp,
+  faSlash,
+  faSearchPlus,
+  faSearchMinus
+} from '@fortawesome/free-solid-svg-icons'
 import { ToolButton } from './ToolButton'
 import { Tool } from '../types/Tool'
 import classNames from 'classnames'
@@ -13,6 +18,9 @@ type Props = {
   onTitleChange: (title: string) => void
   palmRejectionEnabled: boolean
   onPalmRejectionEnabledChange: (enabled: boolean) => void
+  onZoomIn(): void
+  onZoomOut(): void
+  scale: number
 }
 
 function makeToolButton(
@@ -35,7 +43,10 @@ export function ToolBar({
   title,
   onTitleChange,
   palmRejectionEnabled,
-  onPalmRejectionEnabledChange
+  onPalmRejectionEnabledChange,
+  onZoomIn,
+  onZoomOut,
+  scale
 }: Props) {
   return (
     <Container>
@@ -47,17 +58,29 @@ export function ToolBar({
           {makeToolButton('eraser', selectedTool, onSelectedToolChange)}
         </div>
 
-        <button
-          className={classNames('tool-bar-button', { selected: palmRejectionEnabled })}
-          onClick={() => {
-            onPalmRejectionEnabledChange(!palmRejectionEnabled)
-          }}
-        >
-          <span className="fa-layers fa-fw">
-            <FontAwesomeIcon icon={faHandPointUp} className="icon" />
-            <FontAwesomeIcon icon={faSlash} className="icon" />
-          </span>
-        </button>
+        <div className="tool-group">
+          <button
+            className={classNames('tool-bar-button', { selected: palmRejectionEnabled })}
+            onClick={() => {
+              onPalmRejectionEnabledChange(!palmRejectionEnabled)
+            }}
+          >
+            <span className="fa-layers fa-fw">
+              <FontAwesomeIcon icon={faHandPointUp} className="icon" />
+              <FontAwesomeIcon icon={faSlash} className="icon" />
+            </span>
+          </button>
+        </div>
+
+        <div className="tool-group">
+          <button className="tool-bar-button" onClick={onZoomOut}>
+            <FontAwesomeIcon className="icon" icon={faSearchMinus} />
+          </button>
+          <button className="tool-bar-button" onClick={onZoomIn}>
+            <FontAwesomeIcon className="icon" icon={faSearchPlus} />
+          </button>
+          {(scale * 100).toFixed()}%
+        </div>
       </div>
     </Container>
   )

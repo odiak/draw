@@ -42,7 +42,19 @@ export class CanvasManager {
   readonly onPathsAdded = new Subject<Path[]>()
   readonly onPathsRemoved = new Subject<string[]>()
 
-  constructor(private pictureId: string) {}
+  readonly scale = new Variable(1.0)
+
+  constructor(private pictureId: string) {
+    this.scale.subscribe((scale, prevScale) => {
+      const { width, height, dpr } = this
+      const r = scale / prevScale
+      const w2 = width / dpr / 2
+      const h2 = height / dpr / 2
+      this.scrollLeft = this.bufferedScrollLeft = w2 * (r - 1) + r * this.scrollLeft
+      this.scrollTop = this.bufferedScrollTop = h2 * (r - 1) + r * this.scrollTop
+      this.tickDraw()
+    })
+  }
 
   setCanvasElement(elem: HTMLCanvasElement) {
     if (elem === this.canvasElement) return
@@ -85,6 +97,14 @@ export class CanvasManager {
     this.tickDraw()
   }
 
+  zoomIn() {
+    this.scale.update((s) => s * 1.1)
+  }
+
+  zoomOut() {
+    this.scale.update((s) => s / 1.1)
+  }
+
   private handleResize() {
     const ce = this.canvasElement
     if (ce == null) return
@@ -123,8 +143,9 @@ export class CanvasManager {
     let y = event.clientY - this.offsetTop
 
     if (!ignoreScroll) {
-      x += this.scrollLeft
-      y += this.scrollTop
+      const scale = this.scale.value
+      x = (x + this.scrollLeft) / scale
+      y = (y + this.scrollTop) / scale
     }
 
     return { x, y }
@@ -154,9 +175,11 @@ export class CanvasManager {
 
     let x = touch.clientX - this.offsetLeft
     let y = touch.clientY - this.offsetTop
+
     if (!ignoreScrollAndTouchType) {
-      x += this.scrollLeft
-      y += this.scrollTop
+      const scale = this.scale.value
+      x = (x + this.scrollLeft) / scale
+      y = (y + this.scrollTop) / scale
     }
     return { x, y }
   }
@@ -414,22 +437,29 @@ export class CanvasManager {
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
 
-    const { erasingPathIds, dpr, scrollLeft, scrollTop, drawingPath } = this
+    const {
+      erasingPathIds,
+      dpr,
+      scrollLeft,
+      scrollTop,
+      drawingPath,
+      scale: { value: scale }
+    } = this
 
     if (erasingPathIds == null) {
       for (const path of this.paths) {
-        drawPath(ctx, path, this.scrollLeft, this.scrollTop, dpr)
+        drawPath(ctx, path, scrollLeft, scrollTop, dpr, scale)
       }
     } else {
       for (const path of this.paths) {
         if (!erasingPathIds.has(path.id)) {
-          drawPath(ctx, path, scrollLeft, scrollTop, dpr)
+          drawPath(ctx, path, scrollLeft, scrollTop, dpr, scale)
         }
       }
     }
 
     if (drawingPath != null) {
-      drawPath(ctx, drawingPath, scrollLeft, scrollTop, dpr)
+      drawPath(ctx, drawingPath, scrollLeft, scrollTop, dpr, scale)
     }
   }
 
@@ -461,19 +491,20 @@ function drawPath(
   { width, color, points }: Path,
   scrollLeft: number,
   scrollTop: number,
-  dpr: number
+  dpr: number,
+  scale: number
 ) {
   if (points.length === 0) {
     return
   }
 
-  ctx.lineWidth = width * dpr
+  ctx.lineWidth = width * scale * dpr
   ctx.strokeStyle = color
   let first = true
   ctx.beginPath()
   for (const { x, y } of points) {
-    const realX = (x - scrollLeft) * dpr
-    const realY = (y - scrollTop) * dpr
+    const realX = (x * scale - scrollLeft) * dpr
+    const realY = (y * scale - scrollTop) * dpr
     if (first) {
       ctx.moveTo(realX, realY)
       first = false
