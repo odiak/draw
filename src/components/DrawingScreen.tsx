@@ -46,7 +46,7 @@ export function DrawingScreen({}: Props) {
           setTitle(title)
         }
         if (paths != null) {
-          canvasManager.addPaths(paths)
+          canvasManager.addPathsAndAdjustPosition(paths)
         }
       }
     })

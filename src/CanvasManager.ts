@@ -95,6 +95,28 @@ export class CanvasManager {
     this.tickDraw()
   }
 
+  addPathsAndAdjustPosition(pathsToAdd: Path[]) {
+    const wasEmpty = this.paths.length === 0
+    this.paths = addPaths(this.paths, pathsToAdd)
+
+    if (wasEmpty) {
+      let minX = Number.POSITIVE_INFINITY
+      let minY = Number.POSITIVE_INFINITY
+      for (const path of this.paths) {
+        for (const { x, y } of path.points) {
+          minX = Math.min(minX, x)
+          minY = Math.min(minY, y)
+        }
+      }
+      if (Number.isFinite(minX + minY)) {
+        this.scrollLeft = this.bufferedScrollLeft = minX - 40
+        this.scrollTop = this.bufferedScrollTop = minY - 40
+      }
+    }
+
+    this.tickDraw()
+  }
+
   removePathsById(pathIdsToRemove: string[]) {
     this.paths = removePathsByIds(this.paths, pathIdsToRemove)
     this.tickDraw()
