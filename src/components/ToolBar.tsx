@@ -79,7 +79,7 @@ export function ToolBar({
           <button className="tool-bar-button" onClick={onZoomIn}>
             <FontAwesomeIcon className="icon" icon={faSearchPlus} />
           </button>
-          {(scale * 100).toFixed()}%
+          <span>{(scale * 100).toFixed()}%</span>
         </div>
       </div>
     </Container>
@@ -89,10 +89,13 @@ export function ToolBar({
 const Container = styled.div`
   display: block;
   border-bottom: 1px solid #000;
+  touch-action: manipulation;
 
   input {
     display: block;
     border: 1px solid transparent;
+    padding: 3px;
+    width: 300px;
 
     &:hover {
       border-color: #ccc;
@@ -103,6 +106,7 @@ const Container = styled.div`
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    margin-top: 4px;
   }
 
   .tool-group {
