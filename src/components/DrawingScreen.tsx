@@ -101,6 +101,8 @@ export function DrawingScreen({}: Props) {
             canvasManager.zoomOut()
           }}
           scale={scale}
+          imageLink={`https://i.kakeru.app/${pictureId}.svg`}
+          pageLink={`https://kakeru.app/${pictureId}`}
         />
         <div className="canvas-wrapper">
           <canvas ref={canvasRef}></canvas>
