@@ -123,8 +123,8 @@ export function ToolBar({
     window.addEventListener('keydown', onKeyDown)
 
     return () => {
-      document.removeEventListener('click', onClick)
-      document.removeEventListener('touchstart', onTouchStart)
+      document.removeEventListener('click', onClick, { capture: true })
+      document.removeEventListener('touchstart', onTouchStart, { capture: true })
       window.removeEventListener('keydown', onKeyDown)
     }
   }, [menuButtonRef, menuRef, showMenu, closeMenu])
