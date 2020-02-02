@@ -131,7 +131,12 @@ export function ToolBar({
 
   return (
     <Container>
-      <input type="text" value={title} onChange={(e) => onTitleChange(e.target.value)} />
+      <input
+        type="text"
+        value={title}
+        onChange={(e) => onTitleChange(e.target.value)}
+        placeholder="Title"
+      />
       <MenuButton
         ref={menuButtonRef}
         onClick={() => {

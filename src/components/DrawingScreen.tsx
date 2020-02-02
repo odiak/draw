@@ -51,11 +51,9 @@ export function DrawingScreen({}: Props) {
       }
     })
 
-    pictureService.watchPicture(
+    const unwatch = pictureService.watchPicture(
       pictureId,
-      ({ pictureId: targetPictureId, title: newTitle, pathsToAdd, pathIdsToRemove }) => {
-        if (targetPictureId !== pictureId) return
-
+      ({ title: newTitle, pathsToAdd, pathIdsToRemove }) => {
         if (newTitle != null) {
           setTitle(newTitle)
         }
@@ -77,7 +75,7 @@ export function DrawingScreen({}: Props) {
     })
 
     return () => {
-      pictureService.unwatchPicture(pictureId)
+      unwatch()
       unsubscribeAdd()
       unsubscribeRemove()
     }
@@ -85,10 +83,10 @@ export function DrawingScreen({}: Props) {
 
   return (
     <>
-      <Title>{title || defaultTitle}</Title>
+      <Title>{title ?? defaultTitle}</Title>
       <Container>
         <ToolBar
-          title={title || defaultTitle}
+          title={title ?? defaultTitle}
           onTitleChange={setTitle}
           selectedTool={selectedTool}
           onSelectedToolChange={setSelectedTool}
