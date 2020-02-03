@@ -1,12 +1,19 @@
 import path from 'path'
 import webpack from 'webpack'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
+import 'webpack-dev-server'
+// @ts-ignore
+import PnpWebpackPlugin from 'pnp-webpack-plugin'
 
 const config: webpack.Configuration = {
   mode: 'development',
   entry: './src/index.tsx',
   resolve: {
-    extensions: ['.ts', '.tsx', '.js']
+    extensions: ['.ts', '.tsx', '.js'],
+    plugins: [PnpWebpackPlugin]
+  },
+  resolveLoader: {
+    plugins: [PnpWebpackPlugin.moduleLoader(module)]
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
