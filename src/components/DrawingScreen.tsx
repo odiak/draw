@@ -59,7 +59,7 @@ export function DrawingScreen({}: Props) {
         }
 
         if (pathsToAdd != null) {
-          canvasManager.addPaths(pathsToAdd)
+          canvasManager.addPathsAndAdjustPosition(pathsToAdd)
         }
         if (pathIdsToRemove != null) {
           canvasManager.removePathsById(pathIdsToRemove)
