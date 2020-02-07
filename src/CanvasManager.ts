@@ -22,7 +22,7 @@ export class CanvasManager {
   readonly tool = new Variable<Tool>('pen')
   readonly palmRejection = new Variable(false)
 
-  private paths: Path[] = []
+  private paths = new Map<string, Path>()
   private drawingPath: Path | null = null
   private erasingPathIds: Set<string> | null = null
 
@@ -91,18 +91,18 @@ export class CanvasManager {
   }
 
   addPaths(pathsToAdd: Path[]) {
-    this.paths = addPaths(this.paths, pathsToAdd)
+    addPaths(this.paths, pathsToAdd)
     this.tickDraw()
   }
 
   addPathsAndAdjustPosition(pathsToAdd: Path[]) {
-    const wasEmpty = this.paths.length === 0
-    this.paths = addPaths(this.paths, pathsToAdd)
+    const wasEmpty = this.paths.size === 0
+    addPaths(this.paths, pathsToAdd)
 
     if (wasEmpty) {
       let minX = Number.POSITIVE_INFINITY
       let minY = Number.POSITIVE_INFINITY
-      for (const path of this.paths) {
+      for (const path of this.paths.values()) {
         for (const { x, y } of path.points) {
           minX = Math.min(minX, x)
           minY = Math.min(minY, y)
@@ -118,7 +118,7 @@ export class CanvasManager {
   }
 
   removePathsById(pathIdsToRemove: string[]) {
-    this.paths = removePathsByIds(this.paths, pathIdsToRemove)
+    removePaths(this.paths, pathIdsToRemove)
     this.tickDraw()
   }
 
@@ -282,7 +282,7 @@ export class CanvasManager {
         const { drawingPath } = this
         if (drawingPath != null) {
           if (drawingPath.points.length > 1) {
-            this.paths = this.paths.concat([drawingPath])
+            this.paths.set(drawingPath.id, drawingPath)
             this.pictureService.addAndRemovePaths(this.pictureId, [drawingPath], null)
             this.tickDraw()
           }
@@ -294,10 +294,9 @@ export class CanvasManager {
       case 'eraser': {
         const { erasingPathIds, paths } = this
         if (erasingPathIds != null) {
-          const newPaths = removePaths(paths, erasingPathIds)
-          if (newPaths !== paths) {
-            this.paths = newPaths
-            this.pictureService.addAndRemovePaths(this.pictureId, null, Array.from(erasingPathIds))
+          const removedCount = removePaths(paths, erasingPathIds)
+          if (removedCount > 0) {
+            this.pictureService.addAndRemovePaths(this.pictureId, null, [...erasingPathIds])
             this.tickDraw()
           }
           this.erasingPathIds = null
@@ -402,7 +401,7 @@ export class CanvasManager {
           if (drawingPath != null) {
             pushPoint(drawingPath.points, p)
             if (drawingPath.points.length > 1) {
-              this.paths = this.paths.concat([drawingPath])
+              this.paths.set(drawingPath.id, drawingPath)
               this.pictureService.addAndRemovePaths(this.pictureId, [drawingPath], null)
               this.tickDraw()
             }
@@ -421,14 +420,9 @@ export class CanvasManager {
             const pathIdsToRemove = erase(this.paths, p)
             addToSet(erasingPathIds, pathIdsToRemove)
 
-            const newPaths = removePaths(this.paths, erasingPathIds)
-            if (newPaths !== this.paths) {
-              this.paths = newPaths
-              this.pictureService.addAndRemovePaths(
-                this.pictureId,
-                null,
-                Array.from(erasingPathIds)
-              )
+            const removedCount = removePaths(this.paths, erasingPathIds)
+            if (removedCount > 0) {
+              this.pictureService.addAndRemovePaths(this.pictureId, null, [...pathIdsToRemove])
               this.tickDraw()
             }
             this.erasingPathIds = null
@@ -478,11 +472,11 @@ export class CanvasManager {
     } = this
 
     if (erasingPathIds == null) {
-      for (const path of this.paths) {
+      for (const path of this.paths.values()) {
         drawPath(ctx, path, scrollLeft, scrollTop, dpr, scale)
       }
     } else {
-      for (const path of this.paths) {
+      for (const path of this.paths.values()) {
         if (!erasingPathIds.has(path.id)) {
           drawPath(ctx, path, scrollLeft, scrollTop, dpr, scale)
         }
@@ -503,7 +497,7 @@ export class CanvasManager {
     let minDrawedY_ = Number.POSITIVE_INFINITY
     let maxDrawedX_ = Number.NEGATIVE_INFINITY
     let maxDrawedY_ = Number.NEGATIVE_INFINITY
-    for (const path of this.paths) {
+    for (const path of this.paths.values()) {
       for (const { x, y } of path.points) {
         minDrawedX_ = min(minDrawedX_, x)
         minDrawedY_ = min(minDrawedY_, y)
@@ -643,10 +637,10 @@ function pushPoint(points: Point[] | null | undefined, point: Point) {
   points.push(point)
 }
 
-function erase(paths: Path[], p1: Point): string[] {
+function erase(paths: Map<string, Path>, p1: Point): string[] {
   const pathIdsToRemove: string[] = []
 
-  for (const { points, id } of paths) {
+  for (const { points, id } of paths.values()) {
     if (points.some((p2) => isCloser(p1, p2, 3))) {
       pathIdsToRemove.push(id)
     }
@@ -660,30 +654,18 @@ function isCloser({ x: x1, y: y1 }: Point, { x: x2, y: y2 }: Point, r: number): 
   return d <= r ** 2
 }
 
-function removePaths(paths: Path[], pathIdsToRemove: Set<string>): Path[] {
-  const newPaths = paths.filter((path) => !pathIdsToRemove.has(path.id))
-  if (newPaths.length === paths.length) {
-    return paths
+function removePaths(paths: Map<string, Path>, pathIdsToRemove: Iterable<string>): number {
+  let count = 0
+  for (const pathId of pathIdsToRemove) {
+    if (paths.delete(pathId)) count++
   }
-  return newPaths
+  return count
 }
 
-function addPaths(paths: Path[], pathsToAdd: Path[]): Path[] {
-  const idSet = new Set(paths.map(({ id }) => id))
-  const pathsToReallyAdd = pathsToAdd.filter(({ id }) => {
-    if (idSet.has(id)) return false
-    idSet.add(id)
-    return true
-  })
-  if (pathsToReallyAdd.length === 0) return paths
-  return paths.concat(pathsToReallyAdd)
-}
-
-function removePathsByIds(paths: Path[], pathIdsToRemove: string[]): Path[] {
-  const pathIdsSetToRemove = new Set(pathIdsToRemove)
-  const newPaths = paths.filter(({ id }) => !pathIdsSetToRemove.has(id))
-  if (newPaths.length === paths.length) return paths
-  return newPaths
+function addPaths(paths: Map<string, Path>, pathsToAdd: Path[]) {
+  for (const path of pathsToAdd) {
+    paths.set(path.id, path)
+  }
 }
 
 function addToSet<T>(set: Set<T>, items: Iterable<T>) {
