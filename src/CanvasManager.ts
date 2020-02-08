@@ -159,8 +159,9 @@ export class CanvasManager {
     if (this.canRedo.value !== canRedo) this.canRedo.next(canRedo)
   }
 
-  private doOperation(operation: Operation) {
+  private doOperation(operation: Operation, redo: boolean = false) {
     this.doneOperationStack.push(operation)
+    if (!redo) this.undoneOperationStack = []
     this.checkOperationStack()
 
     switch (operation.type) {
@@ -215,7 +216,7 @@ export class CanvasManager {
     this.checkOperationStack()
     if (op == null) return false
 
-    this.doOperation(op)
+    this.doOperation(op, true)
     return true
   }
 
