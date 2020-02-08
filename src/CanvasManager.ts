@@ -4,6 +4,18 @@ import { generateId } from './utils/generateId'
 import { Subject } from './utils/Subject'
 import { Variable } from './utils/Variable'
 
+type Operation =
+  | Readonly<{
+      type: 'add'
+      paths: Path[]
+    }>
+  | Readonly<{
+      type: 'remove'
+      paths: Path[]
+    }>
+
+type StackType = 'done' | 'undone'
+
 export class CanvasManager {
   private canvasElement: HTMLCanvasElement | null = null
   private renderingContext: CanvasRenderingContext2D | null = null
@@ -47,6 +59,12 @@ export class CanvasManager {
   readonly onPathsRemoved = new Subject<string[]>()
 
   readonly scale = new Variable(1.0)
+
+  private doneOperationStack: Operation[] = []
+  private undoneOperationStack: Operation[] = []
+
+  readonly canUndo = new Variable<boolean>(false)
+  readonly canRedo = new Variable<boolean>(false)
 
   constructor(private pictureId: string) {
     this.scale.subscribe((scale, prevScale) => {
@@ -122,12 +140,83 @@ export class CanvasManager {
     this.tickDraw()
   }
 
+  private addPathsInternal(paths: Path[]) {
+    addPaths(this.paths, paths)
+    this.pictureService.addAndRemovePaths(this.pictureId, paths, null)
+  }
+
+  private removePathsInternal(paths: Path[]) {
+    const pathIds = paths.map((p) => p.id)
+    removePaths(this.paths, pathIds)
+    this.pictureService.addAndRemovePaths(this.pictureId, null, pathIds)
+  }
+
+  private checkOperationStack() {
+    const canUndo = this.doneOperationStack.length !== 0
+    const canRedo = this.undoneOperationStack.length !== 0
+
+    if (this.canUndo.value !== canUndo) this.canUndo.next(canUndo)
+    if (this.canRedo.value !== canRedo) this.canRedo.next(canRedo)
+  }
+
+  private doOperation(operation: Operation) {
+    this.doneOperationStack.push(operation)
+    this.checkOperationStack()
+
+    switch (operation.type) {
+      case 'add':
+        this.addPathsInternal(operation.paths)
+        break
+
+      case 'remove':
+        this.removePathsInternal(operation.paths)
+        break
+    }
+
+    this.tickDraw()
+  }
+
+  private undoOperation(operation: Operation) {
+    this.undoneOperationStack.push(operation)
+    this.checkOperationStack()
+
+    switch (operation.type) {
+      case 'add':
+        this.removePathsInternal(operation.paths)
+        break
+
+      case 'remove':
+        this.addPathsInternal(operation.paths)
+        break
+    }
+
+    this.tickDraw()
+  }
+
   zoomIn() {
     this.scale.update((s) => s * 1.1)
   }
 
   zoomOut() {
     this.scale.update((s) => s / 1.1)
+  }
+
+  undo(): boolean {
+    const op = this.doneOperationStack.pop()
+    this.checkOperationStack()
+    if (op == null) return false
+
+    this.undoOperation(op)
+    return true
+  }
+
+  redo(): boolean {
+    const op = this.undoneOperationStack.pop()
+    this.checkOperationStack()
+    if (op == null) return false
+
+    this.doOperation(op)
+    return true
   }
 
   private handleResize() {
@@ -211,6 +300,36 @@ export class CanvasManager {
     return { x, y }
   }
 
+  private addDrawingPath() {
+    const { drawingPath } = this
+    if (drawingPath == null) return
+
+    this.drawingPath = null
+    if (drawingPath.points.length !== 0) {
+      this.doOperation({ type: 'add', paths: [drawingPath] })
+    }
+  }
+
+  private removeErasingPaths() {
+    const { erasingPathIds } = this
+    if (erasingPathIds == null) return
+
+    this.erasingPathIds = null
+
+    const erasingPaths: Path[] = []
+    for (const id of erasingPathIds) {
+      const path = this.paths.get(id)
+      if (path == null) {
+        erasingPathIds.delete(id)
+      } else {
+        erasingPaths.push(path)
+      }
+    }
+    if (erasingPathIds.size === 0) return
+
+    this.doOperation({ type: 'remove', paths: erasingPaths })
+  }
+
   private handleMouseDown(event: MouseEvent) {
     this.updateOffset()
 
@@ -278,31 +397,13 @@ export class CanvasManager {
 
   private handleGlobalMouseUp() {
     switch (this.tool.value) {
-      case 'pen': {
-        const { drawingPath } = this
-        if (drawingPath != null) {
-          if (drawingPath.points.length > 1) {
-            this.paths.set(drawingPath.id, drawingPath)
-            this.pictureService.addAndRemovePaths(this.pictureId, [drawingPath], null)
-            this.tickDraw()
-          }
-          this.drawingPath = null
-        }
+      case 'pen':
+        this.addDrawingPath()
         break
-      }
 
-      case 'eraser': {
-        const { erasingPathIds, paths } = this
-        if (erasingPathIds != null) {
-          const removedCount = removePaths(paths, erasingPathIds)
-          if (removedCount > 0) {
-            this.pictureService.addAndRemovePaths(this.pictureId, null, [...erasingPathIds])
-            this.tickDraw()
-          }
-          this.erasingPathIds = null
-        }
+      case 'eraser':
+        this.removeErasingPaths()
         break
-      }
 
       case 'hand':
         this.handScrollingByMouse = false
@@ -397,16 +498,8 @@ export class CanvasManager {
       case 'pen': {
         const p = this.getPointFromTouchEvent(event)
         if (p != null) {
-          const { drawingPath } = this
-          if (drawingPath != null) {
-            pushPoint(drawingPath.points, p)
-            if (drawingPath.points.length > 1) {
-              this.paths.set(drawingPath.id, drawingPath)
-              this.pictureService.addAndRemovePaths(this.pictureId, [drawingPath], null)
-              this.tickDraw()
-            }
-            this.drawingPath = null
-          }
+          pushPoint(this.drawingPath?.points, p)
+          this.addDrawingPath()
           break
         }
       }
@@ -415,18 +508,8 @@ export class CanvasManager {
       case 'eraser': {
         const p = this.getPointFromTouchEvent(event)
         if (p != null) {
-          const { erasingPathIds } = this
-          if (erasingPathIds != null) {
-            const pathIdsToRemove = erase(this.paths, p)
-            addToSet(erasingPathIds, pathIdsToRemove)
-
-            const removedCount = removePaths(this.paths, erasingPathIds)
-            if (removedCount > 0) {
-              this.pictureService.addAndRemovePaths(this.pictureId, null, [...pathIdsToRemove])
-              this.tickDraw()
-            }
-            this.erasingPathIds = null
-          }
+          addToSet(this.erasingPathIds, erase(this.paths, p))
+          this.removeErasingPaths()
           break
         }
       }
@@ -668,7 +751,9 @@ function addPaths(paths: Map<string, Path>, pathsToAdd: Path[]) {
   }
 }
 
-function addToSet<T>(set: Set<T>, items: Iterable<T>) {
+function addToSet<T>(set: Set<T> | null | undefined, items: Iterable<T>) {
+  if (set == null) return
+
   for (const item of items) {
     set.add(item)
   }

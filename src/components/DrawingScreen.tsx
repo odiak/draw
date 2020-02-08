@@ -23,6 +23,9 @@ export function DrawingScreen({}: Props) {
   const [palmRejectionEnabled, setPalmRejectionEnabled] = useVariable(canvasManager.palmRejection)
   const [scale] = useVariable(canvasManager.scale)
 
+  const [canUndo] = useVariable(canvasManager.canUndo)
+  const [canRedo] = useVariable(canvasManager.canRedo)
+
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useLayoutEffect(() => {
@@ -101,6 +104,14 @@ export function DrawingScreen({}: Props) {
           scale={scale}
           imageLink={`https://i.kakeru.app/${pictureId}.svg`}
           pageLink={`https://kakeru.app/${pictureId}`}
+          canUndo={canUndo}
+          canRedo={canRedo}
+          onUndo={() => {
+            canvasManager.undo()
+          }}
+          onRedo={() => {
+            canvasManager.redo()
+          }}
         />
         <div className="canvas-wrapper">
           <canvas ref={canvasRef}></canvas>

@@ -25,6 +25,9 @@
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
     "@typescript-eslint/no-unused-vars": "warn",
-    "no-empty-pattern": "off"
+    "no-empty-pattern": "off",
+    "no-unused-vars": ["warn", { "varsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-unused-vars": ["warn", { "varsIgnorePattern": "^_" }],
+    "eqeqeq": ["error", "always", { "null": "ignore" }]
   }
 }

@@ -62,10 +62,14 @@ export class PictureService {
 
     if (pathsToAdd != null) {
       for (const path of pathsToAdd) {
-        batch.set(pathsCollection.doc(path.id), {
-          ...encodePath(path),
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        })
+        batch.set(
+          pathsCollection.doc(path.id),
+          {
+            ...encodePath(path),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          },
+          { merge: true }
+        )
       }
     }
     if (pathIdsToRemove != null) {

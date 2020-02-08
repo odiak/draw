@@ -5,7 +5,9 @@ import {
   faSlash,
   faSearchPlus,
   faSearchMinus,
-  faEllipsisH
+  faEllipsisH,
+  faUndo,
+  faRedo
 } from '@fortawesome/free-solid-svg-icons'
 import { ToolButton } from './ToolButton'
 import { Tool } from '../types/Tool'
@@ -25,6 +27,10 @@ type Props = {
   scale: number
   imageLink: string
   pageLink: string
+  canUndo: boolean
+  canRedo: boolean
+  onUndo: () => void
+  onRedo: () => void
 }
 
 function makeToolButton(
@@ -75,7 +81,11 @@ export function ToolBar({
   onZoomOut,
   scale,
   imageLink,
-  pageLink
+  pageLink,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo
 }: Props) {
   const [showMenu, setShowMenu] = useState(false)
 
@@ -189,6 +199,15 @@ export function ToolBar({
             <FontAwesomeIcon className="icon" icon={faSearchPlus} />
           </button>
           <span>{(scale * 100).toFixed()}%</span>
+        </div>
+
+        <div className="tool-group">
+          <button className="tool-bar-button" disabled={!canUndo} onClick={onUndo}>
+            <FontAwesomeIcon className="icon" icon={faUndo} />
+          </button>
+          <button className="tool-bar-button" disabled={!canRedo} onClick={onRedo}>
+            <FontAwesomeIcon className="icon" icon={faRedo} />
+          </button>
         </div>
       </div>
     </Container>
