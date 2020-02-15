@@ -14,8 +14,6 @@ type Operation =
       paths: Path[]
     }>
 
-type StackType = 'done' | 'undone'
-
 export class CanvasManager {
   private canvasElement: HTMLCanvasElement | null = null
   private renderingContext: CanvasRenderingContext2D | null = null
@@ -66,6 +64,8 @@ export class CanvasManager {
   readonly canUndo = new Variable<boolean>(false)
   readonly canRedo = new Variable<boolean>(false)
 
+  private imageCache: ImageData | null = null
+
   constructor(private pictureId: string) {
     this.scale.subscribe((scale, prevScale) => {
       const r = scale / prevScale
@@ -110,6 +110,9 @@ export class CanvasManager {
 
   addPaths(pathsToAdd: Path[]) {
     addPaths(this.paths, pathsToAdd)
+
+    this.invalidateImageCache()
+
     this.tickDraw()
   }
 
@@ -132,11 +135,16 @@ export class CanvasManager {
       }
     }
 
+    this.invalidateImageCache()
+
     this.tickDraw()
   }
 
   removePathsById(pathIdsToRemove: string[]) {
     removePaths(this.paths, pathIdsToRemove)
+
+    this.invalidateImageCache()
+
     this.tickDraw()
   }
 
@@ -174,6 +182,8 @@ export class CanvasManager {
         break
     }
 
+    this.invalidateImageCache()
+
     this.tickDraw()
   }
 
@@ -191,14 +201,20 @@ export class CanvasManager {
         break
     }
 
+    this.invalidateImageCache()
+
     this.tickDraw()
   }
 
   zoomIn() {
+    this.invalidateImageCache()
+
     this.scale.update((s) => s * 1.1)
   }
 
   zoomOut() {
+    this.invalidateImageCache()
+
     this.scale.update((s) => s / 1.1)
   }
 
@@ -233,6 +249,8 @@ export class CanvasManager {
     this.heightPP = rect.height * this.dpr
     ce.width = this.widthPP
     ce.height = this.heightPP
+
+    this.invalidateImageCache()
 
     this.draw()
   }
@@ -347,6 +365,7 @@ export class CanvasManager {
       case 'eraser': {
         const p = this.getPointFromMouseEvent(event)
         this.erasingPathIds = new Set(erase(this.paths, p))
+        this.invalidateImageCache()
         this.tickDraw()
         break
       }
@@ -377,6 +396,7 @@ export class CanvasManager {
         if (erasingPathIds != null) {
           const p = this.getPointFromMouseEvent(event)
           addToSet(erasingPathIds, erase(this.paths, p))
+          this.invalidateImageCache()
           this.tickDraw()
         }
         break
@@ -435,6 +455,7 @@ export class CanvasManager {
           } else {
             this.erasingPathIds = new Set(pathIdsToRemove)
           }
+          this.invalidateImageCache()
           this.tickDraw()
           break
         }
@@ -473,6 +494,7 @@ export class CanvasManager {
           if (erasingPathIds != null) {
             const pathIdsToRemove = erase(this.paths, p)
             addToSet(erasingPathIds, pathIdsToRemove)
+            this.invalidateImageCache()
             this.tickDraw()
           }
           break
@@ -537,6 +559,22 @@ export class CanvasManager {
     this.tickScroll()
   }
 
+  private drawFromCache(ctx: CanvasRenderingContext2D): boolean {
+    const { imageCache } = this
+    if (imageCache == null) return false
+
+    ctx.putImageData(imageCache, 0, 0)
+    return true
+  }
+
+  private cacheImage(ctx: CanvasRenderingContext2D): void {
+    this.imageCache = ctx.getImageData(0, 0, this.widthPP, this.heightPP)
+  }
+
+  private invalidateImageCache(): void {
+    this.imageCache = null
+  }
+
   private draw() {
     const ctx = this.renderingContext
     if (ctx == null) return
@@ -556,14 +594,22 @@ export class CanvasManager {
     } = this
 
     if (erasingPathIds == null) {
-      for (const path of this.paths.values()) {
-        drawPath(ctx, path, scrollLeft, scrollTop, dpr, scale)
-      }
-    } else {
-      for (const path of this.paths.values()) {
-        if (!erasingPathIds.has(path.id)) {
+      if (drawingPath == null || !this.drawFromCache(ctx)) {
+        for (const path of this.paths.values()) {
           drawPath(ctx, path, scrollLeft, scrollTop, dpr, scale)
         }
+        if (drawingPath != null) {
+          this.cacheImage(ctx)
+        }
+      }
+    } else {
+      if (!this.drawFromCache(ctx)) {
+        for (const path of this.paths.values()) {
+          if (!erasingPathIds.has(path.id)) {
+            drawPath(ctx, path, scrollLeft, scrollTop, dpr, scale)
+          }
+        }
+        this.cacheImage(ctx)
       }
     }
 
@@ -673,6 +719,9 @@ export class CanvasManager {
       this.scrollLeft = this.bufferedScrollLeft
       this.scrollTop = this.bufferedScrollTop
       this.tickingScroll = false
+
+      this.invalidateImageCache()
+
       this.draw()
     })
   }
