@@ -14,6 +14,15 @@ type Operation =
       paths: Path[]
     }>
 
+type PathBoundary = {
+  minX: number
+  minY: number
+  maxX: number
+  maxY: number
+}
+
+type PathWithBoundary = Path & { boundary?: PathBoundary }
+
 export class CanvasManager {
   private canvasElement: HTMLCanvasElement | null = null
   private renderingContext: CanvasRenderingContext2D | null = null
@@ -32,7 +41,7 @@ export class CanvasManager {
   readonly tool = new Variable<Tool>('pen')
   readonly palmRejection = new Variable(false)
 
-  private paths = new Map<string, Path>()
+  private paths = new Map<string, PathWithBoundary>()
   private drawingPath: Path | null = null
   private erasingPathIds: Set<string> | null = null
 
@@ -63,6 +72,8 @@ export class CanvasManager {
 
   readonly canUndo = new Variable<boolean>(false)
   readonly canRedo = new Variable<boolean>(false)
+
+  private pathBoundaries = new Map<string, PathBoundary>()
 
   constructor(private pictureId: string) {
     this.scale.subscribe((scale, prevScale) => {
@@ -543,6 +554,29 @@ export class CanvasManager {
     this.tickScroll()
   }
 
+  private getPathBoundary(path: PathWithBoundary): PathBoundary {
+    const { min, max } = Math
+
+    let boundary = path.boundary
+    if (boundary != null) {
+      return boundary
+    }
+
+    let minX = Number.POSITIVE_INFINITY
+    let minY = Number.POSITIVE_INFINITY
+    let maxX = Number.NEGATIVE_INFINITY
+    let maxY = Number.NEGATIVE_INFINITY
+    for (const { x, y } of path.points) {
+      minX = min(minX, x)
+      minY = min(minY, y)
+      maxX = max(maxX, x)
+      maxY = max(maxY, y)
+    }
+    boundary = { minX, minY, maxX, maxY }
+    path.boundary = boundary
+    return boundary
+  }
+
   private draw() {
     const ctx = this.renderingContext
     if (ctx == null) return
@@ -561,8 +595,23 @@ export class CanvasManager {
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
 
+    const minXOnScreen = scrollLeft / scale
+    const minYOnScreen = scrollTop / scale
+    const maxXOnScreen = (this.width + scrollLeft) / scale
+    const maxYOnScreen = (this.height + scrollTop) / scale
+
     if (erasingPathIds == null) {
       for (const path of this.paths.values()) {
+        const b = this.getPathBoundary(path)
+        if (
+          b.minX > maxXOnScreen ||
+          b.minY > maxYOnScreen ||
+          b.maxX < minXOnScreen ||
+          b.maxY < minYOnScreen
+        ) {
+          continue
+        }
+
         drawPath(ctx, path, scrollLeft, scrollTop, dpr, scale)
       }
     } else {
@@ -588,12 +637,11 @@ export class CanvasManager {
     let maxDrawedX_ = Number.NEGATIVE_INFINITY
     let maxDrawedY_ = Number.NEGATIVE_INFINITY
     for (const path of this.paths.values()) {
-      for (const { x, y } of path.points) {
-        minDrawedX_ = min(minDrawedX_, x)
-        minDrawedY_ = min(minDrawedY_, y)
-        maxDrawedX_ = max(maxDrawedX_, x)
-        maxDrawedY_ = max(maxDrawedY_, y)
-      }
+      const b = this.getPathBoundary(path)
+      minDrawedX_ = min(minDrawedX_, b.minX)
+      minDrawedY_ = min(minDrawedY_, b.minY)
+      maxDrawedX_ = max(maxDrawedX_, b.maxX)
+      maxDrawedY_ = max(maxDrawedY_, b.maxY)
     }
 
     const {
