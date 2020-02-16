@@ -75,6 +75,8 @@ export class CanvasManager {
 
   private pathBoundaries = new Map<string, PathBoundary>()
 
+  private drawingByTouch = false
+
   constructor(private pictureId: string) {
     this.scale.subscribe((scale, prevScale) => {
       const r = scale / prevScale
@@ -323,7 +325,7 @@ export class CanvasManager {
     if (drawingPath == null) return
 
     this.drawingPath = null
-    if (drawingPath.points.length !== 0) {
+    if (drawingPath.points.length > 1) {
       this.doOperation({ type: 'add', paths: [drawingPath] })
     }
   }
@@ -353,11 +355,13 @@ export class CanvasManager {
 
     switch (this.tool.value) {
       case 'pen':
-        this.drawingPath = {
-          id: generateId(),
-          color: '#000',
-          width: 3,
-          points: [this.getPointFromMouseEvent(event)]
+        if (this.drawingPath == null) {
+          this.drawingPath = {
+            id: generateId(),
+            color: '#000',
+            width: 3,
+            points: [this.getPointFromMouseEvent(event)]
+          }
         }
         break
 
@@ -382,7 +386,7 @@ export class CanvasManager {
     switch (this.tool.value) {
       case 'pen': {
         const { drawingPath } = this
-        if (drawingPath != null) {
+        if (drawingPath != null && !this.drawingByTouch) {
           pushPoint(drawingPath.points, this.getPointFromMouseEvent(event))
           this.tickDraw()
         }
@@ -437,6 +441,7 @@ export class CanvasManager {
         const p = this.getPointFromTouchEvent(event)
         if (p != null) {
           this.drawingPath = { id: generateId(), color: '#000', width: 3, points: [p] }
+          this.drawingByTouch = true
           break
         }
       }
@@ -518,6 +523,7 @@ export class CanvasManager {
         if (p != null) {
           pushPoint(this.drawingPath?.points, p)
           this.addDrawingPath()
+          this.drawingByTouch = false
           break
         }
       }
