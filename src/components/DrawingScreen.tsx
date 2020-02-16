@@ -42,18 +42,6 @@ export function DrawingScreen({}: Props) {
   }, [pictureService, pictureId, title])
 
   useEffect(() => {
-    pictureService.fetchPicture(pictureId).then((picture) => {
-      if (picture != null) {
-        const { title, paths } = picture
-        if (title != null) {
-          setTitle(title)
-        }
-        if (paths != null) {
-          canvasManager.addPathsAndAdjustPosition(paths)
-        }
-      }
-    })
-
     const unwatch = pictureService.watchPicture(
       pictureId,
       ({ title: newTitle, pathsToAdd, pathIdsToRemove }) => {

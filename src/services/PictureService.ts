@@ -92,6 +92,8 @@ export class PictureService {
       .collection('paths')
       .orderBy('timestamp')
       .onSnapshot((snapshot) => {
+        if (snapshot.metadata.hasPendingWrites) return
+
         const pathsToAdd: Path[] = []
         const pathIdsToRemove: string[] = []
 
