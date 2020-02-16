@@ -547,8 +547,6 @@ export class CanvasManager {
     const ctx = this.renderingContext
     if (ctx == null) return
 
-    console.time('draw')
-
     const {
       erasingPathIds,
       dpr,
@@ -580,8 +578,6 @@ export class CanvasManager {
     }
 
     this.drawScrollBar(ctx)
-
-    console.timeEnd('draw')
   }
 
   drawScrollBar(ctx: CanvasRenderingContext2D) {
