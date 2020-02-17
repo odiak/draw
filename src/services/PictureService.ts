@@ -11,8 +11,11 @@ export type Picture = {
 
 export type PictureUpdate = Partial<{
   title: string
-  pathsToAdd: Path[]
-  pathIdsToRemove: string[]
+}>
+
+export type PathsUpdate = Partial<{
+  addedPaths: Path[]
+  removedPathIds: string[]
 }>
 
 export class PictureService {
@@ -52,70 +55,70 @@ export class PictureService {
     this.titleUpdateTick = { pictureId, timerId }
   }
 
-  addAndRemovePaths(
-    pictureId: string,
-    pathsToAdd: Path[] | null,
-    pathIdsToRemove: string[] | null
-  ) {
+  addPaths(pictureId: string, pathsToAdd: Path[]) {
     const batch = this.db.batch()
     const pathsCollection = this.picturesCollection.doc(pictureId).collection('paths')
 
-    if (pathsToAdd != null) {
-      for (const path of pathsToAdd) {
-        batch.set(
-          pathsCollection.doc(path.id),
-          {
-            ...encodePath(path),
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          },
-          { merge: true }
-        )
-      }
+    for (const path of pathsToAdd) {
+      batch.set(
+        pathsCollection.doc(path.id),
+        {
+          ...encodePath(path),
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        },
+        { merge: true }
+      )
     }
-    if (pathIdsToRemove != null) {
-      for (const pathId of pathIdsToRemove) {
-        batch.delete(pathsCollection.doc(pathId))
-      }
+    batch.commit()
+  }
+
+  removePaths(pictureId: string, pathIdsToRemove: string[]) {
+    const batch = this.db.batch()
+    const pathsCollection = this.picturesCollection.doc(pictureId).collection('paths')
+
+    for (const pathId of pathIdsToRemove) {
+      batch.delete(pathsCollection.doc(pathId))
     }
     batch.commit()
   }
 
   watchPicture(pictureId: string, onUpdate: (update: PictureUpdate) => void): () => void {
-    const docRef = this.picturesCollection.doc(pictureId)
-    const unwatchPic = docRef.onSnapshot((snapshot) => {
+    const unwatch = this.picturesCollection.doc(pictureId).onSnapshot((snapshot) => {
       if (snapshot.metadata.hasPendingWrites) return
       const data = snapshot.data()
       onUpdate((data || {}) as { title?: string })
     })
 
-    const unwatchPaths = docRef
+    return unwatch
+  }
+
+  watchPaths(pictureId: string, onUpdate: (update: PathsUpdate) => void): () => void {
+    const unwatch = this.picturesCollection
+      .doc(pictureId)
       .collection('paths')
       .orderBy('timestamp')
       .onSnapshot((snapshot) => {
         if (snapshot.metadata.hasPendingWrites) return
 
-        const pathsToAdd: Path[] = []
-        const pathIdsToRemove: string[] = []
+        const addedPaths: Path[] = []
+        const removedPathIds: string[] = []
 
         for (const change of snapshot.docChanges()) {
           switch (change.type) {
             case 'added':
-              pathsToAdd.push(decodePath(change.doc))
+              addedPaths.push(decodePath(change.doc))
               break
 
             case 'removed':
-              pathIdsToRemove.push(change.doc.id)
+              removedPathIds.push(change.doc.id)
               break
           }
         }
 
-        onUpdate({ pathsToAdd, pathIdsToRemove })
+        onUpdate({ addedPaths, removedPathIds })
       })
 
-    return () => {
-      unwatchPic()
-      unwatchPaths()
-    }
+    return unwatch
   }
 }
 

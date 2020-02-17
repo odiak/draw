@@ -1,7 +1,6 @@
 import { Tool } from './types/Tool'
 import { Path, PictureService, Point } from './services/PictureService'
 import { generateId } from './utils/generateId'
-import { Subject } from './utils/Subject'
 import { Variable } from './utils/Variable'
 
 type Operation =
@@ -62,9 +61,6 @@ export class CanvasManager {
 
   private canvasCleanUpHandler: (() => void) | null = null
 
-  readonly onPathsAdded = new Subject<Path[]>()
-  readonly onPathsRemoved = new Subject<string[]>()
-
   readonly scale = new Variable(1.0)
 
   private doneOperationStack: Operation[] = []
@@ -72,8 +68,6 @@ export class CanvasManager {
 
   readonly canUndo = new Variable<boolean>(false)
   readonly canRedo = new Variable<boolean>(false)
-
-  private pathBoundaries = new Map<string, PathBoundary>()
 
   private drawingByTouch = false
 
@@ -85,6 +79,15 @@ export class CanvasManager {
       this.scrollLeft = this.bufferedScrollLeft = w2 * (r - 1) + r * this.scrollLeft
       this.scrollTop = this.bufferedScrollTop = h2 * (r - 1) + r * this.scrollTop
       this.tickDraw()
+    })
+
+    this.pictureService.watchPaths(pictureId, ({ addedPaths, removedPathIds }) => {
+      if (addedPaths != null) {
+        this.addPathsAndAdjustPosition(addedPaths)
+      }
+      if (removedPathIds != null) {
+        this.removePathsById(removedPathIds)
+      }
     })
   }
 
@@ -119,15 +122,7 @@ export class CanvasManager {
     }
   }
 
-  addPaths(pathsToAdd: Path[]) {
-    const n = addPaths(this.paths, pathsToAdd)
-
-    if (n > 0) {
-      this.tickDraw()
-    }
-  }
-
-  addPathsAndAdjustPosition(pathsToAdd: Path[]) {
+  private addPathsAndAdjustPosition(pathsToAdd: Path[]) {
     const wasEmpty = this.paths.size === 0
     const n = addPaths(this.paths, pathsToAdd)
 
@@ -151,7 +146,7 @@ export class CanvasManager {
     }
   }
 
-  removePathsById(pathIdsToRemove: string[]) {
+  private removePathsById(pathIdsToRemove: string[]) {
     const n = removePaths(this.paths, pathIdsToRemove)
 
     if (n > 0) {
@@ -161,13 +156,13 @@ export class CanvasManager {
 
   private addPathsInternal(paths: Path[]) {
     addPaths(this.paths, paths)
-    this.pictureService.addAndRemovePaths(this.pictureId, paths, null)
+    this.pictureService.addPaths(this.pictureId, paths)
   }
 
   private removePathsInternal(paths: Path[]) {
     const pathIds = paths.map((p) => p.id)
     removePaths(this.paths, pathIds)
-    this.pictureService.addAndRemovePaths(this.pictureId, null, pathIds)
+    this.pictureService.removePaths(this.pictureId, pathIds)
   }
 
   private checkOperationStack() {

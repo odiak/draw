@@ -42,33 +42,14 @@ export function DrawingScreen({}: Props) {
   }, [pictureService, pictureId, title])
 
   useEffect(() => {
-    const unwatch = pictureService.watchPicture(
-      pictureId,
-      ({ title: newTitle, pathsToAdd, pathIdsToRemove }) => {
-        if (newTitle != null) {
-          setTitle(newTitle)
-        }
-
-        if (pathsToAdd != null) {
-          canvasManager.addPathsAndAdjustPosition(pathsToAdd)
-        }
-        if (pathIdsToRemove != null) {
-          canvasManager.removePathsById(pathIdsToRemove)
-        }
+    const unwatch = pictureService.watchPicture(pictureId, ({ title: newTitle }) => {
+      if (newTitle != null) {
+        setTitle(newTitle)
       }
-    )
-
-    const unsubscribeAdd = canvasManager.onPathsAdded.subscribe((paths) => {
-      pictureService.addAndRemovePaths(pictureId, paths, null)
-    })
-    const unsubscribeRemove = canvasManager.onPathsRemoved.subscribe((pathIds) => {
-      pictureService.addAndRemovePaths(pictureId, null, pathIds)
     })
 
     return () => {
       unwatch()
-      unsubscribeAdd()
-      unsubscribeRemove()
     }
   }, [pictureId, pictureService, canvasManager])
 
