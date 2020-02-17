@@ -282,6 +282,7 @@ const Menu = styled.ul<{ show: boolean }>`
   border: 1px solid #ccc;
   margin: 0;
   box-shadow: 0 0 6px #0004;
+  z-index: 100;
 `
 
 const MenuItem = styled.li`
