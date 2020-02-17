@@ -2,6 +2,7 @@ import { Tool } from './types/Tool'
 import { Path, PictureService, Point } from './services/PictureService'
 import { generateId } from './utils/generateId'
 import { Variable } from './utils/Variable'
+import { SettingsService } from './services/SettingsService'
 
 type Operation =
   | Readonly<{
@@ -45,6 +46,7 @@ export class CanvasManager {
   private erasingPathIds: Set<string> | null = null
 
   private pictureService = PictureService.instantiate()
+  private settingsService = SettingsService.instantiate()
 
   private scrollLeft = 0
   private scrollTop = 0
@@ -89,6 +91,24 @@ export class CanvasManager {
         this.removePathsById(removedPathIds)
       }
     })
+
+    const { tool, palmRejection } = this.settingsService.drawingSettings
+    if (tool != null) {
+      this.tool.next(tool)
+    }
+    if (palmRejection != null) {
+      this.palmRejection.next(palmRejection)
+    }
+
+    this.tool.subscribe(this.saveSettings.bind(this))
+    this.palmRejection.subscribe(this.saveSettings.bind(this))
+  }
+
+  private saveSettings(): void {
+    this.settingsService.drawingSettings = {
+      tool: this.tool.value,
+      palmRejection: this.palmRejection.value
+    }
   }
 
   setCanvasElement(elem: HTMLCanvasElement) {
