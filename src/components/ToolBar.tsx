@@ -149,32 +149,34 @@ export function ToolBar({
         onChange={(e) => onTitleChange(e.target.value)}
         placeholder="Title"
       />
-      <NewButton to="/">
-        <FontAwesomeIcon icon={faPlus} className="icon" />
-      </NewButton>
-      <MenuButton
-        ref={menuButtonRef}
-        onClick={() => {
-          setShowMenu(!showMenu)
-        }}
-      >
-        <FontAwesomeIcon icon={faEllipsisH} className="icon" />
-      </MenuButton>
-      <Menu ref={menuRef} show={showMenu}>
-        {makeMenuItemToCopy('Copy image link', imageLink, closeMenu)}
-        {makeMenuItemToCopy(
-          'Copy image link for Markdown',
-          `[![](${imageLink})](${pageLink})`,
-          closeMenu
-        )}
-        {makeMenuItemToCopy(
-          'Copy image link for Scrapbox',
-          `[${pageLink} ${imageLink}]`,
-          closeMenu
-        )}
-        <MenuDivider />
-        {makeMenuItemWithLink('About Kakeru', 'https://about.kakeru.app/', closeMenu)}
-      </Menu>
+      <RightButtonsContainer>
+        <NewButton to="/">
+          <FontAwesomeIcon icon={faPlus} className="icon" />
+        </NewButton>
+        <MenuButton
+          ref={menuButtonRef}
+          onClick={() => {
+            setShowMenu(!showMenu)
+          }}
+        >
+          <FontAwesomeIcon icon={faEllipsisH} className="icon" />
+          <Menu ref={menuRef} show={showMenu}>
+            {makeMenuItemToCopy('Copy image link', imageLink, closeMenu)}
+            {makeMenuItemToCopy(
+              'Copy image link for Markdown',
+              `[![](${imageLink})](${pageLink})`,
+              closeMenu
+            )}
+            {makeMenuItemToCopy(
+              'Copy image link for Scrapbox',
+              `[${pageLink} ${imageLink}]`,
+              closeMenu
+            )}
+            <MenuDivider />
+            {makeMenuItemWithLink('About Kakeru', 'https://about.kakeru.app/', closeMenu)}
+          </Menu>
+        </MenuButton>
+      </RightButtonsContainer>
       <div className="tools">
         <div className="tool-group">
           {makeToolButton('pen', selectedTool, onSelectedToolChange)}
@@ -266,14 +268,21 @@ const Container = styled.div`
   }
 `
 
-const MenuButton = styled.button`
+const RightButtonsContainer = styled.div`
+  display: flex;
+  width: fit-content;
+  align-items: right;
   position: absolute;
   right: 0;
   top: 0;
+`
+
+const MenuButton = styled.button`
   width: 36px;
   height: 30px;
   border: 0;
   background: #ddd;
+  position: relative;
 `
 
 const Menu = styled.ul<{ show: boolean }>`
@@ -281,13 +290,16 @@ const Menu = styled.ul<{ show: boolean }>`
   list-style: none;
   position: absolute;
   right: 0;
-  top: 30px;
+  top: 100%;
   display: ${({ show }) => (show ? 'block' : 'none')};
   background: #fff;
   border: 1px solid #ccc;
   margin: 0;
   box-shadow: 0 0 6px #0004;
   z-index: 100;
+  font-size: 16px;
+  width: max-content;
+  text-align: left;
 `
 
 const MenuItem = styled.li`
@@ -323,9 +335,6 @@ const MenuDivider = styled.div`
 
 const NewButton = styled(Link)`
   display: block;
-  position: absolute;
-  right: 52px;
-  top: 0;
   width: 30px;
   height: 30px;
   border: 0;
@@ -333,6 +342,13 @@ const NewButton = styled(Link)`
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-right: 12px;
+
+  &:link,
+  &:visited {
+    color: inherit;
+    text-decoration: none;
+  }
 
   > .icon {
     display: block;
