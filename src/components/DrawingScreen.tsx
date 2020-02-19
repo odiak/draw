@@ -33,6 +33,10 @@ export function DrawingScreen({}: Props) {
     if (e != null) {
       canvasManager.setCanvasElement(e)
     }
+
+    return () => {
+      canvasManager.cleanup()
+    }
   }, [canvasRef, canvasManager])
 
   useEffect(() => {

@@ -73,6 +73,8 @@ export class CanvasManager {
 
   private drawingByTouch = false
 
+  private unwatchPaths: (() => void) | null = null
+
   constructor(private pictureId: string) {
     this.scale.subscribe((scale, prevScale) => {
       const r = scale / prevScale
@@ -83,14 +85,17 @@ export class CanvasManager {
       this.tickDraw()
     })
 
-    this.pictureService.watchPaths(pictureId, ({ addedPaths, removedPathIds }) => {
-      if (addedPaths != null) {
-        this.addPathsAndAdjustPosition(addedPaths)
+    this.unwatchPaths = this.pictureService.watchPaths(
+      pictureId,
+      ({ addedPaths, removedPathIds }) => {
+        if (addedPaths != null) {
+          this.addPathsAndAdjustPosition(addedPaths)
+        }
+        if (removedPathIds != null) {
+          this.removePathsById(removedPathIds)
+        }
       }
-      if (removedPathIds != null) {
-        this.removePathsById(removedPathIds)
-      }
-    })
+    )
 
     const { tool, palmRejection } = this.settingsService.drawingSettings
     if (tool != null) {
@@ -140,6 +145,21 @@ export class CanvasManager {
         f()
       }
     }
+  }
+
+  cleanup() {
+    const { canvasCleanUpHandler, unwatchPaths } = this
+    if (canvasCleanUpHandler != null) {
+      canvasCleanUpHandler()
+      this.canvasCleanUpHandler = null
+    }
+    if (unwatchPaths != null) {
+      unwatchPaths()
+      this.unwatchPaths = null
+    }
+
+    this.canvasElement = null
+    this.renderingContext = null
   }
 
   private addPathsAndAdjustPosition(pathsToAdd: Path[]) {
