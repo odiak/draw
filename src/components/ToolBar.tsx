@@ -7,13 +7,15 @@ import {
   faSearchMinus,
   faEllipsisH,
   faUndo,
-  faRedo
+  faRedo,
+  faPlus
 } from '@fortawesome/free-solid-svg-icons'
 import { ToolButton } from './ToolButton'
 import { Tool } from '../types/Tool'
 import classNames from 'classnames'
 import styled from '@emotion/styled'
 import { copyToClipboard } from '../utils/copyToClipboard'
+import { Link } from 'react-router-dom'
 
 type Props = {
   selectedTool: Tool
@@ -147,6 +149,9 @@ export function ToolBar({
         onChange={(e) => onTitleChange(e.target.value)}
         placeholder="Title"
       />
+      <NewButton to="/">
+        <FontAwesomeIcon icon={faPlus} className="icon" />
+      </NewButton>
       <MenuButton
         ref={menuButtonRef}
         onClick={() => {
@@ -314,4 +319,22 @@ const MenuItemWithAnchor = styled.li`
 const MenuDivider = styled.div`
   height: 1px;
   background: #ccc;
+`
+
+const NewButton = styled(Link)`
+  display: block;
+  position: absolute;
+  right: 52px;
+  top: 0;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  background: #ddd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  > .icon {
+    display: block;
+  }
 `
