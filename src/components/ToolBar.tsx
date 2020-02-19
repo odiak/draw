@@ -1,4 +1,4 @@
-import React, { useState, useRef, useLayoutEffect, useCallback } from 'react'
+import React, { useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faHandPointUp,
@@ -8,7 +8,8 @@ import {
   faEllipsisH,
   faUndo,
   faRedo,
-  faPlus
+  faPlus,
+  faUser
 } from '@fortawesome/free-solid-svg-icons'
 import { ToolButton } from './ToolButton'
 import { Tool } from '../types/Tool'
@@ -16,6 +17,7 @@ import classNames from 'classnames'
 import styled from '@emotion/styled'
 import { copyToClipboard } from '../utils/copyToClipboard'
 import { Link } from 'react-router-dom'
+import { useMenu } from '../utils/useMenu'
 
 type Props = {
   selectedTool: Tool
@@ -89,57 +91,20 @@ export function ToolBar({
   onUndo,
   onRedo
 }: Props) {
-  const [showMenu, setShowMenu] = useState(false)
-
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLUListElement>(null)
+  const accountMenuButtonRef = useRef<HTMLButtonElement>(null)
+  const accountMenuRef = useRef<HTMLUListElement>(null)
 
-  const closeMenu = useCallback(() => {
-    setShowMenu(false)
-  }, [setShowMenu])
+  const { show: showMenu, close: closeMenu, toggle: toggleMenu } = useMenu({
+    buttonRef: menuButtonRef,
+    menuRef: menuRef
+  })
 
-  // set up for closing menu
-  useLayoutEffect(() => {
-    if (!showMenu) return
-
-    const isInside = (e: Event) => {
-      const menuButton = menuButtonRef.current
-      const menu = menuRef.current
-      return (
-        (menuButton != null && menuButton.contains(e.target as Node)) ||
-        (menu != null && menu.contains(e.target as Node))
-      )
-    }
-
-    const onClick = (e: MouseEvent) => {
-      if (isInside(e)) return
-      e.preventDefault()
-      e.stopPropagation()
-      closeMenu()
-    }
-    document.addEventListener('click', onClick, { capture: true })
-
-    const onTouchStart = (e: TouchEvent) => {
-      if (isInside(e)) return
-      e.preventDefault()
-      e.stopPropagation()
-      closeMenu()
-    }
-    document.addEventListener('touchstart', onTouchStart, { capture: true })
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        closeMenu()
-      }
-    }
-    window.addEventListener('keydown', onKeyDown)
-
-    return () => {
-      document.removeEventListener('click', onClick, { capture: true })
-      document.removeEventListener('touchstart', onTouchStart, { capture: true })
-      window.removeEventListener('keydown', onKeyDown)
-    }
-  }, [menuButtonRef, menuRef, showMenu, closeMenu])
+  const { show: showAccountMenu, close: closeAccountMenu, toggle: toggleAccountMenu } = useMenu({
+    buttonRef: accountMenuButtonRef,
+    menuRef: accountMenuRef
+  })
 
   return (
     <Container>
@@ -153,12 +118,13 @@ export function ToolBar({
         <NewButton to="/">
           <FontAwesomeIcon icon={faPlus} className="icon" />
         </NewButton>
-        <MenuButton
-          ref={menuButtonRef}
-          onClick={() => {
-            setShowMenu(!showMenu)
-          }}
-        >
+        <AccountButton ref={accountMenuButtonRef} onClick={toggleAccountMenu}>
+          <FontAwesomeIcon icon={faUser} className="icon" />
+          <Menu ref={accountMenuRef} show={showAccountMenu}>
+            <MenuItem>Sign in with Google</MenuItem>
+          </Menu>
+        </AccountButton>
+        <MenuButton ref={menuButtonRef} onClick={toggleMenu}>
           <FontAwesomeIcon icon={faEllipsisH} className="icon" />
           <Menu ref={menuRef} show={showMenu}>
             {makeMenuItemToCopy('Copy image link', imageLink, closeMenu)}
@@ -349,6 +315,23 @@ const NewButton = styled(Link)`
     color: inherit;
     text-decoration: none;
   }
+
+  > .icon {
+    display: block;
+  }
+`
+
+const AccountButton = styled.button`
+  display: block;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  background: #ddd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 12px;
+  position: relative;
 
   > .icon {
     display: block;
