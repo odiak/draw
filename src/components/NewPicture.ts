@@ -6,7 +6,7 @@ export function NewPicture() {
   const history = useHistory()
 
   useEffect(() => {
-    history.push(`/${generateId()}`)
+    history.replace(`/${generateId()}`)
   }, [history])
 
   return null
