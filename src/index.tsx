@@ -1,6 +1,7 @@
 import React from 'react'
 import firebase from 'firebase/app'
 import 'firebase/firestore'
+import 'firebase/auth'
 import { render } from 'react-dom'
 import { App } from './components/App'
 import { css, Global } from '@emotion/core'

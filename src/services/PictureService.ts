@@ -19,7 +19,7 @@ export type PathsUpdate = Partial<{
 }>
 
 export class PictureService {
-  static instantiate = memo(() => new PictureService())
+  static readonly instantiate = memo(() => new PictureService())
 
   private db = firebase.firestore()
   private picturesCollection = this.db.collection('pictures')

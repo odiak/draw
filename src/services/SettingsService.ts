@@ -9,7 +9,7 @@ type DrawingSettings = {
 }
 
 export class SettingsService {
-  static instantiate = memo(() => new SettingsService())
+  static readonly instantiate = memo(() => new SettingsService())
 
   get drawingSettings(): Partial<DrawingSettings> {
     const s: Partial<DrawingSettings> = {}

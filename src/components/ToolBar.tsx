@@ -18,6 +18,8 @@ import styled from '@emotion/styled'
 import { copyToClipboard } from '../utils/copyToClipboard'
 import { Link } from 'react-router-dom'
 import { useMenu } from '../utils/useMenu'
+import { AuthService } from '../services/AuthService'
+import { useVariable } from '../utils/useVariable'
 
 type Props = {
   selectedTool: Tool
@@ -101,10 +103,14 @@ export function ToolBar({
     menuRef: menuRef
   })
 
-  const { show: showAccountMenu, close: closeAccountMenu, toggle: toggleAccountMenu } = useMenu({
+  const { show: showAccountMenu, toggle: toggleAccountMenu } = useMenu({
     buttonRef: accountMenuButtonRef,
     menuRef: accountMenuRef
   })
+
+  const authService = AuthService.instantiate()
+
+  const [currentUser] = useVariable(authService.currentUser)
 
   return (
     <Container>
@@ -119,9 +125,36 @@ export function ToolBar({
           <FontAwesomeIcon icon={faPlus} className="icon" />
         </NewButton>
         <AccountButton ref={accountMenuButtonRef} onClick={toggleAccountMenu}>
-          <FontAwesomeIcon icon={faUser} className="icon" />
+          {currentUser != null ? (
+            <AccountImage src={currentUser.photoURL || ''} />
+          ) : (
+            <FontAwesomeIcon icon={faUser} className="icon" />
+          )}
           <Menu ref={accountMenuRef} show={showAccountMenu}>
-            <MenuItem>Sign in with Google</MenuItem>
+            {currentUser != null ? (
+              <>
+                <MenuItem
+                  onClick={() => {
+                    authService.signOut()
+                  }}
+                >
+                  Sign out
+                </MenuItem>
+              </>
+            ) : (
+              <>
+                <MenuItem
+                  onClick={async () => {
+                    const c = await authService.signInWithGoogle()
+                    if (c == null) {
+                      alert('Failed to sign in')
+                    }
+                  }}
+                >
+                  Sign in with Google
+                </MenuItem>
+              </>
+            )}
           </Menu>
         </AccountButton>
         <MenuButton ref={menuButtonRef} onClick={toggleMenu}>
@@ -266,6 +299,7 @@ const Menu = styled.ul<{ show: boolean }>`
   font-size: 16px;
   width: max-content;
   text-align: left;
+  min-width: 160px;
 `
 
 const MenuItem = styled.li`
@@ -332,8 +366,14 @@ const AccountButton = styled.button`
   align-items: center;
   margin-right: 12px;
   position: relative;
+  padding: 1px;
 
   > .icon {
     display: block;
   }
+`
+
+const AccountImage = styled.img`
+  width: 100%;
+  height: 100%;
 `
