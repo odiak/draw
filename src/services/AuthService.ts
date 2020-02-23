@@ -1,6 +1,6 @@
 import { memo } from '../utils/memo'
 import firebase from 'firebase/app'
-import { Variable } from '../utils/Variable'
+import { Subject } from '../utils/Subject'
 
 export class AuthService {
   static readonly instantiate = memo(() => new AuthService())
@@ -8,13 +8,20 @@ export class AuthService {
   private auth = firebase.auth()
   private googleAuthProvider = new firebase.auth.GoogleAuthProvider()
 
-  readonly currentUser = new Variable<firebase.User | null>(null)
+  readonly currentUser = new Subject<firebase.User>()
 
   constructor() {
     this.auth.useDeviceLanguage()
 
-    this.auth.onAuthStateChanged((user) => {
-      this.currentUser.next(user)
+    this.auth.onAuthStateChanged(async (user) => {
+      if (user == null) {
+        const { user: anonUser } = await this.auth.signInAnonymously()
+        if (anonUser != null) {
+          this.currentUser.next(anonUser)
+        }
+      } else {
+        this.currentUser.next(user)
+      }
     })
   }
 

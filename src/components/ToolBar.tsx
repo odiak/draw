@@ -19,7 +19,7 @@ import { copyToClipboard } from '../utils/copyToClipboard'
 import { Link } from 'react-router-dom'
 import { useMenu } from '../utils/useMenu'
 import { AuthService } from '../services/AuthService'
-import { useVariable } from '../utils/useVariable'
+import { useSubject } from '../utils/useSubject'
 
 type Props = {
   selectedTool: Tool
@@ -110,7 +110,7 @@ export function ToolBar({
 
   const authService = AuthService.instantiate()
 
-  const [currentUser] = useVariable(authService.currentUser)
+  const [currentUser] = useSubject(authService.currentUser)
 
   return (
     <Container>
@@ -124,39 +124,41 @@ export function ToolBar({
         <NewButton to="/">
           <FontAwesomeIcon icon={faPlus} className="icon" />
         </NewButton>
-        <AccountButton ref={accountMenuButtonRef} onClick={toggleAccountMenu}>
-          {currentUser != null ? (
-            <AccountImage src={currentUser.photoURL || ''} />
-          ) : (
-            <FontAwesomeIcon icon={faUser} className="icon" />
-          )}
-          <Menu ref={accountMenuRef} show={showAccountMenu}>
-            {currentUser != null ? (
-              <>
-                <MenuItem
-                  onClick={() => {
-                    authService.signOut()
-                  }}
-                >
-                  Sign out
-                </MenuItem>
-              </>
+        {currentUser != null && (
+          <AccountButton ref={accountMenuButtonRef} onClick={toggleAccountMenu}>
+            {currentUser.isAnonymous ? (
+              <FontAwesomeIcon icon={faUser} className="icon" />
             ) : (
-              <>
-                <MenuItem
-                  onClick={async () => {
-                    const c = await authService.signInWithGoogle()
-                    if (c == null) {
-                      alert('Failed to sign in')
-                    }
-                  }}
-                >
-                  Sign in with Google
-                </MenuItem>
-              </>
+              <AccountImage src={currentUser.photoURL || ''} />
             )}
-          </Menu>
-        </AccountButton>
+            <Menu ref={accountMenuRef} show={showAccountMenu}>
+              {currentUser.isAnonymous ? (
+                <>
+                  <MenuItem
+                    onClick={async () => {
+                      const c = await authService.signInWithGoogle()
+                      if (c == null) {
+                        alert('Failed to sign in')
+                      }
+                    }}
+                  >
+                    Sign in with Google
+                  </MenuItem>
+                </>
+              ) : (
+                <>
+                  <MenuItem
+                    onClick={() => {
+                      authService.signOut()
+                    }}
+                  >
+                    Sign out
+                  </MenuItem>
+                </>
+              )}
+            </Menu>
+          </AccountButton>
+        )}
         <MenuButton ref={menuButtonRef} onClick={toggleMenu}>
           <FontAwesomeIcon icon={faEllipsisH} className="icon" />
           <Menu ref={menuRef} show={showMenu}>
