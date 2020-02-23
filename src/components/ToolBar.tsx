@@ -19,7 +19,7 @@ import { copyToClipboard } from '../utils/copyToClipboard'
 import { Link } from 'react-router-dom'
 import { useMenu } from '../utils/useMenu'
 import { AuthService } from '../services/AuthService'
-import { useSubject } from '../utils/useSubject'
+import { useVariable } from '../utils/useVariable'
 
 type Props = {
   selectedTool: Tool
@@ -110,7 +110,7 @@ export function ToolBar({
 
   const authService = AuthService.instantiate()
 
-  const [currentUser] = useSubject(authService.currentUser)
+  const [currentUser] = useVariable(authService.currentUser)
 
   return (
     <Container>
