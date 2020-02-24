@@ -45,7 +45,7 @@ export class CanvasManager {
   private drawingPath: Path | null = null
   private erasingPathIds: Set<string> | null = null
 
-  private pictureService = PictureService.instantiate()
+  private pictureService = PictureService.instantiate(this.pictureId)
   private settingsService = SettingsService.instantiate()
 
   private scrollLeft = 0
@@ -85,8 +85,7 @@ export class CanvasManager {
       this.tickDraw()
     })
 
-    this.unwatchPaths = this.pictureService.watchPaths(
-      pictureId,
+    this.unwatchPaths = this.pictureService.onChangePaths.subscribe(
       ({ addedPaths, removedPathIds }) => {
         if (addedPaths != null) {
           this.addPathsAndAdjustPosition(addedPaths)

@@ -12,8 +12,8 @@ type Props = {}
 const defaultTitle = 'Untitled'
 
 export function DrawingScreen({}: Props) {
-  const pictureService = PictureService.instantiate()
   const { pictureId } = useParams<{ pictureId: string }>()
+  const pictureService = PictureService.instantiate(pictureId)
 
   const canvasManager = useMemo(() => new CanvasManager(pictureId), [pictureId])
 
@@ -41,21 +41,15 @@ export function DrawingScreen({}: Props) {
 
   useEffect(() => {
     if (title != null) {
-      pictureService.setTitle(pictureId, title)
+      pictureService.updatePicture({ title })
     }
   }, [pictureService, pictureId, title])
 
   useEffect(() => {
-    const unwatch = pictureService.watchPicture(pictureId, ({ title: newTitle }) => {
-      if (newTitle != null) {
-        setTitle(newTitle)
-      }
-    })
-
     return () => {
-      unwatch()
+      pictureService.deactivate()
     }
-  }, [pictureId, pictureService, canvasManager])
+  }, [pictureService])
 
   return (
     <>

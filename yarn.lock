@@ -2926,6 +2926,7 @@ __metadata:
     eslint-plugin-react-hooks: ^2.3.0
     firebase: ^7.8.0
     html-webpack-plugin: ^3.2.0
+    memoize-one: ^5.1.1
     pnp-webpack-plugin: ^1.6.0
     prettier: ^1.19.1
     react: ^16.12.0
@@ -5244,6 +5245,13 @@ fsevents@^1.2.7:
     mimic-fn: ^2.0.0
     p-is-promise: ^2.0.0
   checksum: 3445f5cc1b55740b2100c9126ecab8796905e753dee5f2281c8656bd9b393fdb302362c82fbb9dba1e7ee5170185c34031524fbf7fd68692e11f47f379cafd01
+  languageName: node
+  linkType: hard
+
+"memoize-one@npm:^5.1.1":
+  version: 5.1.1
+  resolution: "memoize-one@npm:5.1.1"
+  checksum: 0386c018758a9bbebafc1b865630e1f31d89e98c6072d536d7302182a4aaee02e733c87feec3fbff8ff211226a125efa808706bd1147810d0a156d2dc8de5b94
   languageName: node
   linkType: hard
 

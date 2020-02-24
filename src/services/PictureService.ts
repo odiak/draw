@@ -1,5 +1,8 @@
-import { memo } from '../utils/memo'
 import firebase from 'firebase/app'
+import memoizeOne from 'memoize-one'
+import { Variable } from '../utils/Variable'
+import { Subject } from '../utils/Subject'
+import { shallowEqual } from '../utils/shallowEqual'
 
 export type Point = { x: number; y: number }
 export type Path = { color: string; width: number; points: Point[]; id: string }
@@ -18,41 +21,55 @@ export type PathsUpdate = Partial<{
   removedPathIds: string[]
 }>
 
+export type PictureMetaData = {
+  exists: boolean
+  isOwner: boolean
+  readable: boolean
+  writable: boolean
+}
+
 export class PictureService {
-  static readonly instantiate = memo(() => new PictureService())
+  static readonly instantiate = memoizeOne((pictureId: string) => new PictureService(pictureId))
 
   private db = firebase.firestore()
   private picturesCollection = this.db.collection('pictures')
 
-  private titleUpdateTick: { pictureId: string; timerId: number } | null = null
+  private titleUpdateTick: { timerId: number } | null = null
 
-  async fetchPicture(pictureId: string): Promise<Picture | null> {
-    let title: string | undefined
-    const picRef = this.picturesCollection.doc(pictureId)
-    const pic = await picRef.get()
-    if (pic.exists) {
-      title = (pic.data() as { title: string }).title
-    }
+  readonly metaData = new Variable<PictureMetaData | null>(null)
+  readonly onChangePicture = new Subject<PictureUpdate>()
+  readonly onChangePaths = new Subject<PathsUpdate>()
 
-    const pathsSnapshot = await picRef
-      .collection('paths')
-      .orderBy('timestamp')
-      .get()
-    const paths = pathsSnapshot.docs.map(decodePath)
+  private deactivationCallbacks: Array<() => void> = []
 
-    return { id: pictureId, paths, title }
+  constructor(public readonly pictureId: string) {
+    this.activate()
   }
 
-  setTitle(pictureId: string, title: string) {
+  private async activate() {
+    const unwatchPicture = this.watchPicture()
+    const unwatchPaths = this.watchPaths()
+    this.deactivationCallbacks.push(unwatchPicture, unwatchPaths)
+  }
+
+  deactivate() {
+    const { deactivationCallbacks } = this
+    if (deactivationCallbacks != null) {
+      for (const f of deactivationCallbacks) f()
+      this.deactivationCallbacks = []
+    }
+  }
+
+  updatePicture(update: Partial<{ title: string }>) {
     const { titleUpdateTick } = this
-    if (titleUpdateTick != null && titleUpdateTick.pictureId === pictureId) {
+    if (titleUpdateTick != null) {
       clearTimeout(titleUpdateTick.timerId)
     }
 
     const timerId = window.setTimeout(() => {
-      this.picturesCollection.doc(pictureId).set({ title }, { merge: true })
+      this.picturesCollection.doc(this.pictureId).set(update, { merge: true })
     }, 1500)
-    this.titleUpdateTick = { pictureId, timerId }
+    this.titleUpdateTick = { timerId }
   }
 
   addPaths(pictureId: string, pathsToAdd: Path[]) {
@@ -82,19 +99,39 @@ export class PictureService {
     batch.commit()
   }
 
-  watchPicture(pictureId: string, onUpdate: (update: PictureUpdate) => void): () => void {
-    const unwatch = this.picturesCollection.doc(pictureId).onSnapshot((snapshot) => {
+  private watchPicture(): () => void {
+    const unwatch = this.picturesCollection.doc(this.pictureId).onSnapshot((snapshot) => {
       if (snapshot.metadata.hasPendingWrites) return
       const data = snapshot.data()
-      onUpdate((data || {}) as { title?: string })
+      this.onChangePicture.next((data || {}) as { title?: string })
+
+      let newMetaData: PictureMetaData
+      if (data == null) {
+        newMetaData = {
+          exists: false,
+          isOwner: false,
+          writable: true,
+          readable: true
+        }
+      } else {
+        newMetaData = {
+          exists: true,
+          isOwner: false,
+          writable: true,
+          readable: true
+        }
+      }
+      if (!shallowEqual(this.metaData.value, newMetaData)) {
+        this.metaData.next(newMetaData)
+      }
     })
 
     return unwatch
   }
 
-  watchPaths(pictureId: string, onUpdate: (update: PathsUpdate) => void): () => void {
+  private watchPaths(): () => void {
     const unwatch = this.picturesCollection
-      .doc(pictureId)
+      .doc(this.pictureId)
       .collection('paths')
       .orderBy('timestamp')
       .onSnapshot((snapshot) => {
@@ -115,7 +152,7 @@ export class PictureService {
           }
         }
 
-        onUpdate({ addedPaths, removedPathIds })
+        this.onChangePaths.next({ addedPaths, removedPathIds })
       })
 
     return unwatch
