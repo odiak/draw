@@ -33,6 +33,7 @@ export class PictureService {
 
   private db = firebase.firestore()
   private picturesCollection = this.db.collection('pictures')
+  private pictureRef = this.picturesCollection.doc(this.pictureId)
 
   private titleUpdateTick: { timerId: number } | null = null
 
@@ -67,14 +68,14 @@ export class PictureService {
     }
 
     const timerId = window.setTimeout(() => {
-      this.picturesCollection.doc(this.pictureId).set(update, { merge: true })
+      this.pictureRef.set(update, { merge: true })
     }, 1500)
     this.titleUpdateTick = { timerId }
   }
 
-  addPaths(pictureId: string, pathsToAdd: Path[]) {
+  addPaths(pathsToAdd: Path[]) {
     const batch = this.db.batch()
-    const pathsCollection = this.picturesCollection.doc(pictureId).collection('paths')
+    const pathsCollection = this.pictureRef.collection('paths')
 
     for (const path of pathsToAdd) {
       batch.set(
@@ -89,9 +90,9 @@ export class PictureService {
     batch.commit()
   }
 
-  removePaths(pictureId: string, pathIdsToRemove: string[]) {
+  removePaths(pathIdsToRemove: string[]) {
     const batch = this.db.batch()
-    const pathsCollection = this.picturesCollection.doc(pictureId).collection('paths')
+    const pathsCollection = this.pictureRef.collection('paths')
 
     for (const pathId of pathIdsToRemove) {
       batch.delete(pathsCollection.doc(pathId))
@@ -100,7 +101,7 @@ export class PictureService {
   }
 
   private watchPicture(): () => void {
-    const unwatch = this.picturesCollection.doc(this.pictureId).onSnapshot((snapshot) => {
+    const unwatch = this.pictureRef.onSnapshot((snapshot) => {
       if (snapshot.metadata.hasPendingWrites) return
       const data = snapshot.data()
       this.onChangePicture.next((data || {}) as { title?: string })
@@ -130,8 +131,7 @@ export class PictureService {
   }
 
   private watchPaths(): () => void {
-    const unwatch = this.picturesCollection
-      .doc(this.pictureId)
+    const unwatch = this.pictureRef
       .collection('paths')
       .orderBy('timestamp')
       .onSnapshot((snapshot) => {

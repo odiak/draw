@@ -195,13 +195,13 @@ export class CanvasManager {
 
   private addPathsInternal(paths: Path[]) {
     addPaths(this.paths, paths)
-    this.pictureService.addPaths(this.pictureId, paths)
+    this.pictureService.addPaths(paths)
   }
 
   private removePathsInternal(paths: Path[]) {
     const pathIds = paths.map((p) => p.id)
     removePaths(this.paths, pathIds)
-    this.pictureService.removePaths(this.pictureId, pathIds)
+    this.pictureService.removePaths(pathIds)
   }
 
   private checkOperationStack() {
