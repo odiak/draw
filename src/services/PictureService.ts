@@ -3,6 +3,7 @@ import memoizeOne from 'memoize-one'
 import { Variable } from '../utils/Variable'
 import { Subject } from '../utils/Subject'
 import { shallowEqual } from '../utils/shallowEqual'
+import { AuthService } from './AuthService'
 
 export type Point = { x: number; y: number }
 export type Path = { color: string; width: number; points: Point[]; id: string }
@@ -42,6 +43,8 @@ export class PictureService {
   readonly onChangePaths = new Subject<PathsUpdate>()
 
   private deactivationCallbacks: Array<() => void> = []
+
+  private authService = AuthService.instantiate()
 
   constructor(public readonly pictureId: string) {
     this.activate()
@@ -88,6 +91,8 @@ export class PictureService {
       )
     }
     batch.commit()
+
+    this.setPictureOwnerIfNotExist()
   }
 
   removePaths(pathIdsToRemove: string[]) {
@@ -98,6 +103,8 @@ export class PictureService {
       batch.delete(pathsCollection.doc(pathId))
     }
     batch.commit()
+
+    this.setPictureOwnerIfNotExist()
   }
 
   private watchPicture(): () => void {
@@ -156,6 +163,16 @@ export class PictureService {
       })
 
     return unwatch
+  }
+
+  private async setPictureOwnerIfNotExist(): Promise<void> {
+    const { value: metaData } = this.metaData
+    if (metaData == null || metaData.exists) return
+
+    const { value: currentUser } = this.authService.currentUser
+    if (currentUser == null) return
+
+    await this.pictureRef.set({ ownerId: currentUser.uid }, { merge: true })
   }
 }
 
