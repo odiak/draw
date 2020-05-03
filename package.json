@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "start": "webpack-dev-server",
-    "build": "webpack"
+    "build": "webpack",
+    "build:prod": "webpack --config webpack.config.production.js"
   },
   "devDependencies": {
     "@types/html-webpack-plugin": "^3.2.2",
