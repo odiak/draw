@@ -1,11 +1,9 @@
-import path from 'path'
-import webpack from 'webpack'
-import HtmlWebpackPlugin from 'html-webpack-plugin'
-import 'webpack-dev-server'
-// @ts-ignore
-import PnpWebpackPlugin from 'pnp-webpack-plugin'
+const path = require('path')
+const webpack = require('webpack')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+const PnpWebpackPlugin = require('pnp-webpack-plugin')
 
-const config: webpack.Configuration = {
+module.exports = {
   mode: 'development',
   entry: './src/index.tsx',
   resolve: {
@@ -33,5 +31,3 @@ const config: webpack.Configuration = {
     historyApiFallback: true
   }
 }
-
-export default config
