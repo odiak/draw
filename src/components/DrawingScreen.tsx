@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo, useLayoutEffect } from 'react'
+import React, { useEffect, useState, useRef, useMemo, useLayoutEffect, useCallback } from 'react'
 import { ToolBar } from './ToolBar'
 import { useParams } from 'react-router-dom'
 import styled from '@emotion/styled'
@@ -39,13 +39,22 @@ export function DrawingScreen({}: Props) {
     }
   }, [canvasRef, canvasManager])
 
-  useEffect(() => {
-    if (title != null) {
-      pictureService.updatePicture({ title })
-    }
-  }, [pictureService, pictureId, title])
+  const setTitleWithUpdate = useCallback(
+    (title: string | null) => {
+      setTitle(title)
+      if (title != null) {
+        pictureService.updatePicture({ title })
+      }
+    },
+    [setTitle, pictureService]
+  )
 
   useEffect(() => {
+    pictureService.onChangePicture.subscribe(({ title }) => {
+      if (title != null) {
+        setTitle(title)
+      }
+    })
     return () => {
       pictureService.deactivate()
     }
@@ -57,7 +66,7 @@ export function DrawingScreen({}: Props) {
       <Container>
         <ToolBar
           title={title ?? defaultTitle}
-          onTitleChange={setTitle}
+          onTitleChange={setTitleWithUpdate}
           selectedTool={selectedTool}
           onSelectedToolChange={setSelectedTool}
           palmRejectionEnabled={palmRejectionEnabled}
