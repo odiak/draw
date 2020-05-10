@@ -2,13 +2,15 @@ import { memo } from '../utils/memo'
 import firebase from 'firebase/app'
 import { Variable } from '../utils/Variable'
 
+export type User = firebase.User
+
 export class AuthService {
   static readonly instantiate = memo(() => new AuthService())
 
   private auth = firebase.auth()
   private googleAuthProvider = new firebase.auth.GoogleAuthProvider()
 
-  readonly currentUser = new Variable<firebase.User | null>(null)
+  readonly currentUser = new Variable<User | null>(null)
 
   constructor() {
     this.auth.useDeviceLanguage()

@@ -45,7 +45,7 @@ export class CanvasManager {
   private drawingPath: Path | null = null
   private erasingPathIds: Set<string> | null = null
 
-  private pictureService = PictureService.instantiate(this.pictureId)
+  private pictureService = PictureService.instantiate()
   private settingsService = SettingsService.instantiate()
 
   private scrollLeft = 0
@@ -85,7 +85,8 @@ export class CanvasManager {
       this.tickDraw()
     })
 
-    this.unwatchPaths = this.pictureService.onChangePaths.subscribe(
+    this.unwatchPaths = this.pictureService.watchPaths(
+      pictureId,
       ({ addedPaths, removedPathIds }) => {
         if (addedPaths != null) {
           this.addPathsAndAdjustPosition(addedPaths)
@@ -195,13 +196,13 @@ export class CanvasManager {
 
   private addPathsInternal(paths: Path[]) {
     addPaths(this.paths, paths)
-    this.pictureService.addPaths(paths)
+    this.pictureService.addPaths(this.pictureId, paths)
   }
 
   private removePathsInternal(paths: Path[]) {
     const pathIds = paths.map((p) => p.id)
     removePaths(this.paths, pathIds)
-    this.pictureService.removePaths(pathIds)
+    this.pictureService.removePaths(this.pictureId, pathIds)
   }
 
   private checkOperationStack() {
