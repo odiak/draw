@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState, useCallback } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faHandPointUp,
@@ -20,23 +20,12 @@ import { Link } from 'react-router-dom'
 import { useMenu } from '../utils/useMenu'
 import { AuthService } from '../services/AuthService'
 import { useVariable } from '../utils/useVariable'
+import { PictureService } from '../services/PictureService'
+import { CanvasManager } from '../CanvasManager'
 
 type Props = {
-  selectedTool: Tool
-  onSelectedToolChange: (tool: Tool) => void
-  title: string
-  onTitleChange: (title: string) => void
-  palmRejectionEnabled: boolean
-  onPalmRejectionEnabledChange: (enabled: boolean) => void
-  onZoomIn(): void
-  onZoomOut(): void
-  scale: number
-  imageLink: string
-  pageLink: string
-  canUndo: boolean
-  canRedo: boolean
-  onUndo: () => void
-  onRedo: () => void
+  pictureId: string
+  canvasManager: CanvasManager
 }
 
 function makeToolButton(
@@ -76,23 +65,11 @@ function makeMenuItemWithLink(content: string, url: string, close: () => void) {
   )
 }
 
-export function ToolBar({
-  selectedTool,
-  onSelectedToolChange,
-  title,
-  onTitleChange,
-  palmRejectionEnabled,
-  onPalmRejectionEnabledChange,
-  onZoomIn,
-  onZoomOut,
-  scale,
-  imageLink,
-  pageLink,
-  canUndo,
-  canRedo,
-  onUndo,
-  onRedo
-}: Props) {
+const defaultTitle = 'Untitled'
+
+export function ToolBar({ pictureId, canvasManager }: Props) {
+  const pictureService = PictureService.instantiate()
+
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLUListElement>(null)
   const accountMenuButtonRef = useRef<HTMLButtonElement>(null)
@@ -112,12 +89,46 @@ export function ToolBar({
 
   const [currentUser] = useVariable(authService.currentUser)
 
+  const [title, setTitle] = useState<string | null>(null)
+  const setTitleWithUpdate = useCallback(
+    (title: string) => {
+      setTitle(title)
+      pictureService.updatePicture(pictureId, { title })
+    },
+    [setTitle, pictureId, pictureService]
+  )
+
+  const imageLink = `https://i.kakeru.app/${pictureId}.svg`
+  const pageLink = `https://kakeru.app/${pictureId}`
+
+  const [tool, setTool] = useVariable(canvasManager.tool)
+  const [palmRejection, setPalmRejection] = useVariable(canvasManager.palmRejection)
+
+  const [scale] = useVariable(canvasManager.scale)
+
+  const zoomIn = useCallback(() => {
+    canvasManager.zoomIn()
+  }, [canvasManager])
+  const zoomOut = useCallback(() => {
+    canvasManager.zoomOut()
+  }, [canvasManager])
+
+  const [canUndo] = useVariable(canvasManager.canUndo)
+  const [canRedo] = useVariable(canvasManager.canRedo)
+
+  const undo = useCallback(() => {
+    canvasManager.undo()
+  }, [canvasManager])
+  const redo = useCallback(() => {
+    canvasManager.redo()
+  }, [canvasManager])
+
   return (
     <Container>
       <input
         type="text"
-        value={title}
-        onChange={(e) => onTitleChange(e.target.value)}
+        value={title ?? defaultTitle}
+        onChange={(e) => setTitleWithUpdate(e.target.value)}
         placeholder="Title"
       />
       <RightButtonsContainer>
@@ -180,16 +191,16 @@ export function ToolBar({
       </RightButtonsContainer>
       <div className="tools">
         <div className="tool-group">
-          {makeToolButton('pen', selectedTool, onSelectedToolChange)}
-          {makeToolButton('hand', selectedTool, onSelectedToolChange)}
-          {makeToolButton('eraser', selectedTool, onSelectedToolChange)}
+          {makeToolButton('pen', tool, setTool)}
+          {makeToolButton('hand', tool, setTool)}
+          {makeToolButton('eraser', tool, setTool)}
         </div>
 
         <div className="tool-group">
           <button
-            className={classNames('tool-bar-button', { selected: palmRejectionEnabled })}
+            className={classNames('tool-bar-button', { selected: palmRejection })}
             onClick={() => {
-              onPalmRejectionEnabledChange(!palmRejectionEnabled)
+              setPalmRejection(!palmRejection)
             }}
           >
             <span className="fa-layers fa-fw">
@@ -200,20 +211,20 @@ export function ToolBar({
         </div>
 
         <div className="tool-group">
-          <button className="tool-bar-button" onClick={onZoomOut}>
+          <button className="tool-bar-button" onClick={zoomOut}>
             <FontAwesomeIcon className="icon" icon={faSearchMinus} />
           </button>
-          <button className="tool-bar-button" onClick={onZoomIn}>
+          <button className="tool-bar-button" onClick={zoomIn}>
             <FontAwesomeIcon className="icon" icon={faSearchPlus} />
           </button>
           <span>{(scale * 100).toFixed()}%</span>
         </div>
 
         <div className="tool-group">
-          <button className="tool-bar-button" disabled={!canUndo} onClick={onUndo}>
+          <button className="tool-bar-button" disabled={!canUndo} onClick={undo}>
             <FontAwesomeIcon className="icon" icon={faUndo} />
           </button>
-          <button className="tool-bar-button" disabled={!canRedo} onClick={onRedo}>
+          <button className="tool-bar-button" disabled={!canRedo} onClick={redo}>
             <FontAwesomeIcon className="icon" icon={faRedo} />
           </button>
         </div>

@@ -1,11 +1,10 @@
-import React, { useEffect, useState, useRef, useMemo, useLayoutEffect, useCallback } from 'react'
+import React, { useEffect, useState, useRef, useMemo, useLayoutEffect } from 'react'
 import { ToolBar } from './ToolBar'
 import { useParams } from 'react-router-dom'
 import styled from '@emotion/styled'
 import { PictureService } from '../services/PictureService'
 import { CanvasManager } from '../CanvasManager'
 import { Title } from './Title'
-import { useVariable } from '../utils/useVariable'
 
 type Props = {}
 
@@ -18,13 +17,6 @@ export function DrawingScreen({}: Props) {
   const canvasManager = useMemo(() => new CanvasManager(pictureId), [pictureId])
 
   const [title, setTitle] = useState<string | null>(null)
-
-  const [selectedTool, setSelectedTool] = useVariable(canvasManager.tool)
-  const [palmRejectionEnabled, setPalmRejectionEnabled] = useVariable(canvasManager.palmRejection)
-  const [scale] = useVariable(canvasManager.scale)
-
-  const [canUndo] = useVariable(canvasManager.canUndo)
-  const [canRedo] = useVariable(canvasManager.canRedo)
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -39,55 +31,19 @@ export function DrawingScreen({}: Props) {
     }
   }, [canvasRef, canvasManager])
 
-  const setTitleWithUpdate = useCallback(
-    (title: string | null) => {
-      setTitle(title)
-      if (title != null) {
-        pictureService.updatePicture(pictureId, { title })
-      }
-    },
-    [setTitle, pictureService, pictureId]
-  )
-
   useEffect(() => {
     const unsubscribe = pictureService.watchPicture(pictureId, ({ title }) => {
-      if (title != null) {
-        setTitle(title)
-      }
+      setTitle(title ?? null)
     })
 
     return unsubscribe
-  }, [pictureService])
+  }, [pictureService, pictureId])
 
   return (
     <>
       <Title>{title ?? defaultTitle}</Title>
       <Container>
-        <ToolBar
-          title={title ?? defaultTitle}
-          onTitleChange={setTitleWithUpdate}
-          selectedTool={selectedTool}
-          onSelectedToolChange={setSelectedTool}
-          palmRejectionEnabled={palmRejectionEnabled}
-          onPalmRejectionEnabledChange={setPalmRejectionEnabled}
-          onZoomIn={() => {
-            canvasManager.zoomIn()
-          }}
-          onZoomOut={() => {
-            canvasManager.zoomOut()
-          }}
-          scale={scale}
-          imageLink={`https://i.kakeru.app/${pictureId}.svg`}
-          pageLink={`https://kakeru.app/${pictureId}`}
-          canUndo={canUndo}
-          canRedo={canRedo}
-          onUndo={() => {
-            canvasManager.undo()
-          }}
-          onRedo={() => {
-            canvasManager.redo()
-          }}
-        />
+        <ToolBar pictureId={pictureId} canvasManager={canvasManager} />
         <div className="canvas-wrapper">
           <canvas ref={canvasRef}></canvas>
         </div>
