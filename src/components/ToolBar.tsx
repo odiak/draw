@@ -28,11 +28,11 @@ type Props = {
   canvasManager: CanvasManager
 }
 
-function makeToolButton(
-  tool: Tool,
-  selectedTool: Tool,
+const WrappedToolButton: FC<{
+  tool: Tool
+  selectedTool: Tool
   onSelectedToolChange: (tool: Tool) => void
-) {
+}> = ({ tool, selectedTool, onSelectedToolChange }) => {
   return (
     <ToolButton
       tool={tool}
@@ -191,9 +191,9 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
       </RightButtonsContainer>
       <div className="tools">
         <div className="tool-group">
-          {makeToolButton('pen', tool, setTool)}
-          {makeToolButton('hand', tool, setTool)}
-          {makeToolButton('eraser', tool, setTool)}
+          <WrappedToolButton tool="pen" selectedTool={tool} onSelectedToolChange={setTool} />
+          <WrappedToolButton tool="hand" selectedTool={tool} onSelectedToolChange={setTool} />
+          <WrappedToolButton tool="eraser" selectedTool={tool} onSelectedToolChange={setTool} />
         </div>
 
         <div className="tool-group">
