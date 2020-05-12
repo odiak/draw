@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react'
+import React, { useRef, useState, useCallback, FC } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faHandPointUp,
@@ -42,24 +42,24 @@ function makeToolButton(
   )
 }
 
-function makeMenuItemToCopy(content: string, textToCopy: string, close: () => void) {
+const MenuItemToCopy: FC<{ text: string; close: () => void }> = ({ children, text, close }) => {
   return (
     <MenuItem
       onClick={() => {
         close()
-        copyToClipboard(textToCopy)
+        copyToClipboard(text)
       }}
     >
-      {content}
+      {children}
     </MenuItem>
   )
 }
 
-function makeMenuItemWithLink(content: string, url: string, close: () => void) {
+const MenuItemWithLink: FC<{ link: string; close: () => void }> = ({ link, close, children }) => {
   return (
     <MenuItemWithAnchor onClick={close}>
-      <a href={url} target="_blank" rel="noopener noreferrer">
-        {content}
+      <a href={link} target="_blank" rel="noopener noreferrer">
+        {children}
       </a>
     </MenuItemWithAnchor>
   )
@@ -173,19 +173,19 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
         <MenuButton ref={menuButtonRef} onClick={toggleMenu}>
           <FontAwesomeIcon icon={faEllipsisH} className="icon" />
           <Menu ref={menuRef} show={showMenu}>
-            {makeMenuItemToCopy('Copy image link', imageLink, closeMenu)}
-            {makeMenuItemToCopy(
-              'Copy image link for Markdown',
-              `[![](${imageLink})](${pageLink})`,
-              closeMenu
-            )}
-            {makeMenuItemToCopy(
-              'Copy image link for Scrapbox',
-              `[${pageLink} ${imageLink}]`,
-              closeMenu
-            )}
+            <MenuItemToCopy text={imageLink} close={closeMenu}>
+              Copy image link
+            </MenuItemToCopy>
+            <MenuItemToCopy text={`[![](${imageLink})](${pageLink})`} close={closeMenu}>
+              Copy image link for Markdown
+            </MenuItemToCopy>
+            <MenuItemToCopy text={`[${pageLink} ${imageLink}]`} close={closeMenu}>
+              Copy image link for Scrapbox
+            </MenuItemToCopy>
             <MenuDivider />
-            {makeMenuItemWithLink('About Kakeru', 'https://about.kakeru.app/', closeMenu)}
+            <MenuItemWithLink link="https://about.kakeru.app/" close={closeMenu}>
+              About Kakeru
+            </MenuItemWithLink>
           </Menu>
         </MenuButton>
       </RightButtonsContainer>
