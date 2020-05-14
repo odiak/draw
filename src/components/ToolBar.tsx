@@ -14,7 +14,7 @@ import {
 import { ToolButton } from './ToolButton'
 import { Tool } from '../types/Tool'
 import classNames from 'classnames'
-import styled from '@emotion/styled'
+import styled from 'styled-components'
 import { copyToClipboard } from '../utils/copyToClipboard'
 import { Link } from 'react-router-dom'
 import { useMenu } from '../utils/useMenu'

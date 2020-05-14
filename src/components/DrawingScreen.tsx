@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useMemo, useLayoutEffect } from 'react'
 import { ToolBar } from './ToolBar'
 import { useParams } from 'react-router-dom'
-import styled from '@emotion/styled'
+import styled from 'styled-components'
 import { PictureService } from '../services/PictureService'
 import { CanvasManager } from '../CanvasManager'
 import { Title } from './Title'

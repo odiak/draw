@@ -4,7 +4,7 @@ import 'firebase/firestore'
 import 'firebase/auth'
 import { render } from 'react-dom'
 import { App } from './components/App'
-import { css, Global } from '@emotion/core'
+import { createGlobalStyle } from 'styled-components'
 
 firebase.initializeApp({
   apiKey: 'AIzaSyC3uYAGMS5pIjJKlNyGkc4aqKn4U1fjV8w',
@@ -16,7 +16,7 @@ firebase.initializeApp({
   appId: '1:251397130642:web:ae3b9c1dff554eea'
 })
 
-const globalStyle = css`
+const GlobalStyle = createGlobalStyle`
   html {
     font-family: Arial, Helvetica, sans-serif;
   }
@@ -33,7 +33,7 @@ const globalStyle = css`
 
 render(
   <>
-    <Global styles={globalStyle} />
+    <GlobalStyle />
     <App />
   </>,
   document.getElementById('app')
