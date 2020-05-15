@@ -3289,6 +3289,7 @@ __metadata:
     prettier: ^2.0.5
     react: ^16.13.1
     react-dom: ^16.13.1
+    react-is: ^16.13.1
     react-router-dom: ^5.1.2
     styled-components: ^5.1.0
     ts-loader: ^7.0.2
@@ -7240,6 +7241,13 @@ fsevents@^1.2.7:
   peerDependencies:
     react: ^16.13.1
   checksum: 2c51e67bd908d052a01ba701fa6b3d92796a91aa2c637bf3e5d98ba9e7ff5bfd7627af43a30fc8c44f1a9601204738c991149f35210303abc56e1846d2fb2a06
+  languageName: node
+  linkType: hard
+
+"react-is@npm:^16.13.1":
+  version: 16.13.1
+  resolution: "react-is@npm:16.13.1"
+  checksum: 9659c004a370c15275784b1e848b735a7d403b5ba455e76b48d0840b05ee12bd79ef1dea520e7d70228367e0d95cc3cb894fbcbfda91c198b3339a96a0ecacc4
   languageName: node
   linkType: hard
 
