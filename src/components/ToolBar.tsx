@@ -128,6 +128,17 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
     canvasManager.redo()
   }, [canvasManager])
 
+  const signIn = useCallback(async () => {
+    const c = await authService.signInWithGoogle()
+    if (c == null) {
+      alert('Failed to sign in')
+    }
+  }, [authService])
+
+  const signOut = useCallback(() => {
+    authService.signOut()
+  }, [authService])
+
   return (
     <Container>
       <input
@@ -149,28 +160,9 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
             )}
             <Menu ref={accountMenuRef} show={showAccountMenu}>
               {currentUser.isAnonymous ? (
-                <>
-                  <MenuItem
-                    onClick={async () => {
-                      const c = await authService.signInWithGoogle()
-                      if (c == null) {
-                        alert('Failed to sign in')
-                      }
-                    }}
-                  >
-                    Sign in with Google
-                  </MenuItem>
-                </>
+                <MenuItem onClick={signIn}>Sign in with Google</MenuItem>
               ) : (
-                <>
-                  <MenuItem
-                    onClick={() => {
-                      authService.signOut()
-                    }}
-                  >
-                    Sign out
-                  </MenuItem>
-                </>
+                <MenuItem onClick={signOut}>Sign out</MenuItem>
               )}
             </Menu>
           </AccountButton>
