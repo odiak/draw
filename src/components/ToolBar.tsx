@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback, FC, useEffect } from 'react'
+import React, { useState, useCallback, FC, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faHandPointUp,
@@ -22,6 +22,7 @@ import { AuthService } from '../services/AuthService'
 import { useVariable } from '../utils/useVariable'
 import { PictureService } from '../services/PictureService'
 import { CanvasManager } from '../CanvasManager'
+import { MenuDivider, MenuItem, MenuItemWithAnchor, Menu } from './Menu'
 
 type Props = {
   pictureId: string
@@ -42,11 +43,10 @@ const WrappedToolButton: FC<{
   )
 }
 
-const MenuItemToCopy: FC<{ text: string; close: () => void }> = ({ children, text, close }) => {
+const MenuItemToCopy: FC<{ text: string }> = ({ children, text }) => {
   return (
     <MenuItem
       onClick={() => {
-        close()
         copyToClipboard(text)
       }}
     >
@@ -55,9 +55,9 @@ const MenuItemToCopy: FC<{ text: string; close: () => void }> = ({ children, tex
   )
 }
 
-const MenuItemWithLink: FC<{ link: string; close: () => void }> = ({ link, close, children }) => {
+const MenuItemWithLink: FC<{ link: string }> = ({ link, children }) => {
   return (
-    <MenuItemWithAnchor onClick={close}>
+    <MenuItemWithAnchor>
       <a href={link} target="_blank" rel="noopener noreferrer">
         {children}
       </a>
@@ -70,20 +70,8 @@ const defaultTitle = 'Untitled'
 export function ToolBar({ pictureId, canvasManager }: Props) {
   const pictureService = PictureService.instantiate()
 
-  const menuButtonRef = useRef<HTMLButtonElement>(null)
-  const menuRef = useRef<HTMLUListElement>(null)
-  const accountMenuButtonRef = useRef<HTMLButtonElement>(null)
-  const accountMenuRef = useRef<HTMLUListElement>(null)
-
-  const { show: showMenu, close: closeMenu, toggle: toggleMenu } = useMenu({
-    buttonRef: menuButtonRef,
-    menuRef: menuRef
-  })
-
-  const { show: showAccountMenu, toggle: toggleAccountMenu } = useMenu({
-    buttonRef: accountMenuButtonRef,
-    menuRef: accountMenuRef
-  })
+  const { menuRef, buttonRef: menuButtonRef } = useMenu()
+  const { menuRef: accountMenuRef, buttonRef: accountMenuButtonRef } = useMenu()
 
   const authService = AuthService.instantiate()
 
@@ -152,13 +140,13 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
           <FontAwesomeIcon icon={faPlus} className="icon" />
         </NewButton>
         {currentUser != null && (
-          <AccountButton ref={accountMenuButtonRef} onClick={toggleAccountMenu}>
+          <AccountButton ref={accountMenuButtonRef}>
             {currentUser.isAnonymous ? (
               <FontAwesomeIcon icon={faUser} className="icon" />
             ) : (
               <AccountImage src={currentUser.photoURL || ''} />
             )}
-            <Menu ref={accountMenuRef} show={showAccountMenu}>
+            <Menu ref={accountMenuRef}>
               {currentUser.isAnonymous ? (
                 <MenuItem onClick={signIn}>Sign in with Google</MenuItem>
               ) : (
@@ -167,22 +155,18 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
             </Menu>
           </AccountButton>
         )}
-        <MenuButton ref={menuButtonRef} onClick={toggleMenu}>
+        <MenuButton ref={menuButtonRef}>
           <FontAwesomeIcon icon={faEllipsisH} className="icon" />
-          <Menu ref={menuRef} show={showMenu}>
-            <MenuItemToCopy text={imageLink} close={closeMenu}>
-              Copy image link
-            </MenuItemToCopy>
-            <MenuItemToCopy text={`[![](${imageLink})](${pageLink})`} close={closeMenu}>
+          <Menu ref={menuRef}>
+            <MenuItemToCopy text={imageLink}>Copy image link</MenuItemToCopy>
+            <MenuItemToCopy text={`[![](${imageLink})](${pageLink})`}>
               Copy image link for Markdown
             </MenuItemToCopy>
-            <MenuItemToCopy text={`[${pageLink} ${imageLink}]`} close={closeMenu}>
+            <MenuItemToCopy text={`[${pageLink} ${imageLink}]`}>
               Copy image link for Scrapbox
             </MenuItemToCopy>
             <MenuDivider />
-            <MenuItemWithLink link="https://about.kakeru.app/" close={closeMenu}>
-              About Kakeru
-            </MenuItemWithLink>
+            <MenuItemWithLink link="https://about.kakeru.app/">About Kakeru</MenuItemWithLink>
           </Menu>
         </MenuButton>
       </RightButtonsContainer>
@@ -292,55 +276,6 @@ const MenuButton = styled.button`
   border: 0;
   background: #ddd;
   position: relative;
-`
-
-const Menu = styled.ul<{ show: boolean }>`
-  padding: 0;
-  list-style: none;
-  position: absolute;
-  right: 0;
-  top: 100%;
-  display: ${({ show }) => (show ? 'block' : 'none')};
-  background: #fff;
-  border: 1px solid #ccc;
-  margin: 0;
-  box-shadow: 0 0 6px #0004;
-  z-index: 100;
-  font-size: 16px;
-  width: max-content;
-  text-align: left;
-  min-width: 160px;
-`
-
-const MenuItem = styled.li`
-  padding: 6px 8px;
-  cursor: pointer;
-
-  &:hover {
-    background: #eee;
-  }
-`
-
-const MenuItemWithAnchor = styled.li`
-  padding: 0;
-  cursor: pointer;
-
-  &:hover {
-    background: #eee;
-  }
-
-  & > a:link,
-  & > a:visited {
-    padding: 6px 8px;
-    color: inherit;
-    text-decoration: none;
-    display: block;
-  }
-`
-
-const MenuDivider = styled.div`
-  height: 1px;
-  background: #ccc;
 `
 
 const NewButton = styled(Link)`
