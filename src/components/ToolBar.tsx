@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback, FC } from 'react'
+import React, { useRef, useState, useCallback, FC, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faHandPointUp,
@@ -97,6 +97,11 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
     },
     [setTitle, pictureId, pictureService]
   )
+  useEffect(() => {
+    return pictureService.watchPicture(pictureId, ({ title }) => {
+      setTitle(title ?? null)
+    })
+  }, [pictureId, pictureService])
 
   const imageLink = `https://i.kakeru.app/${pictureId}.svg`
   const pageLink = `https://kakeru.app/${pictureId}`
