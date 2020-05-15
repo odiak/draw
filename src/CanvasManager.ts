@@ -3,6 +3,7 @@ import { Path, PictureService, Point } from './services/PictureService'
 import { generateId } from './utils/generateId'
 import { Variable } from './utils/Variable'
 import { SettingsService } from './services/SettingsService'
+import { addEventListener } from './utils/addEventListener'
 
 type Operation =
   | Readonly<{
@@ -130,14 +131,14 @@ export class CanvasManager {
     this.handleResize()
 
     const unsubscribers = [
-      listen(window, 'resize', this.handleWindowResize.bind(this)),
-      listen(elem, 'wheel', this.handleWheel.bind(this)),
-      listen(elem, 'mousedown', this.handleMouseDown.bind(this)),
-      listen(elem, 'mousemove', this.handleMouseMove.bind(this)),
-      listen(document.body, 'mouseup', this.handleGlobalMouseUp.bind(this)),
-      listen(elem, 'touchstart', this.handleTouchStart.bind(this), { passive: true }),
-      listen(elem, 'touchmove', this.handleTouchMove.bind(this), { passive: true }),
-      listen(elem, 'touchend', this.handleTouchEnd.bind(this), { passive: true })
+      addEventListener(window, 'resize', this.handleWindowResize.bind(this)),
+      addEventListener(elem, 'wheel', this.handleWheel.bind(this)),
+      addEventListener(elem, 'mousedown', this.handleMouseDown.bind(this)),
+      addEventListener(elem, 'mousemove', this.handleMouseMove.bind(this)),
+      addEventListener(document.body, 'mouseup', this.handleGlobalMouseUp.bind(this)),
+      addEventListener(elem, 'touchstart', this.handleTouchStart.bind(this), { passive: true }),
+      addEventListener(elem, 'touchmove', this.handleTouchMove.bind(this), { passive: true }),
+      addEventListener(elem, 'touchend', this.handleTouchEnd.bind(this), { passive: true })
     ]
 
     this.canvasCleanUpHandler = () => {
@@ -858,23 +859,5 @@ function addToSet<T>(set: Set<T> | null | undefined, items: Iterable<T>) {
 
   for (const item of items) {
     set.add(item)
-  }
-}
-
-type Listenable<EventType extends string, Event, ExtraArgs extends unknown[]> = {
-  addEventListener(eventType: EventType, handler: (event: Event) => void, ...args: ExtraArgs): void
-  removeEventListener(eventType: EventType, handler: (event: Event) => void): void
-}
-
-function listen<ET extends string, E, EA extends unknown[]>(
-  target: Listenable<ET, E, EA>,
-  eventType: ET,
-  handler: (e: E) => void,
-  ...args: EA
-): () => void {
-  target.addEventListener(eventType, handler, ...args)
-
-  return () => {
-    target.removeEventListener(eventType, handler)
   }
 }
