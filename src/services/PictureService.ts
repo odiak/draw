@@ -5,9 +5,12 @@ import { AuthService, User } from './AuthService'
 export type Point = { x: number; y: number }
 export type Path = { color: string; width: number; points: Point[]; id: string }
 
+export type AccessibilityLevel = 'public' | 'protected' | 'private'
+
 export type Picture = {
   title?: string
   ownerId?: string
+  accessibilityLevel?: AccessibilityLevel
 }
 
 export type PathsUpdate = Partial<{
@@ -19,6 +22,11 @@ export type Permission = {
   isOwner: boolean
   readable: boolean
   writable: boolean
+  accessibilityLevel: AccessibilityLevel
+}
+
+export type WatchPictureOptions = {
+  includesLocalChanges?: boolean
 }
 
 export class PictureService {
@@ -33,7 +41,7 @@ export class PictureService {
 
   private authService = AuthService.instantiate()
 
-  updatePicture(pictureId: string, update: Partial<{ title: string }>) {
+  updateTitle(pictureId: string, title: string) {
     const tick = this.titleUpdateTick.get(pictureId)
     if (tick != null) {
       clearTimeout(tick.timerId)
@@ -41,9 +49,13 @@ export class PictureService {
     }
 
     const timerId = window.setTimeout(() => {
-      this.picturesCollection.doc(pictureId).set(update, { merge: true })
+      this.picturesCollection.doc(pictureId).set({ title }, { merge: true })
     }, 1500)
     this.titleUpdateTick.set(pictureId, { timerId })
+  }
+
+  async updatePicture(pictureId: string, update: Pick<Picture, 'accessibilityLevel'>) {
+    await this.picturesCollection.doc(pictureId).set(update, { merge: true })
   }
 
   addPaths(pictureId: string, pathsToAdd: Path[]) {
@@ -77,9 +89,15 @@ export class PictureService {
     this.setPictureOwnerIfNotExist(pictureId)
   }
 
-  watchPicture(pictureId: string, callback: (u: Picture) => void): () => void {
+  watchPicture(
+    pictureId: string,
+    callback: (u: Picture) => void,
+    options?: WatchPictureOptions
+  ): () => void {
+    const includesLocalChanges = options != null && options.includesLocalChanges === true
+
     const unwatch = this.picturesCollection.doc(pictureId).onSnapshot((snapshot) => {
-      if (snapshot.metadata.hasPendingWrites) return
+      if (snapshot.metadata.hasPendingWrites && !includesLocalChanges) return
       const data = snapshot.data()
       const update = (data || {}) as { title?: string }
       callback(update)
@@ -123,7 +141,9 @@ export class PictureService {
 
       callback(getPermission(picture, user))
     })
-    const unsubscribeP = this.watchPicture(pictureId, pictureCallback)
+    const unsubscribeP = this.watchPicture(pictureId, pictureCallback, {
+      includesLocalChanges: true
+    })
     const unsubscribeU = this.authService.currentUser.subscribe(userCallback)
 
     return () => {
@@ -172,19 +192,28 @@ function decodePath(doc: any): Path {
 }
 
 function getPermission(picture: Picture, user: User): Permission {
+  const accessibilityLevel = validateAccessibilityLevel(picture.accessibilityLevel)
+
   if (picture.ownerId === user.uid) {
     return {
       isOwner: true,
       readable: true,
-      writable: true
+      writable: true,
+      accessibilityLevel
     }
   } else {
     return {
       isOwner: false,
       readable: true,
-      writable: true
+      writable: true,
+      accessibilityLevel
     }
   }
+}
+
+function validateAccessibilityLevel(accLevel: string | null | undefined): AccessibilityLevel {
+  if (accLevel === 'protected' || accLevel === 'private') return accLevel
+  return 'public'
 }
 
 function combine<T1, T2>(callback: (v1: T1, v2: T2) => void): [(v1: T1) => void, (v2: T2) => void] {

@@ -20,8 +20,9 @@ import { Link } from 'react-router-dom'
 import { useMenu } from '../utils/useMenu'
 import { AuthService } from '../services/AuthService'
 import { useVariable } from '../utils/useVariable'
-import { PictureService } from '../services/PictureService'
+import { PictureService, Permission, AccessibilityLevel } from '../services/PictureService'
 import { CanvasManager } from '../CanvasManager'
+import { AccessibilityMenuButton } from './AccessibilityMenuButton'
 import { MenuDivider, MenuItem, MenuItemWithAnchor, Menu } from './Menu'
 
 type Props = {
@@ -81,7 +82,7 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
   const setTitleWithUpdate = useCallback(
     (title: string) => {
       setTitle(title)
-      pictureService.updatePicture(pictureId, { title })
+      pictureService.updateTitle(pictureId, title)
     },
     [setTitle, pictureId, pictureService]
   )
@@ -90,6 +91,11 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
       setTitle(title ?? null)
     })
   }, [pictureId, pictureService])
+
+  const [permission, setPermission] = useState<Permission | null>(null)
+  useEffect(() => {
+    return pictureService.watchPermission(pictureId, setPermission)
+  }, [pictureService, pictureId])
 
   const imageLink = `https://i.kakeru.app/${pictureId}.svg`
   const pageLink = `https://kakeru.app/${pictureId}`
@@ -127,6 +133,13 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
     authService.signOut()
   }, [authService])
 
+  const updateAccessibilityLevel = useCallback(
+    (accLevel: AccessibilityLevel) => {
+      pictureService.updatePicture(pictureId, { accessibilityLevel: accLevel })
+    },
+    [pictureId, pictureService]
+  )
+
   return (
     <Container>
       <input
@@ -136,6 +149,12 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
         placeholder="Title"
       />
       <RightButtonsContainer>
+        {permission != null && permission.isOwner && (
+          <StyledAccessibilityMenuButton
+            permission={permission}
+            onAccessibilityLevelChange={updateAccessibilityLevel}
+          />
+        )}
         <NewButton to="/">
           <FontAwesomeIcon icon={faPlus} className="icon" />
         </NewButton>
@@ -321,4 +340,8 @@ const AccountButton = styled.button`
 const AccountImage = styled.img`
   width: 100%;
   height: 100%;
+`
+
+const StyledAccessibilityMenuButton = styled(AccessibilityMenuButton)`
+  margin-right: 40px;
 `
