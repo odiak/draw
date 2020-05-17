@@ -147,6 +147,7 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
         value={title ?? defaultTitle}
         onChange={(e) => setTitleWithUpdate(e.target.value)}
         placeholder="Title"
+        disabled={permission == null || !permission.writable}
       />
       <RightButtonsContainer>
         {permission != null && permission.isOwner && (
@@ -252,6 +253,14 @@ const Container = styled.div`
 
     &:hover {
       border-color: #ccc;
+    }
+
+    &:disabled {
+      background: inherit;
+      color: inherit;
+      &:hover {
+        border-color: transparent;
+      }
     }
   }
 
