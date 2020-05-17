@@ -105,11 +105,16 @@ export class PictureService {
   ): () => void {
     const includesLocalChanges = options != null && options.includesLocalChanges === true
 
-    const unwatch = this.picturesCollection.doc(pictureId).onSnapshot((snapshot) => {
-      if (snapshot.metadata.hasPendingWrites && !includesLocalChanges) return
-      this.existFlags.set(pictureId, snapshot.exists)
-      callback(snapshot.data() ?? null)
-    })
+    const unwatch = this.picturesCollection.doc(pictureId).onSnapshot(
+      (snapshot) => {
+        if (snapshot.metadata.hasPendingWrites && !includesLocalChanges) return
+        this.existFlags.set(pictureId, snapshot.exists)
+        callback(snapshot.data() ?? null)
+      },
+      () => {
+        callback({ accessibilityLevel: 'private' })
+      }
+    )
 
     return unwatch
   }
@@ -209,11 +214,25 @@ function getPermission(picture: Picture | null, user: User): Permission {
       writable: true,
       accessibilityLevel
     }
-  } else {
+  } else if (accessibilityLevel === 'public') {
     return {
       isOwner: false,
       readable: true,
       writable: true,
+      accessibilityLevel
+    }
+  } else if (accessibilityLevel === 'protected') {
+    return {
+      isOwner: false,
+      readable: true,
+      writable: false,
+      accessibilityLevel
+    }
+  } else {
+    return {
+      isOwner: false,
+      readable: false,
+      writable: false,
       accessibilityLevel
     }
   }

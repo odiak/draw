@@ -78,6 +78,8 @@ export class CanvasManager {
 
   readonly canvasRef = this.setCanvasElement.bind(this)
 
+  private writable = false
+
   constructor(private pictureId: string) {
     this.scale.subscribe((scale, prevScale) => {
       const r = scale / prevScale
@@ -168,6 +170,10 @@ export class CanvasManager {
 
     this.canvasElement = null
     this.renderingContext = null
+  }
+
+  setWritable(writable: boolean = true) {
+    this.writable = writable
   }
 
   private addPathsAndAdjustPosition(pathsToAdd: Path[]) {
@@ -393,10 +399,15 @@ export class CanvasManager {
     this.doOperation({ type: 'remove', paths: erasingPaths })
   }
 
+  private get actualCurrentTool(): Tool {
+    if (!this.writable) return 'hand'
+    return this.tool.value
+  }
+
   private handleMouseDown(event: MouseEvent) {
     this.updateOffset()
 
-    switch (this.tool.value) {
+    switch (this.actualCurrentTool) {
       case 'pen':
         if (this.drawingPath == null) {
           this.drawingPath = {
@@ -426,7 +437,7 @@ export class CanvasManager {
   }
 
   private handleMouseMove(event: MouseEvent) {
-    switch (this.tool.value) {
+    switch (this.actualCurrentTool) {
       case 'pen': {
         const { drawingPath } = this
         if (drawingPath != null && !this.drawingByTouch) {
@@ -461,7 +472,7 @@ export class CanvasManager {
   }
 
   private handleGlobalMouseUp() {
-    switch (this.tool.value) {
+    switch (this.actualCurrentTool) {
       case 'pen':
         this.addDrawingPath()
         break
@@ -479,7 +490,7 @@ export class CanvasManager {
   private handleTouchStart(event: TouchEvent) {
     this.updateOffset()
 
-    switch (this.tool.value) {
+    switch (this.actualCurrentTool) {
       case 'pen': {
         const p = this.getPointFromTouchEvent(event)
         if (p != null) {
@@ -517,7 +528,7 @@ export class CanvasManager {
   }
 
   private handleTouchMove(event: TouchEvent) {
-    switch (this.tool.value) {
+    switch (this.actualCurrentTool) {
       case 'pen': {
         const p = this.getPointFromTouchEvent(event)
         if (p != null) {
@@ -560,7 +571,7 @@ export class CanvasManager {
   }
 
   private handleTouchEnd(event: TouchEvent) {
-    switch (this.tool.value) {
+    switch (this.actualCurrentTool) {
       case 'pen': {
         const p = this.getPointFromTouchEvent(event)
         if (p != null) {

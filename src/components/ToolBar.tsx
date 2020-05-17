@@ -190,25 +190,29 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
         </MenuButton>
       </RightButtonsContainer>
       <div className="tools">
-        <div className="tool-group">
-          <WrappedToolButton tool="pen" selectedTool={tool} onSelectedToolChange={setTool} />
-          <WrappedToolButton tool="hand" selectedTool={tool} onSelectedToolChange={setTool} />
-          <WrappedToolButton tool="eraser" selectedTool={tool} onSelectedToolChange={setTool} />
-        </div>
+        {permission?.writable && (
+          <>
+            <div className="tool-group">
+              <WrappedToolButton tool="pen" selectedTool={tool} onSelectedToolChange={setTool} />
+              <WrappedToolButton tool="hand" selectedTool={tool} onSelectedToolChange={setTool} />
+              <WrappedToolButton tool="eraser" selectedTool={tool} onSelectedToolChange={setTool} />
+            </div>
 
-        <div className="tool-group">
-          <button
-            className={classNames('tool-bar-button', { selected: palmRejection })}
-            onClick={() => {
-              setPalmRejection(!palmRejection)
-            }}
-          >
-            <span className="fa-layers fa-fw">
-              <FontAwesomeIcon icon={faHandPointUp} className="icon" />
-              <FontAwesomeIcon icon={faSlash} className="icon" />
-            </span>
-          </button>
-        </div>
+            <div className="tool-group">
+              <button
+                className={classNames('tool-bar-button', { selected: palmRejection })}
+                onClick={() => {
+                  setPalmRejection(!palmRejection)
+                }}
+              >
+                <span className="fa-layers fa-fw">
+                  <FontAwesomeIcon icon={faHandPointUp} className="icon" />
+                  <FontAwesomeIcon icon={faSlash} className="icon" />
+                </span>
+              </button>
+            </div>
+          </>
+        )}
 
         <div className="tool-group">
           <button className="tool-bar-button" onClick={zoomOut}>
@@ -220,14 +224,16 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
           <span>{(scale * 100).toFixed()}%</span>
         </div>
 
-        <div className="tool-group">
-          <button className="tool-bar-button" disabled={!canUndo} onClick={undo}>
-            <FontAwesomeIcon className="icon" icon={faUndo} />
-          </button>
-          <button className="tool-bar-button" disabled={!canRedo} onClick={redo}>
-            <FontAwesomeIcon className="icon" icon={faRedo} />
-          </button>
-        </div>
+        {permission?.writable && (
+          <div className="tool-group">
+            <button className="tool-bar-button" disabled={!canUndo} onClick={undo}>
+              <FontAwesomeIcon className="icon" icon={faUndo} />
+            </button>
+            <button className="tool-bar-button" disabled={!canRedo} onClick={redo}>
+              <FontAwesomeIcon className="icon" icon={faRedo} />
+            </button>
+          </div>
+        )}
       </div>
     </Container>
   )

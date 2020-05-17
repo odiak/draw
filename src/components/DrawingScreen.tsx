@@ -33,8 +33,15 @@ export function DrawingScreen({}: Props) {
       { includesLocalChanges: true }
     )
 
-    return unsubscribe
-  }, [pictureService, pictureId])
+    const unsubscribePermission = pictureService.watchPermission(pictureId, (permission) => {
+      canvasManager.setWritable(permission.writable)
+    })
+
+    return () => {
+      unsubscribe()
+      unsubscribePermission()
+    }
+  }, [pictureService, pictureId, canvasManager])
 
   return (
     <>
