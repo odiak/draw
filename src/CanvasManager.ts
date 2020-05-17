@@ -76,6 +76,8 @@ export class CanvasManager {
 
   private unwatchPaths: (() => void) | null = null
 
+  readonly canvasRef = this.setCanvasElement.bind(this)
+
   constructor(private pictureId: string) {
     this.scale.subscribe((scale, prevScale) => {
       const r = scale / prevScale
@@ -117,7 +119,12 @@ export class CanvasManager {
     }
   }
 
-  setCanvasElement(elem: HTMLCanvasElement) {
+  setCanvasElement(elem: HTMLCanvasElement | null) {
+    if (elem == null) {
+      this.cleanup()
+      return
+    }
+
     if (elem === this.canvasElement) return
 
     const { canvasCleanUpHandler } = this

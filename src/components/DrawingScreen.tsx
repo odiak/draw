@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo, useLayoutEffect } from 'react'
+import React, { useEffect, useState, useMemo, useLayoutEffect } from 'react'
 import { ToolBar } from './ToolBar'
 import { useParams } from 'react-router-dom'
 import styled from 'styled-components'
@@ -18,18 +18,11 @@ export function DrawingScreen({}: Props) {
 
   const [title, setTitle] = useState<string | null>(null)
 
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-
   useLayoutEffect(() => {
-    const e = canvasRef.current
-    if (e != null) {
-      canvasManager.setCanvasElement(e)
-    }
-
     return () => {
       canvasManager.cleanup()
     }
-  }, [canvasRef, canvasManager])
+  }, [canvasManager])
 
   useEffect(() => {
     const unsubscribe = pictureService.watchPicture(pictureId, ({ title }) => {
@@ -45,7 +38,7 @@ export function DrawingScreen({}: Props) {
       <Container>
         <ToolBar pictureId={pictureId} canvasManager={canvasManager} />
         <div className="canvas-wrapper">
-          <canvas ref={canvasRef}></canvas>
+          <canvas ref={canvasManager.canvasRef}></canvas>
         </div>
       </Container>
     </>
