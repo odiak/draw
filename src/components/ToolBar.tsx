@@ -87,8 +87,8 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
     [setTitle, pictureId, pictureService]
   )
   useEffect(() => {
-    return pictureService.watchPicture(pictureId, ({ title }) => {
-      setTitle(title ?? null)
+    return pictureService.watchPicture(pictureId, (picture) => {
+      setTitle(picture?.title ?? null)
     })
   }, [pictureId, pictureService])
 

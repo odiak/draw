@@ -25,8 +25,8 @@ export function DrawingScreen({}: Props) {
   }, [canvasManager])
 
   useEffect(() => {
-    const unsubscribe = pictureService.watchPicture(pictureId, ({ title }) => {
-      setTitle(title ?? null)
+    const unsubscribe = pictureService.watchPicture(pictureId, (picture) => {
+      setTitle(picture?.title ?? null)
     })
 
     return unsubscribe

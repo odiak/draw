@@ -49,12 +49,21 @@ export class PictureService {
     }
 
     const timerId = window.setTimeout(() => {
-      this.picturesCollection.doc(pictureId).set({ title }, { merge: true })
+      this.updatePicture(pictureId, { title })
     }, 1500)
     this.titleUpdateTick.set(pictureId, { timerId })
   }
 
-  async updatePicture(pictureId: string, update: Pick<Picture, 'accessibilityLevel'>) {
+  async updatePicture(
+    pictureId: string,
+    update: Pick<Picture, 'ownerId' | 'title' | 'accessibilityLevel'>
+  ) {
+    if (this.existFlags.get(pictureId) === false) {
+      const { value: currentUser } = this.authService.currentUser
+      if (currentUser != null) {
+        update.ownerId = currentUser.uid
+      }
+    }
     await this.picturesCollection.doc(pictureId).set(update, { merge: true })
   }
 
@@ -91,16 +100,15 @@ export class PictureService {
 
   watchPicture(
     pictureId: string,
-    callback: (u: Picture) => void,
+    callback: (u: Picture | null) => void,
     options?: WatchPictureOptions
   ): () => void {
     const includesLocalChanges = options != null && options.includesLocalChanges === true
 
     const unwatch = this.picturesCollection.doc(pictureId).onSnapshot((snapshot) => {
       if (snapshot.metadata.hasPendingWrites && !includesLocalChanges) return
-      const data = snapshot.data()
-      const update = (data || {}) as { title?: string }
-      callback(update)
+      this.existFlags.set(pictureId, snapshot.exists)
+      callback(snapshot.data() ?? null)
     })
 
     return unwatch
@@ -136,15 +144,18 @@ export class PictureService {
   }
 
   watchPermission(pictureId: string, callback: (p: Permission) => void): () => void {
-    const [pictureCallback, userCallback] = combine<Picture, User | null>((picture, user) => {
-      if (user == null) return
+    const [pictureCallback, userCallback] = combine<Picture | null, User | null>(
+      (picture, user) => {
+        if (user == null) return
 
-      callback(getPermission(picture, user))
-    })
+        callback(getPermission(picture, user))
+      }
+    )
     const unsubscribeP = this.watchPicture(pictureId, pictureCallback, {
       includesLocalChanges: true
     })
     const unsubscribeU = this.authService.currentUser.subscribe(userCallback)
+    userCallback(this.authService.currentUser.value)
 
     return () => {
       unsubscribeP()
@@ -159,9 +170,6 @@ export class PictureService {
     if (currentUser == null) return
 
     const doc = this.picturesCollection.doc(pictureId)
-    const pictureSS = await doc.get()
-    if (pictureSS.exists) return
-
     await doc.set({ ownerId: currentUser.uid }, { merge: true })
   }
 }
@@ -191,10 +199,10 @@ function decodePath(doc: any): Path {
   return { points, width: rawPath.width, color: rawPath.color, id: doc.id }
 }
 
-function getPermission(picture: Picture, user: User): Permission {
-  const accessibilityLevel = validateAccessibilityLevel(picture.accessibilityLevel)
+function getPermission(picture: Picture | null, user: User): Permission {
+  const accessibilityLevel = validateAccessibilityLevel(picture?.accessibilityLevel)
 
-  if (picture.ownerId === user.uid) {
+  if (picture == null || picture.ownerId === user.uid) {
     return {
       isOwner: true,
       readable: true,
