@@ -167,6 +167,9 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
               <AccountImage src={currentUser.photoURL || ''} />
             )}
             <Menu ref={accountMenuRef}>
+              <MenuItemWithAnchor>
+                <Link to="/boards">My boards</Link>
+              </MenuItemWithAnchor>
               {currentUser.isAnonymous ? (
                 <MenuItem onClick={signIn}>Sign in with Google</MenuItem>
               ) : (

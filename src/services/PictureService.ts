@@ -1,6 +1,7 @@
 import firebase from 'firebase/app'
 import memoizeOne from 'memoize-one'
 import { AuthService, User } from './AuthService'
+import { Variable } from '../utils/Variable'
 
 export type Point = { x: number; y: number }
 export type Path = { color: string; width: number; points: Point[]; id: string }
@@ -11,6 +12,10 @@ export type Picture = {
   title?: string
   ownerId?: string
   accessibilityLevel?: AccessibilityLevel
+}
+
+export type PictureWithId = Picture & {
+  id: string
 }
 
 export type PathsUpdate = Partial<{
@@ -177,6 +182,19 @@ export class PictureService {
     const doc = this.picturesCollection.doc(pictureId)
     await doc.set({ ownerId: currentUser.uid }, { merge: true })
   }
+
+  async fetchPictures(): Promise<Array<PictureWithId>> {
+    const currentUser = await waitUntil(
+      this.authService.currentUser,
+      (u: User | null): u is User => u != null
+    )
+
+    const qs = await this.picturesCollection
+      .where('ownerId', '==', currentUser.uid)
+      .limit(100)
+      .get()
+    return qs.docs.map((ds) => ({ ...ds.data(), id: ds.id }))
+  }
 }
 
 type EncodedPath = {
@@ -264,4 +282,21 @@ function combine<T1, T2>(callback: (v1: T1, v2: T2) => void): [(v1: T1) => void,
     }
   }
   return [callback1, callback2]
+}
+
+async function waitUntil<T, S extends T>(
+  variable: Variable<T>,
+  cond: (t: T) => t is S
+): Promise<S> {
+  const { value } = variable
+  if (cond(value)) return value
+
+  return new Promise((resolve) => {
+    const unsubscribe = variable.subscribe((t) => {
+      if (cond(t)) {
+        resolve(t)
+        unsubscribe()
+      }
+    })
+  })
 }
