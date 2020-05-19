@@ -161,10 +161,10 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
         </NewButton>
         {currentUser != null && (
           <AccountButton ref={accountMenuButtonRef}>
-            {currentUser.isAnonymous ? (
+            {currentUser.isAnonymous || currentUser.photoURL == null ? (
               <FontAwesomeIcon icon={faUser} className="icon" />
             ) : (
-              <AccountImage src={currentUser.photoURL || ''} />
+              <AccountImage src={currentUser.photoURL} />
             )}
             <Menu ref={accountMenuRef}>
               <MenuItemWithAnchor>
