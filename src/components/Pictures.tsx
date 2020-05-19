@@ -44,7 +44,8 @@ const Container = styled.div`
 const ContentContainer = styled.div`
   margin-left: auto;
   margin-right: auto;
-  max-width: 600px;
+  max-width: 800px;
+  padding: 5px;
 `
 
 const H = styled.h1``
@@ -57,13 +58,25 @@ const PictureList = styled.div`
 const PictureListItem = styled(Link)`
   width: 190px;
   height: 150px;
-  margin-right: 10px;
-  margin-bottom: 10px;
+  margin: 5px;
   color: inherit;
   text-decoration: none;
   position: relative;
   box-shadow: 1px 1px 4px #6669;
   overflow: hidden;
+  border-radius: 2px;
+
+  @media screen and (max-width: 830px) {
+    width: calc(25% - 10px);
+  }
+
+  @media screen and (max-width: 600px) {
+    width: calc(33% - 10px);
+  }
+
+  @media screen and (max-width: 400px) {
+    width: calc(50% - 10px);
+  }
 `
 
 const PictureTitle = styled.div`
