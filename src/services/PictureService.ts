@@ -12,6 +12,7 @@ export type Picture = {
   title?: string
   ownerId?: string
   accessibilityLevel?: AccessibilityLevel
+  createdAt?: firebase.firestore.Timestamp
 }
 
 export type PictureWithId = Picture & {
@@ -61,12 +62,16 @@ export class PictureService {
 
   async updatePicture(
     pictureId: string,
-    update: Pick<Picture, 'ownerId' | 'title' | 'accessibilityLevel'>
+    update: Pick<Picture, 'ownerId' | 'title' | 'accessibilityLevel' | 'createdAt'>
   ) {
     if (this.existFlags.get(pictureId) === false) {
       const { value: currentUser } = this.authService.currentUser
       if (currentUser != null) {
-        update.ownerId = currentUser.uid
+        update = {
+          ...update,
+          ownerId: currentUser.uid,
+          createdAt: firebase.firestore.Timestamp.now()
+        }
       }
     }
     await this.picturesCollection.doc(pictureId).set(update, { merge: true })
@@ -180,7 +185,13 @@ export class PictureService {
     if (currentUser == null) return
 
     const doc = this.picturesCollection.doc(pictureId)
-    await doc.set({ ownerId: currentUser.uid }, { merge: true })
+    await doc.set(
+      {
+        ownerId: currentUser.uid,
+        createdAt: firebase.firestore.Timestamp.now()
+      },
+      { merge: true }
+    )
   }
 
   async fetchPictures(): Promise<Array<PictureWithId>> {
