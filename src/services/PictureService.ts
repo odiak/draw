@@ -35,6 +35,8 @@ export type WatchPictureOptions = {
   includesLocalChanges?: boolean
 }
 
+export type Anchor = firebase.firestore.Timestamp | undefined
+
 export class PictureService {
   static readonly instantiate = memoizeOne(() => new PictureService())
 
@@ -194,17 +196,26 @@ export class PictureService {
     )
   }
 
-  async fetchPictures(): Promise<Array<PictureWithId>> {
+  async fetchPictures(anchor?: Anchor): Promise<[Array<PictureWithId>, Anchor]> {
     const currentUser = await waitUntil(
       this.authService.currentUser,
       (u: User | null): u is User => u != null
     )
 
-    const qs = await this.picturesCollection
+    const limit = 50
+
+    let q = this.picturesCollection
       .where('ownerId', '==', currentUser.uid)
-      .limit(100)
-      .get()
-    return qs.docs.map((ds) => ({ ...ds.data(), id: ds.id }))
+      .limit(limit)
+      .orderBy('createdAt', 'desc')
+    if (anchor != null) {
+      q = q.startAfter(anchor)
+    }
+    const qs = await q.get()
+    return [
+      qs.docs.map((ds) => ({ ...ds.data(), id: ds.id })),
+      qs.docs[limit - 1]?.data()?.createdAt
+    ]
   }
 }
 

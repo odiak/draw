@@ -1,20 +1,29 @@
-import React, { FC, useState, useEffect } from 'react'
+import React, { FC, useState, useEffect, useCallback } from 'react'
 import styled from 'styled-components'
 import { Title } from './Title'
-import { PictureService, PictureWithId } from '../services/PictureService'
+import { PictureService, PictureWithId, Anchor } from '../services/PictureService'
 import { Link } from 'react-router-dom'
 
 export const Pictures: FC<{}> = () => {
   const pictureService = PictureService.instantiate()
 
   const [pictures, setPictures] = useState<Array<PictureWithId>>([])
+  const [isLoading, setLoading] = useState(false)
+  const [anchor, setAnchor] = useState(undefined as Anchor)
+
+  const fetchPictures = useCallback(() => {
+    ;(async () => {
+      setLoading(true)
+      const [fetchedPictures, newAnchor] = await pictureService.fetchPictures(anchor)
+      setPictures((ps) => ps.concat(fetchedPictures))
+      setLoading(false)
+      setAnchor(newAnchor)
+    })()
+  }, [pictureService, anchor])
 
   useEffect(() => {
-    ;(async () => {
-      const fetchedPictures = await pictureService.fetchPictures()
-      setPictures((ps) => ps.concat(fetchedPictures))
-    })()
-  }, [pictureService])
+    fetchPictures()
+  }, [])
 
   return (
     <Container>
@@ -30,6 +39,8 @@ export const Pictures: FC<{}> = () => {
             </PictureListItem>
           ))}
         </PictureList>
+        {!isLoading && anchor != null && <Button onClick={fetchPictures}>More</Button>}
+        {isLoading && <LoadingMessage>Loading...</LoadingMessage>}
       </ContentContainer>
     </Container>
   )
@@ -46,6 +57,7 @@ const ContentContainer = styled.div`
   margin-right: auto;
   max-width: 800px;
   padding: 5px;
+  padding-bottom: 20px;
 `
 
 const H = styled.h1``
@@ -91,4 +103,14 @@ const PictureTitle = styled.div`
 
 const PictureThumnail = styled.img`
   transform: scale(0.5) translate(-50%, -50%);
+`
+
+const Button = styled.button`
+  display: block;
+  margin: 10px auto;
+`
+
+const LoadingMessage = styled.div`
+  text-align: center;
+  margin: 10px 0;
 `
