@@ -196,12 +196,7 @@ export class PictureService {
     )
   }
 
-  async fetchPictures(anchor?: Anchor): Promise<[Array<PictureWithId>, Anchor]> {
-    const currentUser = await waitUntil(
-      this.authService.currentUser,
-      (u: User | null): u is User => u != null
-    )
-
+  async fetchPictures(currentUser: User, anchor?: Anchor): Promise<[Array<PictureWithId>, Anchor]> {
     const limit = 50
 
     let q = this.picturesCollection

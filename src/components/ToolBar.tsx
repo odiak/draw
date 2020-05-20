@@ -8,8 +8,7 @@ import {
   faEllipsisH,
   faUndo,
   faRedo,
-  faPlus,
-  faUser
+  faPlus
 } from '@fortawesome/free-solid-svg-icons'
 import { ToolButton } from './ToolButton'
 import { Tool } from '../types/Tool'
@@ -18,12 +17,13 @@ import styled from 'styled-components'
 import { copyToClipboard } from '../utils/copyToClipboard'
 import { Link } from 'react-router-dom'
 import { useMenu } from '../utils/useMenu'
-import { AuthService } from '../services/AuthService'
 import { useVariable } from '../utils/useVariable'
 import { PictureService, Permission, AccessibilityLevel } from '../services/PictureService'
 import { CanvasManager } from '../CanvasManager'
 import { AccessibilityMenuButton } from './AccessibilityMenuButton'
 import { MenuDivider, MenuItem, MenuItemWithAnchor, Menu } from './Menu'
+import { UserMenuButton } from './UserMenuButton'
+import { NewButton } from './NewButton'
 
 type Props = {
   pictureId: string
@@ -72,11 +72,6 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
   const pictureService = PictureService.instantiate()
 
   const { menuRef, buttonRef: menuButtonRef } = useMenu()
-  const { menuRef: accountMenuRef, buttonRef: accountMenuButtonRef } = useMenu()
-
-  const authService = AuthService.instantiate()
-
-  const [currentUser] = useVariable(authService.currentUser)
 
   const [title, setTitle] = useState<string | null>(null)
   const setTitleWithUpdate = useCallback(
@@ -122,17 +117,6 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
     canvasManager.redo()
   }, [canvasManager])
 
-  const signIn = useCallback(async () => {
-    const c = await authService.signInWithGoogle()
-    if (c == null) {
-      alert('Failed to sign in')
-    }
-  }, [authService])
-
-  const signOut = useCallback(() => {
-    authService.signOut()
-  }, [authService])
-
   const updateAccessibilityLevel = useCallback(
     (accLevel: AccessibilityLevel) => {
       pictureService.updatePicture(pictureId, { accessibilityLevel: accLevel })
@@ -156,28 +140,8 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
             onAccessibilityLevelChange={updateAccessibilityLevel}
           />
         )}
-        <NewButton to="/">
-          <FontAwesomeIcon icon={faPlus} className="icon" />
-        </NewButton>
-        {currentUser != null && (
-          <AccountButton ref={accountMenuButtonRef}>
-            {currentUser.isAnonymous || currentUser.photoURL == null ? (
-              <FontAwesomeIcon icon={faUser} className="icon" />
-            ) : (
-              <AccountImage src={currentUser.photoURL} />
-            )}
-            <Menu ref={accountMenuRef}>
-              <MenuItemWithAnchor>
-                <Link to="/boards">My boards</Link>
-              </MenuItemWithAnchor>
-              {currentUser.isAnonymous ? (
-                <MenuItem onClick={signIn}>Sign in with Google</MenuItem>
-              ) : (
-                <MenuItem onClick={signOut}>Sign out</MenuItem>
-              )}
-            </Menu>
-          </AccountButton>
-        )}
+        <StyledNewButton />
+        <StyledUserMenuButton />
         <MenuButton ref={menuButtonRef}>
           <FontAwesomeIcon icon={faEllipsisH} className="icon" />
           <Menu ref={menuRef}>
@@ -307,57 +271,20 @@ const RightButtonsContainer = styled.div`
   top: 0;
 `
 
+const StyledNewButton = styled(NewButton)`
+  margin-right: 12px;
+`
+
+const StyledUserMenuButton = styled(UserMenuButton)`
+  margin-right: 12px;
+`
+
 const MenuButton = styled.button`
   width: 36px;
   height: 30px;
   border: 0;
   background: #ddd;
   position: relative;
-`
-
-const NewButton = styled(Link)`
-  display: block;
-  width: 30px;
-  height: 30px;
-  border: 0;
-  background: #ddd;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-right: 12px;
-
-  &:link,
-  &:visited {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  > .icon {
-    display: block;
-  }
-`
-
-const AccountButton = styled.button`
-  display: block;
-  width: 30px;
-  height: 30px;
-  border: 0;
-  background: #ddd;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-right: 12px;
-  position: relative;
-  padding: 1px;
-
-  > .icon {
-    display: block;
-  }
-`
-
-const AccountImage = styled.img`
-  width: 100%;
-  height: 100%;
 `
 
 const StyledAccessibilityMenuButton = styled(AccessibilityMenuButton)`

@@ -3,30 +3,54 @@ import styled from 'styled-components'
 import { Title } from './Title'
 import { PictureService, PictureWithId, Anchor } from '../services/PictureService'
 import { Link } from 'react-router-dom'
+import { UserMenuButton } from './UserMenuButton'
+import { AuthService, User } from '../services/AuthService'
+import { useVariable } from '../utils/useVariable'
+import { NewButton } from './NewButton'
 
 export const Pictures: FC<{}> = () => {
   const pictureService = PictureService.instantiate()
+  const authService = AuthService.instantiate()
 
   const [pictures, setPictures] = useState<Array<PictureWithId>>([])
   const [isLoading, setLoading] = useState(false)
   const [anchor, setAnchor] = useState(undefined as Anchor)
 
-  const fetchPictures = useCallback(() => {
-    ;(async () => {
-      setLoading(true)
-      const [fetchedPictures, newAnchor] = await pictureService.fetchPictures(anchor)
-      setPictures((ps) => ps.concat(fetchedPictures))
-      setLoading(false)
-      setAnchor(newAnchor)
-    })()
-  }, [pictureService, anchor])
+  const [currentUser] = useVariable(authService.currentUser)
+
+  const fetchPictures = useCallback(
+    (anchor_: Anchor = anchor) => {
+      if (currentUser == null) return
+      ;(async () => {
+        setLoading(true)
+        const [fetchedPictures, newAnchor] = await pictureService.fetchPictures(
+          currentUser,
+          anchor_
+        )
+        setPictures((ps) => (anchor_ == null ? fetchedPictures : ps.concat(fetchedPictures)))
+        setLoading(false)
+        setAnchor(newAnchor)
+      })()
+    },
+    [pictureService, anchor, currentUser]
+  )
 
   useEffect(() => {
+    if (currentUser != null) {
+      fetchPictures(undefined)
+    }
+  }, [currentUser])
+
+  const onClick = useCallback(() => {
     fetchPictures()
-  }, [])
+  }, [fetchPictures])
 
   return (
     <Container>
+      <ButtonsContainer>
+        <StyledNewButton />
+        <StyledUserMenuButton />
+      </ButtonsContainer>
       <Title>My boards</Title>
 
       <ContentContainer>
@@ -39,8 +63,9 @@ export const Pictures: FC<{}> = () => {
             </PictureListItem>
           ))}
         </PictureList>
-        {!isLoading && anchor != null && <Button onClick={fetchPictures}>More</Button>}
-        {isLoading && <LoadingMessage>Loading...</LoadingMessage>}
+        {!isLoading && anchor != null && <Button onClick={onClick}>More</Button>}
+        {isLoading && <Message>Loading...</Message>}
+        {!isLoading && pictures.length === 0 && <Message>There is no board.</Message>}
       </ContentContainer>
     </Container>
   )
@@ -110,7 +135,22 @@ const Button = styled.button`
   margin: 10px auto;
 `
 
-const LoadingMessage = styled.div`
+const Message = styled.div`
   text-align: center;
   margin: 10px 0;
+`
+
+const ButtonsContainer = styled.div`
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: fit-content;
+  display: flex;
+`
+
+const StyledNewButton = styled(NewButton)`
+  margin-right: 12px;
+`
+const StyledUserMenuButton = styled(UserMenuButton)`
+  margin-right: 22px;
 `
