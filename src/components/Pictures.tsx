@@ -4,16 +4,18 @@ import { Title } from './Title'
 import { PictureService, PictureWithId, Anchor } from '../services/PictureService'
 import { Link } from 'react-router-dom'
 import { UserMenuButton } from './UserMenuButton'
-import { AuthService, User } from '../services/AuthService'
+import { AuthService } from '../services/AuthService'
 import { useVariable } from '../utils/useVariable'
 import { NewButton } from './NewButton'
+
+type LoadingState = 'initial' | 'loading' | 'loaded'
 
 export const Pictures: FC<{}> = () => {
   const pictureService = PictureService.instantiate()
   const authService = AuthService.instantiate()
 
   const [pictures, setPictures] = useState<Array<PictureWithId>>([])
-  const [isLoading, setLoading] = useState(false)
+  const [loadingState, setLoadingState] = useState<LoadingState>('initial')
   const [anchor, setAnchor] = useState(undefined as Anchor)
 
   const [currentUser] = useVariable(authService.currentUser)
@@ -22,13 +24,13 @@ export const Pictures: FC<{}> = () => {
     (anchor_: Anchor = anchor) => {
       if (currentUser == null) return
       ;(async () => {
-        setLoading(true)
+        setLoadingState('loading')
         const [fetchedPictures, newAnchor] = await pictureService.fetchPictures(
           currentUser,
           anchor_
         )
         setPictures((ps) => (anchor_ == null ? fetchedPictures : ps.concat(fetchedPictures)))
-        setLoading(false)
+        setLoadingState('loaded')
         setAnchor(newAnchor)
       })()
     },
@@ -63,9 +65,11 @@ export const Pictures: FC<{}> = () => {
             </PictureListItem>
           ))}
         </PictureList>
-        {!isLoading && anchor != null && <Button onClick={onClick}>More</Button>}
-        {isLoading && <Message>Loading...</Message>}
-        {!isLoading && pictures.length === 0 && <Message>There is no board.</Message>}
+        {loadingState === 'loaded' && anchor != null && <Button onClick={onClick}>More</Button>}
+        {loadingState === 'loading' && <Message>Loading...</Message>}
+        {loadingState === 'loaded' && pictures.length === 0 && (
+          <Message>There is no board.</Message>
+        )}
       </ContentContainer>
     </Container>
   )
