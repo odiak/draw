@@ -1,17 +1,12 @@
 const path = require('path')
 const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const PnpWebpackPlugin = require('pnp-webpack-plugin')
 
 module.exports = {
   mode: 'development',
   entry: './src/index.tsx',
   resolve: {
-    extensions: ['.ts', '.tsx', '.js'],
-    plugins: [PnpWebpackPlugin]
-  },
-  resolveLoader: {
-    plugins: [PnpWebpackPlugin.moduleLoader(module)]
+    extensions: ['.ts', '.tsx', '.js']
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
