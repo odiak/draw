@@ -60,7 +60,7 @@ export const Pictures: FC<{}> = () => {
         <PictureList>
           {pictures.map((p) => (
             <PictureListItem key={p.id} to={`/${p.id}`}>
-              <PictureThumnail src={`https://i.kakeru.app/${p.id}.svg`} />
+              <PictureThumnail src={`https://i.kakeru.app/${p.id}-w380-h300.png`} />
               <PictureTitle>{p.title ?? 'Untitled'}</PictureTitle>
             </PictureListItem>
           ))}
