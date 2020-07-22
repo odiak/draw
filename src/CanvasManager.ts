@@ -4,6 +4,7 @@ import { generateId } from './utils/generateId'
 import { Variable } from './utils/Variable'
 import { SettingsService } from './services/SettingsService'
 import { addEventListener } from './utils/addEventListener'
+import { fitCurve } from '@odiak/fit-curve'
 
 type Operation =
   | Readonly<{
@@ -375,6 +376,10 @@ export class CanvasManager {
 
     this.drawingPath = null
     if (drawingPath.points.length > 1) {
+      // drawingPath.points = fitCurve(drawingPath.points, 5 * this.scale.value).flatMap((c, i) =>
+      //   i === 0 ? c : c.slice(1)
+      // )
+      // drawingPath.isBezier = true
       this.doOperation({ type: 'add', paths: [drawingPath] })
     }
   }
@@ -474,6 +479,7 @@ export class CanvasManager {
   private handleGlobalMouseUp() {
     switch (this.actualCurrentTool) {
       case 'pen':
+        smoothPath(this.drawingPath, this.scale.value)
         this.addDrawingPath()
         break
 
@@ -576,6 +582,7 @@ export class CanvasManager {
         const p = this.getPointFromTouchEvent(event)
         if (p != null) {
           pushPoint(this.drawingPath?.points, p)
+          smoothPath(this.drawingPath, this.scale.value)
           this.addDrawingPath()
           this.drawingByTouch = false
           break
@@ -795,7 +802,7 @@ export class CanvasManager {
 
 function drawPath(
   ctx: CanvasRenderingContext2D,
-  { width, color, points }: Path,
+  { width, color, points, isBezier }: Path,
   scrollLeft: number,
   scrollTop: number,
   dpr: number,
@@ -809,14 +816,32 @@ function drawPath(
   ctx.strokeStyle = color
   let first = true
   ctx.beginPath()
-  for (const { x, y } of points) {
-    const realX = (x * scale - scrollLeft) * dpr
-    const realY = (y * scale - scrollTop) * dpr
-    if (first) {
-      ctx.moveTo(realX, realY)
-      first = false
-    } else {
-      ctx.lineTo(realX, realY)
+  if (isBezier) {
+    let args: number[] = []
+    for (const { x, y } of points) {
+      const realX = (x * scale - scrollLeft) * dpr
+      const realY = (y * scale - scrollTop) * dpr
+      if (first) {
+        ctx.moveTo(realX, realY)
+        first = false
+      } else {
+        args.push(realX, realY)
+        if (args.length === 6) {
+          ctx.bezierCurveTo(...(args as [number, number, number, number, number, number]))
+          args = []
+        }
+      }
+    }
+  } else {
+    for (const { x, y } of points) {
+      const realX = (x * scale - scrollLeft) * dpr
+      const realY = (y * scale - scrollTop) * dpr
+      if (first) {
+        ctx.moveTo(realX, realY)
+        first = false
+      } else {
+        ctx.lineTo(realX, realY)
+      }
     }
   }
   ctx.stroke()
@@ -878,4 +903,10 @@ function addToSet<T>(set: Set<T> | null | undefined, items: Iterable<T>) {
   for (const item of items) {
     set.add(item)
   }
+}
+
+function smoothPath(path: Path | null, scale: number): void {
+  if (path == null) return
+  path.points = fitCurve(path.points, 5 / scale).flatMap((c, i) => (i === 0 ? c : c.slice(1)))
+  path.isBezier = true
 }

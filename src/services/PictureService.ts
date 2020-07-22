@@ -4,7 +4,13 @@ import { AuthService, User } from './AuthService'
 import { Variable } from '../utils/Variable'
 
 export type Point = { x: number; y: number }
-export type Path = { color: string; width: number; points: Point[]; id: string }
+export type Path = {
+  color: string
+  width: number
+  points: Point[]
+  id: string
+  isBezier?: boolean
+}
 
 export type AccessibilityLevel = 'public' | 'protected' | 'private'
 

@@ -409,6 +409,11 @@
     lodash.camelcase "^4.3.0"
     protobufjs "^6.8.6"
 
+"@odiak/fit-curve@^0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@odiak/fit-curve/-/fit-curve-0.3.0.tgz#609fb791efbef8ed73a8d4f57e1f4e9dc03f63c1"
+  integrity sha512-6JMAgb+vSby0Kt3sol7BCQHxH15uz+4hXGIAzOCWbUJkYX7ySeUkQN2lPqX8xzhucgJ3C6IYpqQ7r7hec6u3Sw==
+
 "@odiak/iterate@^0.0.4":
   version "0.0.4"
   resolved "https://registry.yarnpkg.com/@odiak/iterate/-/iterate-0.0.4.tgz#efc745d34813bb41620488d89c71dc6ed30356c1"
