@@ -9,7 +9,7 @@ export type Path = {
   width: number
   points: Point[]
   id: string
-  isBezier?: boolean
+  isBezier: boolean
 }
 
 export type AccessibilityLevel = 'public' | 'protected' | 'private'
@@ -224,14 +224,15 @@ type EncodedPath = {
   color: string
   width: number
   points: number[]
+  isBezier: boolean
 }
 
-function encodePath({ color, width, points }: Path): EncodedPath {
+function encodePath({ color, width, points, isBezier }: Path): EncodedPath {
   const newPoints: number[] = []
   for (const { x, y } of points) {
     newPoints.push(x, y)
   }
-  return { color, width, points: newPoints }
+  return { color, width, points: newPoints, isBezier }
 }
 
 function decodePath(doc: any): Path {
@@ -242,7 +243,13 @@ function decodePath(doc: any): Path {
   for (let i = 0; i + 1 < length; i += 2) {
     points.push({ x: rawPoints[i], y: rawPoints[i + 1] })
   }
-  return { points, width: rawPath.width, color: rawPath.color, id: doc.id }
+  return {
+    points,
+    width: rawPath.width,
+    color: rawPath.color,
+    id: doc.id,
+    isBezier: !!rawPath.isBezier
+  }
 }
 
 function getPermission(picture: Picture | null, user: User): Permission {

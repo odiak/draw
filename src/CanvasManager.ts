@@ -419,7 +419,8 @@ export class CanvasManager {
             id: generateId(),
             color: '#000',
             width: 3,
-            points: [this.getPointFromMouseEvent(event)]
+            points: [this.getPointFromMouseEvent(event)],
+            isBezier: false
           }
         }
         break
@@ -500,7 +501,13 @@ export class CanvasManager {
       case 'pen': {
         const p = this.getPointFromTouchEvent(event)
         if (p != null) {
-          this.drawingPath = { id: generateId(), color: '#000', width: 3, points: [p] }
+          this.drawingPath = {
+            id: generateId(),
+            color: '#000',
+            width: 3,
+            points: [p],
+            isBezier: false
+          }
           this.drawingByTouch = true
           break
         }
