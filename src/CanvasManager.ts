@@ -5,6 +5,7 @@ import { Variable } from './utils/Variable'
 import { SettingsService } from './services/SettingsService'
 import { addEventListener } from './utils/addEventListener'
 import { fitCurve } from '@odiak/fit-curve'
+import { ExperimentalSettingsService } from './services/ExperimentalSettingsService'
 
 type Operation =
   | Readonly<{
@@ -80,6 +81,9 @@ export class CanvasManager {
   readonly canvasRef = this.setCanvasElement.bind(this)
 
   private writable = false
+
+  private readonly experimentalSettings = ExperimentalSettingsService.instantiate()
+    .experimentalSettings
 
   constructor(private pictureId: string) {
     this.scale.subscribe((scale, prevScale) => {
@@ -480,7 +484,9 @@ export class CanvasManager {
   private handleGlobalMouseUp() {
     switch (this.actualCurrentTool) {
       case 'pen':
-        smoothPath(this.drawingPath, this.scale.value)
+        if (this.experimentalSettings.smoothPaths) {
+          smoothPath(this.drawingPath, this.scale.value)
+        }
         this.addDrawingPath()
         break
 
@@ -589,7 +595,9 @@ export class CanvasManager {
         const p = this.getPointFromTouchEvent(event)
         if (p != null) {
           pushPoint(this.drawingPath?.points, p)
-          smoothPath(this.drawingPath, this.scale.value)
+          if (this.experimentalSettings.smoothPaths) {
+            smoothPath(this.drawingPath, this.scale.value)
+          }
           this.addDrawingPath()
           this.drawingByTouch = false
           break
