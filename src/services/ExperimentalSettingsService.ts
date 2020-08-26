@@ -1,4 +1,5 @@
 import { memo } from '../utils/memo'
+import { Variable } from '../utils/Variable'
 
 const drawingSettingsKey = 'KAKERU_EXPERIMENTAL_SETTINGS'
 
@@ -9,7 +10,20 @@ type ExperimentalSettings = {
 export class ExperimentalSettingsService {
   static readonly instantiate = memo(() => new ExperimentalSettingsService())
 
-  get experimentalSettings(): Partial<ExperimentalSettings> {
+  experimentalSettings: Variable<Partial<ExperimentalSettings>>
+
+  constructor() {
+    this.experimentalSettings = new Variable(this.deserializeExperimentalSettings())
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === drawingSettingsKey && event.storageArea === localStorage) {
+        console.log('changed!')
+        this.experimentalSettings.next(this.deserializeExperimentalSettings())
+      }
+    })
+  }
+
+  private deserializeExperimentalSettings(): Partial<ExperimentalSettings> {
     const s: Partial<ExperimentalSettings> = {}
 
     let obj: { [key: string]: unknown }
@@ -29,11 +43,12 @@ export class ExperimentalSettingsService {
     return s
   }
 
-  set experimentalSettings(settings: Partial<ExperimentalSettings>) {
+  setExperimentalSettings(settings: Partial<ExperimentalSettings>) {
     try {
       localStorage.setItem(drawingSettingsKey, JSON.stringify(settings))
     } finally {
       // nothing
     }
+    this.experimentalSettings.next(settings)
   }
 }

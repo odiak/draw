@@ -1,7 +1,8 @@
-import React, { FC, useState, useCallback } from 'react'
+import React, { FC, useCallback } from 'react'
 import { ExperimentalSettingsService } from '../services/ExperimentalSettingsService'
 import styled from 'styled-components'
 import { Link } from 'react-router-dom'
+import { useVariable } from '../utils/useVariable'
 
 const Container = styled.div`
   padding: 5px 10px;
@@ -9,13 +10,12 @@ const Container = styled.div`
 
 export const Flags: FC<{}> = () => {
   const settingsService = ExperimentalSettingsService.instantiate()
-  const [settings, setSettings] = useState(() => settingsService.experimentalSettings)
+  const [settings] = useVariable(settingsService.experimentalSettings)
 
   const setSettingsWithSave = useCallback(
     (u: typeof settings) => {
       const s = { ...settings, ...u }
-      setSettings(s)
-      settingsService.experimentalSettings = s
+      settingsService.setExperimentalSettings(s)
     },
     [settings, settingsService]
   )
