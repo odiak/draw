@@ -154,6 +154,7 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
             </MenuItemToCopy>
             <MenuDivider />
             <MenuItemWithLink link="https://about.kakeru.app/">About Kakeru</MenuItemWithLink>
+            <MenuItemWithLink link="/flags">Experimental flags</MenuItemWithLink>
           </Menu>
         </MenuButton>
       </RightButtonsContainer>

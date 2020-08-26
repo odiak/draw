@@ -1,7 +1,6 @@
 import React, { FC, useCallback } from 'react'
 import { ExperimentalSettingsService } from '../services/ExperimentalSettingsService'
 import styled from 'styled-components'
-import { Link } from 'react-router-dom'
 import { useVariable } from '../utils/useVariable'
 
 const Container = styled.div`
@@ -22,7 +21,7 @@ export const Flags: FC<{}> = () => {
 
   return (
     <Container>
-      <h1>Flags</h1>
+      <h1>Experimental Flags</h1>
       <div>
         <label>
           <input
@@ -35,9 +34,6 @@ export const Flags: FC<{}> = () => {
           Enable smoothing paths
         </label>
       </div>
-      <p>
-        <Link to="/">back to home</Link>
-      </p>
     </Container>
   )
 }
