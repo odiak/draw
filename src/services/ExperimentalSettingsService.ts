@@ -17,7 +17,6 @@ export class ExperimentalSettingsService {
 
     window.addEventListener('storage', (event) => {
       if (event.key === drawingSettingsKey && event.storageArea === localStorage) {
-        console.log('changed!')
         this.experimentalSettings.next(this.deserializeExperimentalSettings())
       }
     })
