@@ -26,6 +26,8 @@ type PathBoundary = {
 
 type PathWithBoundary = Path & { boundary?: PathBoundary }
 
+const isLikeMacOs = /\bMac OS X\b/i.test(navigator.userAgent)
+
 export class CanvasManager {
   private canvasElement: HTMLCanvasElement | null = null
   private renderingContext: CanvasRenderingContext2D | null = null
@@ -154,7 +156,8 @@ export class CanvasManager {
       addEventListener(document.body, 'mouseup', this.handleGlobalMouseUp.bind(this)),
       addEventListener(elem, 'touchstart', this.handleTouchStart.bind(this), { passive: true }),
       addEventListener(elem, 'touchmove', this.handleTouchMove.bind(this), { passive: true }),
-      addEventListener(elem, 'touchend', this.handleTouchEnd.bind(this), { passive: true })
+      addEventListener(elem, 'touchend', this.handleTouchEnd.bind(this), { passive: true }),
+      addEventListener(window, 'keydown', this.handleWindowKeyDown.bind(this))
     ]
 
     this.canvasCleanUpHandler = () => {
@@ -320,6 +323,20 @@ export class CanvasManager {
       this.handleResize()
       this.tickingResize = false
     }, 300)
+  }
+
+  private handleWindowKeyDown(event: KeyboardEvent) {
+    const isCtrlOrMetaKeyPressed = isLikeMacOs ? event.metaKey : event.ctrlKey
+    const isZKeyPressed = event.key === 'z'
+    const isShiftKeyPressed = event.shiftKey
+
+    if (isCtrlOrMetaKeyPressed && isZKeyPressed) {
+      if (isShiftKeyPressed) {
+        this.redo()
+      } else {
+        this.undo()
+      }
+    }
   }
 
   private updateOffset() {
