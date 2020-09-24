@@ -26,6 +26,9 @@ type PathBoundary = {
 
 type PathWithBoundary = Path & { boundary?: PathBoundary }
 
+const zoomScaleFactor = 1.1
+const zoomScaleFactorForWheel = 1.05
+
 const isLikeMacOs = /\bMac OS X\b/i.test(navigator.userAgent)
 
 export class CanvasManager {
@@ -89,13 +92,24 @@ export class CanvasManager {
 
   private eraserWidth = 3
 
+  private isWheelZooming = false
+  private wheelZoomX = 0
+  private wheelZoomY = 0
+
   constructor(private pictureId: string) {
     this.scale.subscribe((scale, prevScale) => {
       const r = scale / prevScale
-      const w2 = this.width / 2
-      const h2 = this.height / 2
-      this.scrollLeft = this.bufferedScrollLeft = w2 * (r - 1) + r * this.scrollLeft
-      this.scrollTop = this.bufferedScrollTop = h2 * (r - 1) + r * this.scrollTop
+      let x: number
+      let y: number
+      if (this.isWheelZooming) {
+        x = this.wheelZoomX
+        y = this.wheelZoomY
+      } else {
+        x = this.width / 2
+        y = this.height / 2
+      }
+      this.scrollLeft = this.bufferedScrollLeft = x * (r - 1) + r * this.scrollLeft
+      this.scrollTop = this.bufferedScrollTop = y * (r - 1) + r * this.scrollTop
       this.tickDraw()
     })
 
@@ -273,11 +287,19 @@ export class CanvasManager {
   }
 
   zoomIn() {
-    this.scale.update((s) => s * 1.1)
+    this.scale.update((s) => s * zoomScaleFactor)
   }
 
   zoomOut() {
-    this.scale.update((s) => s / 1.1)
+    this.scale.update((s) => s / zoomScaleFactor)
+  }
+
+  zoomByWheel(delta: number, x: number, y: number) {
+    this.isWheelZooming = true
+    this.wheelZoomX = x
+    this.wheelZoomY = y
+    this.scale.update((s) => s * zoomScaleFactorForWheel ** -delta)
+    this.isWheelZooming = false
   }
 
   undo(): boolean {
@@ -668,6 +690,14 @@ export class CanvasManager {
   }
 
   private handleWheel(event: WheelEvent) {
+    event.preventDefault()
+
+    if (event.ctrlKey) {
+      const { x, y } = this.getPointFromMouseEvent(event, true)
+      this.zoomByWheel(event.deltaY, x, y)
+      return
+    }
+
     this.bufferedScrollLeft += event.deltaX
     this.bufferedScrollTop += event.deltaY
 
