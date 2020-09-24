@@ -85,6 +85,8 @@ export class CanvasManager {
   private readonly experimentalSettings = ExperimentalSettingsService.instantiate()
     .experimentalSettings
 
+  private eraserWidth = 3
+
   constructor(private pictureId: string) {
     this.scale.subscribe((scale, prevScale) => {
       const r = scale / prevScale
@@ -431,8 +433,10 @@ export class CanvasManager {
 
       case 'eraser': {
         const p = this.getPointFromMouseEvent(event)
-        this.erasingPathIds = new Set(erase(this.paths, p))
+        this.erasingPathIds = new Set(erase(this.paths, p, null, this.eraserWidth))
         this.tickDraw()
+        this.prevX = p.x
+        this.prevY = p.y
         break
       }
 
@@ -461,8 +465,13 @@ export class CanvasManager {
         const { erasingPathIds } = this
         if (erasingPathIds != null) {
           const p = this.getPointFromMouseEvent(event)
-          addToSet(erasingPathIds, erase(this.paths, p))
+          addToSet(
+            erasingPathIds,
+            erase(this.paths, p, { x: this.prevX, y: this.prevY }, this.eraserWidth)
+          )
           this.tickDraw()
+          this.prevX = p.x
+          this.prevY = p.y
         }
         break
       }
@@ -523,7 +532,7 @@ export class CanvasManager {
       case 'eraser': {
         const p = this.getPointFromTouchEvent(event)
         if (p != null) {
-          const pathIdsToRemove = erase(this.paths, p)
+          const pathIdsToRemove = erase(this.paths, p, null, this.eraserWidth)
           const { erasingPathIds } = this
           if (erasingPathIds != null) {
             addToSet(erasingPathIds, pathIdsToRemove)
@@ -531,6 +540,8 @@ export class CanvasManager {
             this.erasingPathIds = new Set(pathIdsToRemove)
           }
           this.tickDraw()
+          this.prevX = p.x
+          this.prevY = p.y
           break
         }
       }
@@ -566,9 +577,16 @@ export class CanvasManager {
         if (p != null) {
           const { erasingPathIds } = this
           if (erasingPathIds != null) {
-            const pathIdsToRemove = erase(this.paths, p)
+            const pathIdsToRemove = erase(
+              this.paths,
+              p,
+              { x: this.prevX, y: this.prevY },
+              this.eraserWidth
+            )
             addToSet(erasingPathIds, pathIdsToRemove)
             this.tickDraw()
+            this.prevX = p.x
+            this.prevY = p.y
           }
           break
         }
@@ -608,7 +626,10 @@ export class CanvasManager {
       case 'eraser': {
         const p = this.getPointFromTouchEvent(event)
         if (p != null) {
-          addToSet(this.erasingPathIds, erase(this.paths, p))
+          addToSet(
+            this.erasingPathIds,
+            erase(this.paths, p, { x: this.prevX, y: this.prevY }, this.eraserWidth)
+          )
           this.removeErasingPaths()
           break
         }
@@ -876,21 +897,107 @@ function pushPoint(points: Point[] | null | undefined, point: Point) {
   points.push(point)
 }
 
-function erase(paths: Map<string, Path>, p1: Point): string[] {
+function erase(
+  paths: Map<string, Path>,
+  p0: Point,
+  p1: Point | null,
+  eraserWidth: number
+): string[] {
   const pathIdsToRemove: string[] = []
 
-  for (const { points, id } of paths.values()) {
-    if (points.some((p2) => isCloser(p1, p2, 3))) {
-      pathIdsToRemove.push(id)
+  let ps: Point[]
+  if (p1 == null) {
+    ps = [p0]
+  } else {
+    ps = [...iteratePoints(p0, p1, 2)]
+  }
+
+  for (const { points, id, isBezier, width } of paths.values()) {
+    const d2 = (width + eraserWidth) ** 2
+
+    if (isBezier) {
+      loop: for (const [p0, p1, p2, p3] of bezierPoints(points)) {
+        for (const { x: x0, y: y0 } of iterateBezierPoints(p0, p1, p2, p3, 1)) {
+          for (const { x: x1, y: y1 } of ps) {
+            if ((x0 - x1) ** 2 + (y0 - y1) ** 2 <= d2) {
+              pathIdsToRemove.push(id)
+              break loop
+            }
+          }
+        }
+      }
+    } else {
+      loop: for (const [pp, np] of withPrevious(points)) {
+        for (const { x: x0, y: y0 } of iteratePoints(pp, np, 2)) {
+          for (const { x: x1, y: y1 } of ps) {
+            if ((x0 - x1) ** 2 + (y0 - y1) ** 2 <= d2) {
+              pathIdsToRemove.push(id)
+              break loop
+            }
+          }
+        }
+      }
     }
   }
 
   return pathIdsToRemove
 }
 
-function isCloser({ x: x1, y: y1 }: Point, { x: x2, y: y2 }: Point, r: number): boolean {
-  const d = (x1 - x2) ** 2 + (y1 - y2) ** 2
-  return d <= r ** 2
+function* withPrevious<T>(iter: Iterable<T>): Iterable<readonly [T, T]> {
+  let isFirst = false
+  let previous: T
+  for (const it of iter) {
+    previous = it
+    if (isFirst) {
+      isFirst = false
+    } else {
+      yield [previous, it]
+    }
+  }
+}
+
+function* bezierPoints(points: readonly Point[]): Iterable<[Point, Point, Point, Point]> {
+  for (let i = 0; i + 3 < points.length; i += 3) {
+    yield [points[i], points[i + 1], points[i + 2], points[i + 3]]
+  }
+}
+
+function* iteratePoints(p0: Point, p1: Point, f: number): Iterable<Point> {
+  const { x: x0, y: y0 } = p0
+  const { x: x1, y: y1 } = p1
+  const d = Math.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2)
+  const vx = ((x1 - x0) / d) * f
+  const vy = ((y1 - y0) / d) * f
+  const sx = Math.sign(vx)
+  const sy = Math.sign(vy)
+  for (let x = x0, y = y0; x * sx < x1 * sx && y * sy < y1 * sy; x += vx, y += vy) {
+    yield { x, y }
+  }
+}
+
+function* iterateBezierPoints(
+  p0: Point,
+  p1: Point,
+  p2: Point,
+  p3: Point,
+  f: number
+): Iterable<Point> {
+  const { x: x0, y: y0 } = p0
+  const { x: x1, y: y1 } = p1
+  const { x: x2, y: y2 } = p2
+  const { x: x3, y: y3 } = p3
+  const d = Math.sqrt((x0 - x3) ** 2 + (y0 - y3) ** 2)
+  const step = (1 / d) * f
+  for (let t = 0; t < 1; t += step) {
+    const s = 1 - t
+    const a0 = s ** 3
+    const a1 = 3 * s ** 2 * t
+    const a2 = 3 * s * t ** 2
+    const a3 = t ** 3
+    const x = a0 * x0 + a1 * x1 + a2 * x2 + a3 * x3
+    const y = a0 * y0 + a1 * y1 + a2 * y2 + a3 * y3
+    yield { x, y }
+  }
 }
 
 function removePaths(paths: Map<string, Path>, pathIdsToRemove: Iterable<string>): number {
