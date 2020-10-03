@@ -6,6 +6,7 @@ import { SettingsService } from './services/SettingsService'
 import { addEventListener } from './utils/addEventListener'
 import { fitCurve } from '@odiak/fit-curve'
 import { ExperimentalSettingsService } from './services/ExperimentalSettingsService'
+import { Color } from './utils/Color'
 
 type Operation =
   | Readonly<{
@@ -30,6 +31,9 @@ const zoomScaleFactor = 1.1
 const zoomScaleFactorForWheel = 1.05
 
 const isLikeMacOs = /\bMac OS X\b/i.test(navigator.userAgent)
+
+const scrollBarColorV = Color.fromString('#0007')
+const scrollBarColorD = Color.fromString('#111a')
 
 export class CanvasManager {
   private canvasElement: HTMLCanvasElement | null = null
@@ -95,6 +99,10 @@ export class CanvasManager {
   private isWheelZooming = false
   private wheelZoomX = 0
   private wheelZoomY = 0
+
+  private isScrollBarVisible = false
+  private hidingScrollBarTimer = null as number | null
+  private scrollBarOpacity = 1.0
 
   constructor(private pictureId: string) {
     this.scale.subscribe((scale, prevScale) => {
@@ -288,10 +296,14 @@ export class CanvasManager {
 
   zoomIn() {
     this.scale.update((s) => s * zoomScaleFactor)
+    this.showScrollBar()
+    this.hideScrollBarAfterDelay()
   }
 
   zoomOut() {
     this.scale.update((s) => s / zoomScaleFactor)
+    this.showScrollBar()
+    this.hideScrollBarAfterDelay()
   }
 
   zoomByWheel(delta: number, x: number, y: number) {
@@ -300,6 +312,9 @@ export class CanvasManager {
     this.wheelZoomY = y
     this.scale.update((s) => s * zoomScaleFactorForWheel ** -delta)
     this.isWheelZooming = false
+
+    this.showScrollBar()
+    this.hideScrollBarAfterDelay()
   }
 
   undo(): boolean {
@@ -484,6 +499,7 @@ export class CanvasManager {
         this.prevX = x
         this.prevY = y
         this.handScrollingByMouse = true
+        this.showScrollBar()
         break
       }
     }
@@ -544,6 +560,7 @@ export class CanvasManager {
 
       case 'hand':
         this.handScrollingByMouse = false
+        this.hideScrollBarAfterDelay()
         break
     }
   }
@@ -591,6 +608,7 @@ export class CanvasManager {
         if (p == null) break
         this.prevX = p.x
         this.prevY = p.y
+        this.showScrollBar()
         break
       }
     }
@@ -684,6 +702,7 @@ export class CanvasManager {
         this.prevY = p.y
 
         this.tickScroll()
+        this.hideScrollBarAfterDelay()
         break
       }
     }
@@ -700,6 +719,8 @@ export class CanvasManager {
 
     this.bufferedScrollLeft += event.deltaX
     this.bufferedScrollTop += event.deltaY
+    this.showScrollBar()
+    this.hideScrollBarAfterDelay()
 
     this.tickScroll()
   }
@@ -776,7 +797,9 @@ export class CanvasManager {
       drawPath(ctx, drawingPath, scrollLeft, scrollTop, dpr, scale)
     }
 
-    this.drawScrollBar(ctx)
+    if (this.isScrollBarVisible) {
+      this.drawScrollBar(ctx)
+    }
   }
 
   drawScrollBar(ctx: CanvasRenderingContext2D) {
@@ -828,7 +851,12 @@ export class CanvasManager {
     const scaleX = horizontalBarLength / (maxX - minX)
     const scaleY = verticalBarLength / (maxY - minY)
 
-    ctx.fillStyle = '#0007'
+    const colorV = scrollBarColorV.copy()
+    const colorD = scrollBarColorD.copy()
+    colorV.a *= this.scrollBarOpacity
+    colorD.a *= this.scrollBarOpacity
+
+    ctx.fillStyle = colorV.toString()
     ctx.fillRect(
       ((minViewX + shiftX) * scaleX + offsetP) * dpr,
       (height - offsetO1 - barWidth1) * dpr,
@@ -843,7 +871,7 @@ export class CanvasManager {
     )
 
     if (Number.isFinite(minDrawedX + minDrawedY + maxDrawedX + maxDrawedY)) {
-      ctx.fillStyle = '#111a'
+      ctx.fillStyle = colorD.toString()
       ctx.fillRect(
         ((minDrawedX + shiftX) * scaleX + offsetP) * dpr,
         (height - offsetO2 - barWidth2) * dpr,
@@ -880,6 +908,43 @@ export class CanvasManager {
 
       this.draw()
     })
+  }
+
+  private showScrollBar() {
+    const { hidingScrollBarTimer } = this
+    if (hidingScrollBarTimer != null) {
+      clearInterval(hidingScrollBarTimer)
+      this.hidingScrollBarTimer = null
+    }
+
+    this.isScrollBarVisible = true
+    this.scrollBarOpacity = 1
+    this.tickDraw()
+  }
+
+  private hideScrollBarAfterDelay() {
+    const { hidingScrollBarTimer } = this
+    if (hidingScrollBarTimer != null) {
+      clearInterval(hidingScrollBarTimer)
+    }
+
+    const T = 900
+    const TOff = 500
+    const step = 50
+    let t = 0
+    this.hidingScrollBarTimer = setInterval(() => {
+      t += step
+      this.scrollBarOpacity = Math.min(1, (T - t) / (T - TOff))
+      if (t >= T) {
+        this.scrollBarOpacity = 0
+        this.isScrollBarVisible = false
+        if (this.hidingScrollBarTimer != null) {
+          clearInterval(this.hidingScrollBarTimer)
+          this.hidingScrollBarTimer = null
+        }
+      }
+      this.tickDraw()
+    }, step)
   }
 }
 
