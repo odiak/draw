@@ -28,9 +28,7 @@ export class AuthService {
   }
 
   async signInWithGoogle(): Promise<firebase.auth.UserCredential | null> {
-    const cred = await this.auth.signInWithPopup(this.googleAuthProvider).catch((e) => {
-      return null
-    })
+    const cred = await this.auth.signInWithPopup(this.googleAuthProvider).catch(() => null)
     return cred
   }
 
