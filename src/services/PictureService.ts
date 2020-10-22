@@ -1,7 +1,7 @@
 import firebase from 'firebase/app'
-import memoizeOne from 'memoize-one'
 import { AuthService, User } from './AuthService'
 import { Variable } from '../utils/Variable'
+import { memo } from '../utils/memo'
 
 export type Point = { x: number; y: number }
 export type Path = {
@@ -44,7 +44,7 @@ export type WatchPictureOptions = {
 export type Anchor = firebase.firestore.Timestamp | undefined
 
 export class PictureService {
-  static readonly instantiate = memoizeOne(() => new PictureService())
+  static readonly instantiate = memo(() => new PictureService())
 
   private db = firebase.firestore()
   private picturesCollection = this.db.collection('pictures')
