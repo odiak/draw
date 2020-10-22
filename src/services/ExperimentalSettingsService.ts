@@ -1,5 +1,6 @@
 import { memo } from '../utils/memo'
 import { Variable } from '../utils/Variable'
+import { localStorage } from '../utils/localStorage'
 
 const drawingSettingsKey = 'KAKERU_EXPERIMENTAL_SETTINGS'
 
