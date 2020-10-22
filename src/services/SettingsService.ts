@@ -15,14 +15,9 @@ export class SettingsService {
   get drawingSettings(): Partial<DrawingSettings> {
     const s: Partial<DrawingSettings> = {}
 
-    let obj: { [key: string]: unknown }
-    try {
-      const jsonStr = localStorage.getItem(drawingSettingsKey)
-      if (jsonStr == null) return s
-      obj = JSON.parse(jsonStr)
-    } catch (e) {
-      return s
-    }
+    const jsonStr = localStorage.getItem(drawingSettingsKey)
+    if (jsonStr == null) return s
+    const obj: { [key: string]: unknown } = JSON.parse(jsonStr)
 
     const { tool, palmRejection } = obj
     if (typeof tool === 'string' && (tool === 'pen' || tool === 'hand' || tool === 'eraser')) {

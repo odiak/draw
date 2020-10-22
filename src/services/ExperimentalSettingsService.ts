@@ -26,14 +26,9 @@ export class ExperimentalSettingsService {
   private deserializeExperimentalSettings(): Partial<ExperimentalSettings> {
     const s: Partial<ExperimentalSettings> = {}
 
-    let obj: { [key: string]: unknown }
-    try {
-      const jsonStr = localStorage.getItem(drawingSettingsKey)
-      if (jsonStr == null) return s
-      obj = JSON.parse(jsonStr)
-    } catch (e) {
-      return s
-    }
+    const jsonStr = localStorage.getItem(drawingSettingsKey)
+    if (jsonStr == null) return s
+    const obj: { [key: string]: unknown } = JSON.parse(jsonStr)
 
     const { smoothPaths } = obj
     if (typeof smoothPaths === 'boolean') {
