@@ -7,19 +7,22 @@ import { faUser } from '@fortawesome/free-solid-svg-icons'
 import styled from 'styled-components'
 import { useMenu } from '../utils/useMenu'
 import { useVariable } from '../utils/useVariable'
+import { MigrationService } from '../services/MigrationService'
 
 export const UserMenuButton: FC<{ className?: string }> = ({ className }) => {
   const authService = AuthService.instantiate()
   const [currentUser] = useVariable(authService.currentUser)
+  const migrationService = MigrationService.instantiate()
 
   const { menuRef: accountMenuRef, buttonRef: accountMenuButtonRef } = useMenu()
 
   const signIn = useCallback(async () => {
+    await migrationService.registerMigrationToken()
     const c = await authService.signInWithGoogle()
     if (c == null) {
       alert('Failed to sign in')
     }
-  }, [authService])
+  }, [authService, migrationService])
 
   const signOut = useCallback(() => {
     authService.signOut()
