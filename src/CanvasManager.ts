@@ -408,6 +408,16 @@ export class CanvasManager {
       if (touch.touchType === 'stylus') {
         return touch
       }
+
+      // Hack for Samsung Galaxy Note: radiuses of its stylus (S-Pen)
+      // become zero (and non-zero for fingers).
+      if (
+        this.experimentalSettings.value.hackForSamsungGalaxyNote &&
+        touch.radiusX === 0 &&
+        touch.radiusY === 0
+      ) {
+        return touch
+      }
     }
     return null
   }

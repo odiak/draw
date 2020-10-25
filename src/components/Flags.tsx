@@ -7,6 +7,11 @@ const Container = styled.div`
   padding: 5px 10px;
 `
 
+const Label = styled.label`
+  display: block;
+  margin-bottom: 14px;
+`
+
 export const Flags: FC<{}> = () => {
   const settingsService = ExperimentalSettingsService.instantiate()
   const [settings] = useVariable(settingsService.experimentalSettings)
@@ -22,18 +27,26 @@ export const Flags: FC<{}> = () => {
   return (
     <Container>
       <h1>Experimental Flags</h1>
-      <div>
-        <label>
-          <input
-            type="checkbox"
-            checked={!!settings.smoothPaths}
-            onChange={(e) => {
-              setSettingsWithSave({ smoothPaths: e.target.checked })
-            }}
-          />
-          Enable smoothing paths
-        </label>
-      </div>
+      <Label>
+        <input
+          type="checkbox"
+          checked={!!settings.smoothPaths}
+          onChange={(e) => {
+            setSettingsWithSave({ smoothPaths: e.target.checked })
+          }}
+        />
+        Enable smoothing paths
+      </Label>
+      <Label>
+        <input
+          type="checkbox"
+          checked={!!settings.hackForSamsungGalaxyNote}
+          onChange={(e) => {
+            setSettingsWithSave({ hackForSamsungGalaxyNote: e.target.checked })
+          }}
+        />
+        This is a Samsung Galaxy Note (Use dirty hack for S-Pen detection)
+      </Label>
     </Container>
   )
 }
