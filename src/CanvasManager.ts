@@ -171,7 +171,6 @@ export class CanvasManager {
     this.handleResize()
 
     const unsubscribers = [
-      addEventListener(window, 'resize', this.handleWindowResize.bind(this)),
       addEventListener(elem, 'wheel', this.handleWheel.bind(this)),
       addEventListener(elem, 'mousedown', this.handleMouseDown.bind(this)),
       addEventListener(elem, 'mousemove', this.handleMouseMove.bind(this)),
@@ -182,10 +181,16 @@ export class CanvasManager {
       addEventListener(window, 'keydown', this.handleWindowKeyDown.bind(this))
     ]
 
+    const ro = new ResizeObserver(() => {
+      this.handleResizeWithThrottling()
+    })
+    ro.observe(elem)
+
     this.canvasCleanUpHandler = () => {
       for (const f of unsubscribers) {
         f()
       }
+      ro.disconnect()
     }
   }
 
@@ -352,7 +357,7 @@ export class CanvasManager {
     this.draw()
   }
 
-  private handleWindowResize() {
+  private handleResizeWithThrottling() {
     if (this.tickingResize) return
 
     this.tickingResize = true
@@ -374,14 +379,6 @@ export class CanvasManager {
         this.undo()
       }
     }
-  }
-
-  private updateOffset() {
-    const ce = this.canvasElement
-    if (ce == null) return
-    const rect = ce.getBoundingClientRect()
-    this.offsetLeft = rect.left
-    this.offsetTop = rect.top
   }
 
   private getPointFromMouseEvent(event: MouseEvent, ignoreScroll: boolean = false): Point {
@@ -480,8 +477,6 @@ export class CanvasManager {
   }
 
   private handleMouseDown(event: MouseEvent) {
-    this.updateOffset()
-
     switch (this.actualCurrentTool) {
       case 'pen':
         if (this.drawingPath == null) {
@@ -574,8 +569,6 @@ export class CanvasManager {
   }
 
   private handleTouchStart(event: TouchEvent) {
-    this.updateOffset()
-
     switch (this.actualCurrentTool) {
       case 'pen': {
         const p = this.getPointFromTouchEvent(event)
