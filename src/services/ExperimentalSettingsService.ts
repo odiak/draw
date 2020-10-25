@@ -5,7 +5,6 @@ import { localStorage } from '../utils/localStorage'
 const drawingSettingsKey = 'KAKERU_EXPERIMENTAL_SETTINGS'
 
 type ExperimentalSettings = {
-  smoothPaths: boolean
   hackForSamsungGalaxyNote: boolean
 }
 
@@ -31,10 +30,7 @@ export class ExperimentalSettingsService {
     if (jsonStr == null) return s
     const obj: { [key: string]: unknown } = JSON.parse(jsonStr)
 
-    const { smoothPaths, hackForSamsungGalaxyNote } = obj
-    if (typeof smoothPaths === 'boolean') {
-      s.smoothPaths = !!smoothPaths
-    }
+    const { hackForSamsungGalaxyNote } = obj
 
     if (typeof hackForSamsungGalaxyNote === 'boolean') {
       s.hackForSamsungGalaxyNote = hackForSamsungGalaxyNote

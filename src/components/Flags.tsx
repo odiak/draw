@@ -30,16 +30,6 @@ export const Flags: FC<{}> = () => {
       <Label>
         <input
           type="checkbox"
-          checked={!!settings.smoothPaths}
-          onChange={(e) => {
-            setSettingsWithSave({ smoothPaths: e.target.checked })
-          }}
-        />
-        Enable smoothing paths
-      </Label>
-      <Label>
-        <input
-          type="checkbox"
           checked={!!settings.hackForSamsungGalaxyNote}
           onChange={(e) => {
             setSettingsWithSave({ hackForSamsungGalaxyNote: e.target.checked })
