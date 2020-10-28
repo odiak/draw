@@ -37,6 +37,7 @@ const scrollBarColorD = Color.fromString('#111a')
 
 export class CanvasManager {
   private canvasElement: HTMLCanvasElement | null = null
+  private parentElement: Element | null = null
   private renderingContext: CanvasRenderingContext2D | null = null
   private dpr = 1.0
 
@@ -165,7 +166,10 @@ export class CanvasManager {
       canvasCleanUpHandler()
     }
 
+    const parent = elem.parentElement
+
     this.canvasElement = elem
+    this.parentElement = parent
     this.renderingContext = elem.getContext('2d')
     this.dpr = devicePixelRatio
     this.handleResize()
@@ -184,7 +188,7 @@ export class CanvasManager {
     const ro = new ResizeObserver(() => {
       this.handleResizeWithThrottling()
     })
-    ro.observe(elem)
+    ro.observe(parent!)
 
     this.canvasCleanUpHandler = () => {
       for (const f of unsubscribers) {
@@ -342,9 +346,10 @@ export class CanvasManager {
 
   private handleResize() {
     const ce = this.canvasElement
-    if (ce == null) return
+    const parent = this.parentElement
+    if (ce == null || parent == null) return
 
-    const rect = ce.getBoundingClientRect()
+    const rect = parent.getBoundingClientRect()
     this.offsetLeft = rect.left
     this.offsetTop = rect.top
     this.width = rect.width
@@ -353,6 +358,8 @@ export class CanvasManager {
     this.heightPP = rect.height * this.dpr
     ce.width = this.widthPP
     ce.height = this.heightPP
+    ce.style.width = `${rect.width}px`
+    ce.style.height = `${rect.height}px`
 
     this.draw()
   }
@@ -443,10 +450,6 @@ export class CanvasManager {
 
     this.drawingPath = null
     if (drawingPath.points.length > 1) {
-      // drawingPath.points = fitCurve(drawingPath.points, 5 * this.scale.value).flatMap((c, i) =>
-      //   i === 0 ? c : c.slice(1)
-      // )
-      // drawingPath.isBezier = true
       this.doOperation({ type: 'add', paths: [drawingPath] })
     }
   }
