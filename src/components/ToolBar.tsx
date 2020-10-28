@@ -7,15 +7,13 @@ import {
   faSearchMinus,
   faEllipsisH,
   faUndo,
-  faRedo,
-  faPlus
+  faRedo
 } from '@fortawesome/free-solid-svg-icons'
 import { ToolButton } from './ToolButton'
 import { Tool } from '../types/Tool'
 import classNames from 'classnames'
 import styled from 'styled-components'
 import { copyToClipboard } from '../utils/copyToClipboard'
-import { Link } from 'react-router-dom'
 import { useMenu } from '../utils/useMenu'
 import { useVariable } from '../utils/useVariable'
 import { PictureService, Permission, AccessibilityLevel } from '../services/PictureService'
