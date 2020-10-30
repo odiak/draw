@@ -38,6 +38,7 @@ const Button = styled.button`
   width: 50px;
   height: 30px;
   border: 0;
+  background: #e8e8e8;
 
   &.selected {
     background: #000;

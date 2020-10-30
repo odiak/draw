@@ -12,7 +12,7 @@ import {
 import { ToolButton } from './ToolButton'
 import { Tool } from '../types/Tool'
 import classNames from 'classnames'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { copyToClipboard } from '../utils/copyToClipboard'
 import { useMenu } from '../utils/useMenu'
 import { useVariable } from '../utils/useVariable'
@@ -22,6 +22,23 @@ import { AccessibilityMenuButton } from './AccessibilityMenuButton'
 import { MenuDivider, MenuItem, MenuItemWithAnchor, Menu } from './Menu'
 import { UserMenuButton } from './UserMenuButton'
 import { NewButton } from './NewButton'
+
+const colors = [
+  '#c0c0c0',
+  '#808080',
+  '#000000',
+  '#800000',
+  '#ff0000',
+  '#ffa500',
+  '#ffff00',
+  '#008000',
+  '#0000ff',
+  '#ff00ff',
+  '#800080',
+  '#4b0082'
+]
+
+const widths: number[] = [1, 2, 3, 4, 5, 7, 9, 11]
 
 type Props = {
   pictureId: string
@@ -122,6 +139,11 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
     [pictureId, pictureService]
   )
 
+  const { buttonRef: colorWidthButtonRef, menuRef: colorWidthMenuRef } = useMenu()
+
+  const [strokeWidth, setStrokeWidth] = useVariable(canvasManager.strokeWidth)
+  const [strokeColor, setStrokeColor] = useVariable(canvasManager.strokeColor)
+
   return (
     <Container>
       <input
@@ -163,6 +185,36 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
               <WrappedToolButton tool="pen" selectedTool={tool} onSelectedToolChange={setTool} />
               <WrappedToolButton tool="hand" selectedTool={tool} onSelectedToolChange={setTool} />
               <WrappedToolButton tool="eraser" selectedTool={tool} onSelectedToolChange={setTool} />
+            </div>
+
+            <div className="tool-group">
+              <button className="tool-bar-button" ref={colorWidthButtonRef}>
+                <ColorIcon color={strokeColor} width={strokeWidth} />
+                <ColorWidthMenu ref={colorWidthMenuRef}>
+                  <div>
+                    {colors.map((color, i) => (
+                      <ColorWidthMenuItem
+                        key={i}
+                        selected={color === strokeColor}
+                        onClick={() => setStrokeColor(color)}
+                      >
+                        <ColorIndicator color={color} />
+                      </ColorWidthMenuItem>
+                    ))}
+                  </div>
+                  <div>
+                    {widths.map((width, i) => (
+                      <ColorWidthMenuItem
+                        key={i}
+                        selected={width === strokeWidth}
+                        onClick={() => setStrokeWidth(width)}
+                      >
+                        <WidthIndicator width={width} />
+                      </ColorWidthMenuItem>
+                    ))}
+                  </div>
+                </ColorWidthMenu>
+              </button>
             </div>
 
             <div className="tool-group">
@@ -239,13 +291,15 @@ const Container = styled.div`
 
   .tool-group {
     margin-right: 20px;
+    height: 30px;
   }
 
   .tool-bar-button {
-    width: 50px;
+    width: 40px;
     height: 30px;
     border: 0;
-    overflow: hidden;
+    background: #e8e8e8;
+    position: relative;
 
     .fa-slash {
       color: red !important;
@@ -288,4 +342,73 @@ const MenuButton = styled.button`
 
 const StyledAccessibilityMenuButton = styled(AccessibilityMenuButton)`
   margin-right: 40px;
+`
+
+const ColorIcon = styled.div<{ color: string; width: number }>`
+  border: 1px solid #000;
+  box-sizing: border-box;
+  display: inline-block;
+  background: ${(p) => p.color};
+  vertical-align: middle;
+  ${(p) => {
+    const size = p.width + 6
+    return css`
+      width: ${size}px;
+      height: ${size}px;
+      border-radius: ${size / 2}px;
+    `
+  }}
+`
+
+const ColorWidthMenu = styled.div`
+  padding: 0;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: #fff;
+  border: 1px solid #ccc;
+  margin: 0;
+  box-shadow: 0 0 6px #0004;
+  z-index: 100;
+  font-size: 16px;
+  text-align: left;
+  width: 120px;
+  display: none;
+  line-height: 0;
+`
+
+const ColorWidthMenuItem = styled.div<{ selected?: boolean }>`
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  ${(p) =>
+    p.selected &&
+    css`
+      border-radius: 4px;
+      background: #ccc;
+    `}
+`
+
+const ColorIndicator = styled.div<{ color: string }>`
+  background: ${(p) => p.color};
+  width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  border: 1px solid #000;
+  box-sizing: border-box;
+  margin: 4px;
+`
+
+const WidthIndicator = styled.div<{ width: number }>`
+  box-sizing: border-box;
+  background: #000;
+  ${(p) => {
+    const size = p.width * 1.3 + 1
+    return css`
+      width: ${size}px;
+      height: ${size}px;
+      border-radius: ${size / 2}px;
+      margin: ${(30 - size) / 2}px;
+    `
+  }}
 `

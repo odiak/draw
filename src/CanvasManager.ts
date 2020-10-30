@@ -105,6 +105,9 @@ export class CanvasManager {
   private hidingScrollBarTimer = null as number | null
   private scrollBarOpacity = 1.0
 
+  readonly strokeWidth = new Variable(3)
+  readonly strokeColor = new Variable('#000000')
+
   constructor(private pictureId: string) {
     this.scale.subscribe((scale, prevScale) => {
       const r = scale / prevScale
@@ -485,8 +488,8 @@ export class CanvasManager {
         if (this.drawingPath == null) {
           this.drawingPath = {
             id: generateId(),
-            color: '#000',
-            width: 3,
+            color: this.strokeColor.value,
+            width: this.strokeWidth.value,
             points: [this.getPointFromMouseEvent(event)],
             isBezier: false
           }
@@ -578,8 +581,8 @@ export class CanvasManager {
         if (p != null) {
           this.drawingPath = {
             id: generateId(),
-            color: '#000',
-            width: 3,
+            color: this.strokeColor.value,
+            width: this.strokeWidth.value,
             points: [p],
             isBezier: false
           }
