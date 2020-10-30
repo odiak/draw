@@ -53,6 +53,8 @@ export class CanvasManager {
 
   readonly tool = new Variable<Tool>('pen')
   readonly palmRejection = new Variable(false)
+  readonly strokeWidth = new Variable(3)
+  readonly strokeColor = new Variable('#000000')
 
   private paths = new Map<string, PathWithBoundary>()
   private drawingPath: Path | null = null
@@ -105,9 +107,6 @@ export class CanvasManager {
   private hidingScrollBarTimer = null as number | null
   private scrollBarOpacity = 1.0
 
-  readonly strokeWidth = new Variable(3)
-  readonly strokeColor = new Variable('#000000')
-
   constructor(private pictureId: string) {
     this.scale.subscribe((scale, prevScale) => {
       const r = scale / prevScale
@@ -137,22 +136,32 @@ export class CanvasManager {
       }
     )
 
-    const { tool, palmRejection } = this.settingsService.drawingSettings
+    const { tool, palmRejection, strokeWidth, strokeColor } = this.settingsService.drawingSettings
     if (tool != null) {
       this.tool.next(tool)
     }
     if (palmRejection != null) {
       this.palmRejection.next(palmRejection)
     }
+    if (strokeWidth != null) {
+      this.strokeWidth.next(strokeWidth)
+    }
+    if (strokeColor != null) {
+      this.strokeColor.next(strokeColor)
+    }
 
     this.tool.subscribe(this.saveSettings.bind(this))
     this.palmRejection.subscribe(this.saveSettings.bind(this))
+    this.strokeWidth.subscribe(this.saveSettings.bind(this))
+    this.strokeColor.subscribe(this.saveSettings.bind(this))
   }
 
   private saveSettings(): void {
     this.settingsService.drawingSettings = {
       tool: this.tool.value,
-      palmRejection: this.palmRejection.value
+      palmRejection: this.palmRejection.value,
+      strokeColor: this.strokeColor.value,
+      strokeWidth: this.strokeWidth.value
     }
   }
 

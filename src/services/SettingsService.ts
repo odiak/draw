@@ -7,6 +7,8 @@ const drawingSettingsKey = 'KAKERU_DRAWING_SETTINGS'
 type DrawingSettings = {
   tool: Tool
   palmRejection: boolean
+  strokeColor: string
+  strokeWidth: number
 }
 
 export class SettingsService {
@@ -19,12 +21,18 @@ export class SettingsService {
     if (jsonStr == null) return s
     const obj: { [key: string]: unknown } = JSON.parse(jsonStr)
 
-    const { tool, palmRejection } = obj
+    const { tool, palmRejection, strokeColor, strokeWidth } = obj
     if (typeof tool === 'string' && (tool === 'pen' || tool === 'hand' || tool === 'eraser')) {
       s.tool = tool
     }
     if (typeof palmRejection === 'boolean') {
       s.palmRejection = palmRejection
+    }
+    if (typeof strokeColor === 'string') {
+      s.strokeColor = strokeColor
+    }
+    if (typeof strokeWidth === 'number') {
+      s.strokeWidth = strokeWidth
     }
 
     return s
