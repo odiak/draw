@@ -1,6 +1,5 @@
-import firebase from 'firebase/app'
+import { firestore } from 'firebase/app'
 import { AuthService, User } from './AuthService'
-import { Variable } from '../utils/Variable'
 import { memo } from '../utils/memo'
 
 export type Point = { x: number; y: number }
@@ -10,19 +9,17 @@ export type Path = {
   points: Point[]
   id: string
   isBezier: boolean
+  timestamp?: firestore.Timestamp
 }
 
 export type AccessibilityLevel = 'public' | 'protected' | 'private'
 
-export type Picture = {
-  title?: string
-  ownerId?: string
-  accessibilityLevel?: AccessibilityLevel
-  createdAt?: firebase.firestore.Timestamp
-}
-
-export type PictureWithId = Picture & {
+export type PictureWithId = {
   id: string
+  title: string
+  ownerId: string | null
+  accessibilityLevel: AccessibilityLevel
+  createdAt?: firestore.Timestamp
 }
 
 export type PathsUpdate = Partial<{
@@ -41,19 +38,27 @@ export type WatchPictureOptions = {
   includesLocalChanges?: boolean
 }
 
-export type Anchor = firebase.firestore.Timestamp | undefined
+export type Anchor = firestore.Timestamp | undefined
 
 export class PictureService {
   static readonly instantiate = memo(() => new PictureService())
 
-  private db = firebase.firestore()
-  private picturesCollection = this.db.collection('pictures')
+  private db = firestore()
+  private picturesCollection = this.db.collection('pictures').withConverter(pictureConverter)
 
   private titleUpdateTick = new Map<string, { timerId: number }>()
 
   private existFlags = new Map<string, boolean>()
 
   private authService = AuthService.instantiate()
+
+  private pathsById(pictureId: string) {
+    return this.picturesCollection.doc(pictureId).collection('paths').withConverter(pathConverter)
+  }
+
+  private pictureRefById(pictureId: string) {
+    return this.picturesCollection.doc(pictureId)
+  }
 
   updateTitle(pictureId: string, title: string) {
     const tick = this.titleUpdateTick.get(pictureId)
@@ -70,7 +75,7 @@ export class PictureService {
 
   async updatePicture(
     pictureId: string,
-    update: Pick<Picture, 'ownerId' | 'title' | 'accessibilityLevel' | 'createdAt'>
+    update: Partial<Pick<PictureWithId, 'ownerId' | 'title' | 'accessibilityLevel' | 'createdAt'>>
   ) {
     if (this.existFlags.get(pictureId) === false) {
       const { value: currentUser } = this.authService.currentUser
@@ -78,26 +83,19 @@ export class PictureService {
         update = {
           ...update,
           ownerId: currentUser.uid,
-          createdAt: firebase.firestore.Timestamp.now()
+          createdAt: firestore.Timestamp.now()
         }
       }
     }
-    await this.picturesCollection.doc(pictureId).set(update, { merge: true })
+    await this.pictureRefById(pictureId).set(update, { merge: true })
   }
 
   addPaths(pictureId: string, pathsToAdd: Path[]) {
     const batch = this.db.batch()
-    const pathsCollection = this.picturesCollection.doc(pictureId).collection('paths')
+    const pathsCollection = this.pathsById(pictureId)
 
     for (const path of pathsToAdd) {
-      batch.set(
-        pathsCollection.doc(path.id),
-        {
-          ...encodePath(path),
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        },
-        { merge: true }
-      )
+      batch.set(pathsCollection.doc(path.id), path, { merge: true })
     }
     batch.commit()
 
@@ -106,7 +104,7 @@ export class PictureService {
 
   removePaths(pictureId: string, pathIdsToRemove: string[]) {
     const batch = this.db.batch()
-    const pathsCollection = this.picturesCollection.doc(pictureId).collection('paths')
+    const pathsCollection = this.pictureRefById(pictureId).collection('paths')
 
     for (const pathId of pathIdsToRemove) {
       batch.delete(pathsCollection.doc(pathId))
@@ -118,19 +116,19 @@ export class PictureService {
 
   watchPicture(
     pictureId: string,
-    callback: (u: Picture | null) => void,
+    callback: (u: PictureWithId | null) => void,
     options?: WatchPictureOptions
   ): () => void {
     const includesLocalChanges = options != null && options.includesLocalChanges === true
 
-    const unwatch = this.picturesCollection.doc(pictureId).onSnapshot(
+    const unwatch = this.pictureRefById(pictureId).onSnapshot(
       (snapshot) => {
         if (snapshot.metadata.hasPendingWrites && !includesLocalChanges) return
         this.existFlags.set(pictureId, snapshot.exists)
         callback(snapshot.data() ?? null)
       },
       () => {
-        callback({ accessibilityLevel: 'private' })
+        callback({ id: '', title: '', ownerId: null, accessibilityLevel: 'private' })
       }
     )
 
@@ -138,9 +136,7 @@ export class PictureService {
   }
 
   watchPaths(pictureId: string, callback: (u: PathsUpdate) => void): () => void {
-    const unwatch = this.picturesCollection
-      .doc(pictureId)
-      .collection('paths')
+    const unwatch = this.pathsById(pictureId)
       .orderBy('timestamp')
       .onSnapshot((snapshot) => {
         if (snapshot.metadata.hasPendingWrites) return
@@ -151,7 +147,7 @@ export class PictureService {
         for (const change of snapshot.docChanges()) {
           switch (change.type) {
             case 'added':
-              addedPaths.push(decodePath(change.doc))
+              addedPaths.push(change.doc.data())
               break
 
             case 'removed':
@@ -167,7 +163,7 @@ export class PictureService {
   }
 
   watchPermission(pictureId: string, callback: (p: Permission) => void): () => void {
-    const [pictureCallback, userCallback] = combine<Picture | null, User | null>(
+    const [pictureCallback, userCallback] = combine<PictureWithId | null, User | null>(
       (picture, user) => {
         if (user == null) return
 
@@ -192,11 +188,11 @@ export class PictureService {
     const { value: currentUser } = this.authService.currentUser
     if (currentUser == null) return
 
-    const doc = this.picturesCollection.doc(pictureId)
+    const doc = this.pictureRefById(pictureId)
     await doc.set(
       {
         ownerId: currentUser.uid,
-        createdAt: firebase.firestore.Timestamp.now()
+        createdAt: firestore.Timestamp.now()
       },
       { merge: true }
     )
@@ -220,39 +216,59 @@ export class PictureService {
   }
 }
 
-type EncodedPath = {
-  color: string
-  width: number
-  points: number[]
-  isBezier: boolean
-}
+const pictureConverter: firestore.FirestoreDataConverter<PictureWithId> = {
+  fromFirestore(doc: firestore.QueryDocumentSnapshot): PictureWithId {
+    const { id } = doc
+    const { title, ownerId, accessibilityLevel, createdAt } = doc.data()
+    return {
+      id,
+      title: title ?? '',
+      ownerId,
+      accessibilityLevel: validateAccessibilityLevel(accessibilityLevel),
+      createdAt
+    }
+  },
 
-function encodePath({ color, width, points, isBezier }: Path): EncodedPath {
-  const newPoints: number[] = []
-  for (const { x, y } of points) {
-    newPoints.push(x, y)
-  }
-  return { color, width, points: newPoints, isBezier }
-}
-
-function decodePath(doc: any): Path {
-  const rawPath = doc.data()
-  const rawPoints = rawPath.points as number[]
-  const length = rawPoints.length
-  const points: Point[] = []
-  for (let i = 0; i + 1 < length; i += 2) {
-    points.push({ x: rawPoints[i], y: rawPoints[i + 1] })
-  }
-  return {
-    points,
-    width: rawPath.width,
-    color: rawPath.color,
-    id: doc.id,
-    isBezier: !!rawPath.isBezier
+  toFirestore({ id: _id, ...restPicture }: PictureWithId): firestore.DocumentData {
+    return restPicture
   }
 }
 
-function getPermission(picture: Picture | null, user: User): Permission {
+const pathConverter: firestore.FirestoreDataConverter<Path> = {
+  fromFirestore(doc: firestore.QueryDocumentSnapshot): Path {
+    const rawPath = doc.data()
+    const rawPoints = rawPath.points as number[]
+    const length = rawPoints.length
+    const points: Point[] = []
+    for (let i = 0; i + 1 < length; i += 2) {
+      points.push({ x: rawPoints[i], y: rawPoints[i + 1] })
+    }
+    return {
+      points,
+      width: rawPath.width,
+      color: rawPath.color,
+      id: doc.id,
+      isBezier: !!rawPath.isBezier,
+      timestamp: rawPath.timestamp
+    }
+  },
+
+  toFirestore({ points, color, width, isBezier, timestamp }: Path): firestore.DocumentData {
+    const newPoints: number[] = []
+    for (const { x, y } of points) {
+      newPoints.push(x, y)
+    }
+    return {
+      color,
+      width,
+      points: newPoints,
+      isBezier,
+      timestamp: timestamp ?? firestore.FieldValue.serverTimestamp()
+    }
+  }
+}
+
+function getPermission(picture: PictureWithId | null, user: User): Permission {
   const accessibilityLevel = validateAccessibilityLevel(picture?.accessibilityLevel)
 
   if (picture == null || picture.ownerId === user.uid) {
@@ -312,21 +328,4 @@ function combine<T1, T2>(callback: (v1: T1, v2: T2) => void): [(v1: T1) => void,
     }
   }
   return [callback1, callback2]
-}
-
-async function waitUntil<T, S extends T>(
-  variable: Variable<T>,
-  cond: (t: T) => t is S
-): Promise<S> {
-  const { value } = variable
-  if (cond(value)) return value
-
-  return new Promise((resolve) => {
-    const unsubscribe = variable.subscribe((t) => {
-      if (cond(t)) {
-        resolve(t)
-        unsubscribe()
-      }
-    })
-  })
 }
