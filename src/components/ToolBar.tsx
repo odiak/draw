@@ -185,6 +185,7 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
               <WrappedToolButton tool="pen" selectedTool={tool} onSelectedToolChange={setTool} />
               <WrappedToolButton tool="hand" selectedTool={tool} onSelectedToolChange={setTool} />
               <WrappedToolButton tool="eraser" selectedTool={tool} onSelectedToolChange={setTool} />
+              <WrappedToolButton tool="lasso" selectedTool={tool} onSelectedToolChange={setTool} />
             </div>
 
             <div className="tool-group">
