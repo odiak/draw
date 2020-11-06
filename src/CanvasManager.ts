@@ -1041,26 +1041,11 @@ function erase(
   for (const { points, id, isBezier, width } of paths.values()) {
     const d2 = (width + eraserWidth) ** 2
 
-    if (isBezier) {
-      loop: for (const [p0, p1, p2, p3] of bezierPoints(points)) {
-        for (const { x: x0, y: y0 } of iterateBezierPoints(p0, p1, p2, p3, 1)) {
-          for (const { x: x1, y: y1 } of ps) {
-            if ((x0 - x1) ** 2 + (y0 - y1) ** 2 <= d2) {
-              pathIdsToRemove.push(id)
-              break loop
-            }
-          }
-        }
-      }
-    } else {
-      loop: for (const [pp, np] of withPrevious(points)) {
-        for (const { x: x0, y: y0 } of iteratePoints(pp, np, 2)) {
-          for (const { x: x1, y: y1 } of ps) {
-            if ((x0 - x1) ** 2 + (y0 - y1) ** 2 <= d2) {
-              pathIdsToRemove.push(id)
-              break loop
-            }
-          }
+    loop: for (const { x: x0, y: y0 } of iteratePathPoints(points, isBezier, 1.0)) {
+      for (const { x: x1, y: y1 } of ps) {
+        if ((x0 - x1) ** 2 + (y0 - y1) ** 2 <= d2) {
+          pathIdsToRemove.push(id)
+          break loop
         }
       }
     }
@@ -1069,22 +1054,21 @@ function erase(
   return pathIdsToRemove
 }
 
-function* withPrevious<T>(iter: Iterable<T>): Iterable<readonly [T, T]> {
-  let isFirst = false
-  let previous: T
-  for (const it of iter) {
-    previous = it
-    if (isFirst) {
-      isFirst = false
-    } else {
-      yield [previous, it]
+function* iteratePathPoints(points: Point[], isBezier: boolean, f: number): Iterable<Point> {
+  if (isBezier) {
+    for (let i = 3; i < points.length; i += 3) {
+      const p0 = points[i - 3]
+      const p1 = points[i - 2]
+      const p2 = points[i - 1]
+      const p3 = points[i]
+      yield* iterateBezierPoints(p0, p1, p2, p3, f)
     }
-  }
-}
-
-function* bezierPoints(points: readonly Point[]): Iterable<[Point, Point, Point, Point]> {
-  for (let i = 0; i + 3 < points.length; i += 3) {
-    yield [points[i], points[i + 1], points[i + 2], points[i + 3]]
+  } else {
+    for (let i = 1; i < points.length; i++) {
+      const pp = points[i - 1]
+      const np = points[i]
+      yield* iteratePoints(pp, np, f)
+    }
   }
 }
 
