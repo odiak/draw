@@ -35,14 +35,6 @@ const isLikeMacOs = /\bMac OS X\b/i.test(navigator.userAgent)
 const scrollBarColorV = Color.fromString('#0007')
 const scrollBarColorD = Color.fromString('#111a')
 
-type LassoPath = {
-  points: Point[]
-  isClosed: boolean
-  offsetX: number
-  offsetY: number
-  overlappingPathIds: string[]
-}
-
 export class CanvasManager {
   private canvasElement: HTMLCanvasElement | null = null
   private parentElement: Element | null = null
@@ -67,7 +59,7 @@ export class CanvasManager {
   private paths = new Map<string, PathWithBoundary>()
   private drawingPath: Path | null = null
   private erasingPathIds: Set<string> | null = null
-  private currentLassoPath: LassoPath | null = null
+  private currentLasso: Lasso | null = null
 
   private pictureService = PictureService.instantiate()
   private settingsService = SettingsService.instantiate()
@@ -252,8 +244,8 @@ export class CanvasManager {
       let minY = Number.POSITIVE_INFINITY
       for (const path of this.paths.values()) {
         for (const { x, y } of path.points) {
-          minX = Math.min(minX, x)
-          minY = Math.min(minY, y)
+          minX = Math.min(minX, x + path.offsetX)
+          minY = Math.min(minY, y + path.offsetY)
         }
       }
       if (Number.isFinite(minX + minY)) {
@@ -539,20 +531,14 @@ export class CanvasManager {
 
       case 'lasso': {
         const p = this.getPointFromMouseEvent(event)
-        const lasso = this.currentLassoPath
+        const lasso = this.currentLasso
         if (lasso != null && isInsideLasso(p, lasso, calculateLassoBoundary(lasso))) {
           this.prevX = p.x
           this.prevY = p.y
           this.isDraggingLasso = true
           break
         }
-        this.currentLassoPath = {
-          points: [p],
-          isClosed: false,
-          offsetX: 0,
-          offsetY: 0,
-          overlappingPathIds: []
-        }
+        this.currentLasso = new Lasso([p])
         this.tickDraw()
         break
       }
@@ -595,13 +581,13 @@ export class CanvasManager {
       }
 
       case 'lasso': {
-        const { currentLassoPath } = this
+        const { currentLasso } = this
         const p = this.getPointFromMouseEvent(event)
-        if (currentLassoPath != null && !currentLassoPath.isClosed) {
-          pushPoint(currentLassoPath.points, p)
+        if (currentLasso != null && !currentLasso.isClosed) {
+          pushPoint(currentLasso.points, p)
           this.tickDraw()
-        } else if (currentLassoPath != null && this.isDraggingLasso) {
-          this.dragLassoTo(currentLassoPath, p)
+        } else if (currentLasso != null && this.isDraggingLasso) {
+          this.dragLassoTo(currentLasso, p)
         }
         break
       }
@@ -632,19 +618,10 @@ export class CanvasManager {
         break
 
       case 'lasso': {
-        const { currentLassoPath } = this
-        if (currentLassoPath != null && !currentLassoPath.isClosed) {
-          currentLassoPath.isClosed = true
-          if (lassoLength(currentLassoPath, this.scale.value) < 50) {
-            this.currentLassoPath = null
-          } else {
-            currentLassoPath.overlappingPathIds = selectPathsOverlappingWithLasso(
-              this.paths,
-              currentLassoPath
-            )
-          }
-          this.tickDraw()
-        } else if (currentLassoPath != null && this.isDraggingLasso) {
+        const { currentLasso } = this
+        if (currentLasso != null && !currentLasso.isClosed) {
+          this.postProcessLasso(currentLasso)
+        } else if (currentLasso != null && this.isDraggingLasso) {
           this.isDraggingLasso = false
         }
         break
@@ -823,15 +800,19 @@ export class CanvasManager {
       return boundary
     }
 
+    const { offsetX, offsetY } = path
+
     let minX = Number.POSITIVE_INFINITY
     let minY = Number.POSITIVE_INFINITY
     let maxX = Number.NEGATIVE_INFINITY
     let maxY = Number.NEGATIVE_INFINITY
     for (const { x, y } of path.points) {
-      minX = min(minX, x)
-      minY = min(minY, y)
-      maxX = max(maxX, x)
-      maxY = max(maxY, y)
+      const xo = x + offsetX
+      const yo = y + offsetY
+      minX = min(minX, xo)
+      minY = min(minY, yo)
+      maxX = max(maxX, xo)
+      maxY = max(maxY, yo)
     }
     boundary = { minX, minY, maxX, maxY }
     path.boundary = boundary
@@ -849,7 +830,7 @@ export class CanvasManager {
       scrollTop,
       drawingPath,
       scale: { value: scale },
-      currentLassoPath
+      currentLasso
     } = this
 
     ctx.clearRect(0, 0, this.widthPP, this.heightPP)
@@ -888,8 +869,8 @@ export class CanvasManager {
       drawPath(ctx, drawingPath, scrollLeft, scrollTop, dpr, scale)
     }
 
-    if (currentLassoPath != null) {
-      drawLassoPath(ctx, currentLassoPath, scrollLeft, scrollTop, dpr, scale)
+    if (currentLasso != null) {
+      drawLassoPath(ctx, currentLasso, scrollLeft, scrollTop, dpr, scale)
     }
 
     if (this.isScrollBarVisible) {
@@ -1042,12 +1023,11 @@ export class CanvasManager {
     }, step)
   }
 
-  dragLassoTo(lasso: LassoPath, { x, y }: Point) {
+  dragLassoTo(lasso: Lasso, { x, y }: Point) {
     const dx = x - this.prevX
     const dy = y - this.prevY
 
-    lasso.offsetX += dx
-    lasso.offsetY += dy
+    lasso.move(dx, dy)
 
     for (const pathId of lasso.overlappingPathIds) {
       const path = this.paths.get(pathId)
@@ -1059,6 +1039,17 @@ export class CanvasManager {
 
     this.prevX = x
     this.prevY = y
+    this.tickDraw()
+  }
+
+  // Call this after a lasso gets drawed
+  postProcessLasso(lasso: Lasso) {
+    lasso.isClosed = true
+    if (lassoLength(lasso, this.scale.value) < 50) {
+      this.currentLasso = null
+    } else {
+      lasso.overlappingPathIds = selectPathsOverlappingWithLasso(this.paths, lasso)
+    }
     this.tickDraw()
   }
 }
@@ -1112,7 +1103,7 @@ function drawPath(
 
 function drawLassoPath(
   ctx: CanvasRenderingContext2D,
-  { points, isClosed, offsetX, offsetY }: LassoPath,
+  { points, isClosed, offsetX, offsetY }: Lasso,
   scrollLeft: number,
   scrollTop: number,
   dpr: number,
@@ -1171,13 +1162,14 @@ function erase(
   if (p1 == null) {
     ps = [p0]
   } else {
-    ps = [...iteratePoints(p0, p1, 2)]
+    ps = [...iteratePoints(p0, p1, 0, 0, 2)]
   }
 
-  for (const { points, id, isBezier, width } of paths.values()) {
+  for (const path of paths.values()) {
+    const { width, id } = path
     const d2 = (width + eraserWidth) ** 2
 
-    loop: for (const { x: x0, y: y0 } of iteratePathPoints(points, isBezier, 1.0)) {
+    loop: for (const { x: x0, y: y0 } of iteratePathPoints(path, 1.0)) {
       for (const { x: x1, y: y1 } of ps) {
         if ((x0 - x1) ** 2 + (y0 - y1) ** 2 <= d2) {
           pathIdsToRemove.push(id)
@@ -1190,25 +1182,34 @@ function erase(
   return pathIdsToRemove
 }
 
-function* iteratePathPoints(points: Point[], isBezier: boolean, f: number): Iterable<Point> {
+function* iteratePathPoints(
+  { isBezier, points, offsetX, offsetY }: Path,
+  f: number
+): Iterable<Point> {
   if (isBezier) {
     for (let i = 3; i < points.length; i += 3) {
       const p0 = points[i - 3]
       const p1 = points[i - 2]
       const p2 = points[i - 1]
       const p3 = points[i]
-      yield* iterateBezierPoints(p0, p1, p2, p3, f)
+      yield* iterateBezierPoints(p0, p1, p2, p3, offsetX, offsetY, f)
     }
   } else {
     for (let i = 1; i < points.length; i++) {
       const pp = points[i - 1]
       const np = points[i]
-      yield* iteratePoints(pp, np, f)
+      yield* iteratePoints(pp, np, offsetX, offsetY, f)
     }
   }
 }
 
-function* iteratePoints(p0: Point, p1: Point, f: number): Iterable<Point> {
+function* iteratePoints(
+  p0: Point,
+  p1: Point,
+  offsetX: number,
+  offsetY: number,
+  f: number
+): Iterable<Point> {
   const { x: x0, y: y0 } = p0
   const { x: x1, y: y1 } = p1
   const d = Math.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2)
@@ -1217,7 +1218,7 @@ function* iteratePoints(p0: Point, p1: Point, f: number): Iterable<Point> {
   const sx = Math.sign(vx)
   const sy = Math.sign(vy)
   for (let x = x0, y = y0; x * sx < x1 * sx && y * sy < y1 * sy; x += vx, y += vy) {
-    yield { x, y }
+    yield { x: x + offsetX, y: y + offsetY }
   }
 }
 
@@ -1226,6 +1227,8 @@ function* iterateBezierPoints(
   p1: Point,
   p2: Point,
   p3: Point,
+  offsetX: number,
+  offsetY: number,
   f: number
 ): Iterable<Point> {
   const { x: x0, y: y0 } = p0
@@ -1242,7 +1245,7 @@ function* iterateBezierPoints(
     const a3 = t ** 3
     const x = a0 * x0 + a1 * x1 + a2 * x2 + a3 * x3
     const y = a0 * y0 + a1 * y1 + a2 * y2 + a3 * y3
-    yield { x, y }
+    yield { x: x + offsetX, y: y + offsetY }
   }
 }
 
@@ -1279,35 +1282,32 @@ function smoothPath(path: Path | null, scale: number): void {
   path.isBezier = true
 }
 
-type LassoBoundary = {
-  minX: number
-  minY: number
+type LassoInfo = {
   maxX: number
-  maxY: number
+  pointsWithOffset: Point[]
 }
 
-function calculateLassoBoundary(lassoPath: LassoPath): LassoBoundary {
-  let minX = Number.POSITIVE_INFINITY
-  let minY = Number.POSITIVE_INFINITY
+function calculateLassoBoundary(lassoPath: Lasso): LassoInfo {
   let maxX = Number.NEGATIVE_INFINITY
-  let maxY = Number.NEGATIVE_INFINITY
+  const { offsetX, offsetY } = lassoPath
+  const pointsWithOffset: Point[] = []
   for (const { x, y } of lassoPath.points) {
-    minX = Math.min(minX, x)
-    minY = Math.min(minY, y)
-    maxX = Math.max(maxX, x)
-    maxY = Math.max(maxY, y)
+    const xo = x + offsetX
+    const yo = y + offsetY
+    maxX = Math.max(maxX, xo)
+    pointsWithOffset.push({ x: xo, y: yo })
   }
-  return { minX, minY, maxX, maxY }
+  return { maxX, pointsWithOffset }
 }
 
-function isInsideLasso(p0: Point, { points }: LassoPath, { maxX }: LassoBoundary): boolean {
+function isInsideLasso(p0: Point, {}: Lasso, { maxX, pointsWithOffset }: LassoInfo): boolean {
   if (p0.x > maxX) return false
 
   const p1 = { x: maxX + 1000, y: p0.y }
   let c = 0
-  for (let i = 0; i < points.length; i++) {
-    const q0 = i > 0 ? points[i - 1] : points[points.length - 1]
-    const q1 = points[i]
+  for (let i = 0; i < pointsWithOffset.length; i++) {
+    const q0 = i > 0 ? pointsWithOffset[i - 1] : pointsWithOffset[pointsWithOffset.length - 1]
+    const q1 = pointsWithOffset[i]
     if (isIntersect(p0, p1, q0, q1)) {
       c += 1
     }
@@ -1338,7 +1338,7 @@ function outerProduct(p: Point, q: Point): number {
   return p.x * q.y - p.y * q.x
 }
 
-function lassoLength({ points }: LassoPath, scale: number): number {
+function lassoLength({ points }: Lasso, scale: number): number {
   let d = 0
   for (let i = 0; i < points.length; i++) {
     const p = i > 0 ? points[i - 1] : points[points.length - 1]
@@ -1350,12 +1350,12 @@ function lassoLength({ points }: LassoPath, scale: number): number {
 
 function selectPathsOverlappingWithLasso(
   paths: Map<string, PathWithBoundary>,
-  lasso: LassoPath
+  lasso: Lasso
 ): string[] {
   const boundary = calculateLassoBoundary(lasso)
   const pathIds: string[] = []
   for (const [pathId, path] of paths) {
-    for (const p of iteratePathPoints(path.points, path.isBezier, 1.0)) {
+    for (const p of iteratePathPoints(path, 1.0)) {
       if (isInsideLasso(p, lasso, boundary)) {
         pathIds.push(pathId)
         break
@@ -1363,4 +1363,45 @@ function selectPathsOverlappingWithLasso(
     }
   }
   return pathIds
+}
+
+class Lasso {
+  points: Point[]
+  isClosed = false
+  offsetX = 0
+  offsetY = 0
+  overlappingPathIds: string[] = []
+  accumulatedOffsetX = 0
+  accumulatedOffsetY = 0
+
+  constructor(points: Point[] = []) {
+    this.points = points
+  }
+
+  private _pointsWithOffset: Point[] | null = null
+
+  get pointsWithOffset(): Point[] {
+    const po = this._pointsWithOffset
+    if (po != null) {
+      return po
+    }
+
+    const { offsetX, offsetY } = this
+    return (this._pointsWithOffset = this.points.map(({ x, y }) => ({
+      x: x + offsetX,
+      y: y + offsetY
+    })))
+  }
+
+  move(dx: number, dy: number) {
+    this.offsetX += dx
+    this.offsetY += dy
+    this.accumulatedOffsetX += dx
+    this.accumulatedOffsetY += dy
+  }
+
+  resetAccumulation() {
+    this.accumulatedOffsetX = 0
+    this.accumulatedOffsetY = 0
+  }
 }
