@@ -35,6 +35,14 @@ const isLikeMacOs = /\bMac OS X\b/i.test(navigator.userAgent)
 const scrollBarColorV = Color.fromString('#0007')
 const scrollBarColorD = Color.fromString('#111a')
 
+type LassoPath = {
+  points: Point[]
+  isClosed: boolean
+  offsetX: number
+  offsetY: number
+  overlappingPathIds: string[]
+}
+
 export class CanvasManager {
   private canvasElement: HTMLCanvasElement | null = null
   private parentElement: Element | null = null
@@ -59,6 +67,7 @@ export class CanvasManager {
   private paths = new Map<string, PathWithBoundary>()
   private drawingPath: Path | null = null
   private erasingPathIds: Set<string> | null = null
+  private currentLassoPath: LassoPath | null = null
 
   private pictureService = PictureService.instantiate()
   private settingsService = SettingsService.instantiate()
@@ -107,6 +116,8 @@ export class CanvasManager {
   private hidingScrollBarTimer = null as number | null
   private scrollBarOpacity = 1.0
 
+  private isDraggingLasso = false
+
   constructor(private pictureId: string) {
     this.scale.subscribe((scale, prevScale) => {
       const r = scale / prevScale
@@ -126,12 +137,15 @@ export class CanvasManager {
 
     this.unwatchPaths = this.pictureService.watchPaths(
       pictureId,
-      ({ addedPaths, removedPathIds }) => {
+      ({ addedPaths, removedPathIds, modifiedPaths }) => {
         if (addedPaths != null) {
           this.addPathsAndAdjustPosition(addedPaths)
         }
         if (removedPathIds != null) {
           this.removePathsById(removedPathIds)
+        }
+        if (modifiedPaths != null) {
+          this.updatePaths(modifiedPaths)
         }
       }
     )
@@ -257,6 +271,13 @@ export class CanvasManager {
     const n = removePaths(this.paths, pathIdsToRemove)
 
     if (n > 0) {
+      this.tickDraw()
+    }
+  }
+
+  private updatePaths(paths: Path[]) {
+    addPaths(this.paths, paths)
+    if (paths.length > 0) {
       this.tickDraw()
     }
   }
@@ -500,7 +521,9 @@ export class CanvasManager {
             color: this.strokeColor.value,
             width: this.strokeWidth.value,
             points: [this.getPointFromMouseEvent(event)],
-            isBezier: false
+            isBezier: false,
+            offsetX: 0,
+            offsetY: 0
           }
         }
         break
@@ -511,6 +534,26 @@ export class CanvasManager {
         this.tickDraw()
         this.prevX = p.x
         this.prevY = p.y
+        break
+      }
+
+      case 'lasso': {
+        const p = this.getPointFromMouseEvent(event)
+        const lasso = this.currentLassoPath
+        if (lasso != null && isInsideLasso(p, lasso, calculateLassoBoundary(lasso))) {
+          this.prevX = p.x
+          this.prevY = p.y
+          this.isDraggingLasso = true
+          break
+        }
+        this.currentLassoPath = {
+          points: [p],
+          isClosed: false,
+          offsetX: 0,
+          offsetY: 0,
+          overlappingPathIds: []
+        }
+        this.tickDraw()
         break
       }
 
@@ -551,6 +594,18 @@ export class CanvasManager {
         break
       }
 
+      case 'lasso': {
+        const { currentLassoPath } = this
+        const p = this.getPointFromMouseEvent(event)
+        if (currentLassoPath != null && !currentLassoPath.isClosed) {
+          pushPoint(currentLassoPath.points, p)
+          this.tickDraw()
+        } else if (currentLassoPath != null && this.isDraggingLasso) {
+          this.dragLassoTo(currentLassoPath, p)
+        }
+        break
+      }
+
       case 'hand': {
         if (this.handScrollingByMouse) {
           const { x, y } = this.getPointFromMouseEvent(event, true)
@@ -576,6 +631,25 @@ export class CanvasManager {
         this.removeErasingPaths()
         break
 
+      case 'lasso': {
+        const { currentLassoPath } = this
+        if (currentLassoPath != null && !currentLassoPath.isClosed) {
+          currentLassoPath.isClosed = true
+          if (lassoLength(currentLassoPath, this.scale.value) < 50) {
+            this.currentLassoPath = null
+          } else {
+            currentLassoPath.overlappingPathIds = selectPathsOverlappingWithLasso(
+              this.paths,
+              currentLassoPath
+            )
+          }
+          this.tickDraw()
+        } else if (currentLassoPath != null && this.isDraggingLasso) {
+          this.isDraggingLasso = false
+        }
+        break
+      }
+
       case 'hand':
         this.handScrollingByMouse = false
         this.hideScrollBarAfterDelay()
@@ -593,7 +667,9 @@ export class CanvasManager {
             color: this.strokeColor.value,
             width: this.strokeWidth.value,
             points: [p],
-            isBezier: false
+            isBezier: false,
+            offsetX: 0,
+            offsetY: 0
           }
           this.drawingByTouch = true
           break
@@ -772,7 +848,8 @@ export class CanvasManager {
       scrollLeft,
       scrollTop,
       drawingPath,
-      scale: { value: scale }
+      scale: { value: scale },
+      currentLassoPath
     } = this
 
     ctx.clearRect(0, 0, this.widthPP, this.heightPP)
@@ -809,6 +886,10 @@ export class CanvasManager {
 
     if (drawingPath != null) {
       drawPath(ctx, drawingPath, scrollLeft, scrollTop, dpr, scale)
+    }
+
+    if (currentLassoPath != null) {
+      drawLassoPath(ctx, currentLassoPath, scrollLeft, scrollTop, dpr, scale)
     }
 
     if (this.isScrollBarVisible) {
@@ -960,11 +1041,31 @@ export class CanvasManager {
       this.tickDraw()
     }, step)
   }
+
+  dragLassoTo(lasso: LassoPath, { x, y }: Point) {
+    const dx = x - this.prevX
+    const dy = y - this.prevY
+
+    lasso.offsetX += dx
+    lasso.offsetY += dy
+
+    for (const pathId of lasso.overlappingPathIds) {
+      const path = this.paths.get(pathId)
+      if (path != null) {
+        path.offsetX += dx
+        path.offsetY += dy
+      }
+    }
+
+    this.prevX = x
+    this.prevY = y
+    this.tickDraw()
+  }
 }
 
 function drawPath(
   ctx: CanvasRenderingContext2D,
-  { width, color, points, isBezier }: Path,
+  { width, color, points, isBezier, offsetX, offsetY }: Path,
   scrollLeft: number,
   scrollTop: number,
   dpr: number,
@@ -981,8 +1082,8 @@ function drawPath(
   if (isBezier) {
     let args: number[] = []
     for (const { x, y } of points) {
-      const realX = (x * scale - scrollLeft) * dpr
-      const realY = (y * scale - scrollTop) * dpr
+      const realX = ((x + offsetX) * scale - scrollLeft) * dpr
+      const realY = ((y + offsetY) * scale - scrollTop) * dpr
       if (first) {
         ctx.moveTo(realX, realY)
         first = false
@@ -1007,6 +1108,41 @@ function drawPath(
     }
   }
   ctx.stroke()
+}
+
+function drawLassoPath(
+  ctx: CanvasRenderingContext2D,
+  { points, isClosed, offsetX, offsetY }: LassoPath,
+  scrollLeft: number,
+  scrollTop: number,
+  dpr: number,
+  scale: number
+) {
+  if (points.length <= 1) return
+
+  ctx.setLineDash([4 * dpr, 4 * dpr])
+  ctx.strokeStyle = '#000000'
+  ctx.lineWidth = 1
+
+  ctx.beginPath()
+
+  let isFirst = true
+  for (const { x, y } of points) {
+    const realX = ((x + offsetX) * scale - scrollLeft) * dpr
+    const realY = ((y + offsetY) * scale - scrollTop) * dpr
+    if (isFirst) {
+      ctx.moveTo(realX, realY)
+      isFirst = false
+    } else {
+      ctx.lineTo(realX, realY)
+    }
+  }
+  if (isClosed) {
+    ctx.closePath()
+  }
+  ctx.stroke()
+
+  ctx.setLineDash([])
 }
 
 function pushPoint(points: Point[] | null | undefined, point: Point) {
@@ -1141,4 +1277,90 @@ function smoothPath(path: Path | null, scale: number): void {
   if (path == null) return
   path.points = fitCurve(path.points, 5 / scale).flatMap((c, i) => (i === 0 ? c : c.slice(1)))
   path.isBezier = true
+}
+
+type LassoBoundary = {
+  minX: number
+  minY: number
+  maxX: number
+  maxY: number
+}
+
+function calculateLassoBoundary(lassoPath: LassoPath): LassoBoundary {
+  let minX = Number.POSITIVE_INFINITY
+  let minY = Number.POSITIVE_INFINITY
+  let maxX = Number.NEGATIVE_INFINITY
+  let maxY = Number.NEGATIVE_INFINITY
+  for (const { x, y } of lassoPath.points) {
+    minX = Math.min(minX, x)
+    minY = Math.min(minY, y)
+    maxX = Math.max(maxX, x)
+    maxY = Math.max(maxY, y)
+  }
+  return { minX, minY, maxX, maxY }
+}
+
+function isInsideLasso(p0: Point, { points }: LassoPath, { maxX }: LassoBoundary): boolean {
+  if (p0.x > maxX) return false
+
+  const p1 = { x: maxX + 1000, y: p0.y }
+  let c = 0
+  for (let i = 0; i < points.length; i++) {
+    const q0 = i > 0 ? points[i - 1] : points[points.length - 1]
+    const q1 = points[i]
+    if (isIntersect(p0, p1, q0, q1)) {
+      c += 1
+    }
+  }
+  return c % 2 === 1
+}
+
+function isIntersect(p0: Point, p1: Point, q0: Point, q1: Point): boolean {
+  const vp = subtract(p1, p0)
+  const vq = subtract(q1, q0)
+  const d = subtract(q0, p0)
+  const c = outerProduct(vp, vq)
+  const dvp = outerProduct(d, vp)
+  if (c === 0) {
+    return dvp === 0
+  }
+  const dvq = outerProduct(d, vq)
+  const t = dvq / c
+  const u = dvp / c
+  return t > 0 && t <= 1 && u > 0 && u <= 1
+}
+
+function subtract(p: Point, q: Point): Point {
+  return { x: p.x - q.x, y: p.y - q.y }
+}
+
+function outerProduct(p: Point, q: Point): number {
+  return p.x * q.y - p.y * q.x
+}
+
+function lassoLength({ points }: LassoPath, scale: number): number {
+  let d = 0
+  for (let i = 0; i < points.length; i++) {
+    const p = i > 0 ? points[i - 1] : points[points.length - 1]
+    const q = points[i]
+    d += Math.sqrt((p.x - q.x) ** 2 + (p.y - q.y) ** 2)
+  }
+  return d * scale
+}
+
+function selectPathsOverlappingWithLasso(
+  paths: Map<string, PathWithBoundary>,
+  lasso: LassoPath
+): string[] {
+  const boundary = calculateLassoBoundary(lasso)
+  const pathIds: string[] = []
+  for (const [pathId, path] of paths) {
+    for (const p of iteratePathPoints(path.points, path.isBezier, 1.0)) {
+      if (isInsideLasso(p, lasso, boundary)) {
+        pathIds.push(pathId)
+        break
+      }
+    }
+  }
+  return pathIds
 }

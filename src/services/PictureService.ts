@@ -10,6 +10,8 @@ export type Path = {
   id: string
   isBezier: boolean
   timestamp?: firestore.Timestamp
+  offsetX: number
+  offsetY: number
 }
 
 export type AccessibilityLevel = 'public' | 'protected' | 'private'
@@ -25,6 +27,7 @@ export type PictureWithId = {
 export type PathsUpdate = Partial<{
   addedPaths: Path[]
   removedPathIds: string[]
+  modifiedPaths: Path[]
 }>
 
 export type Permission = {
@@ -143,6 +146,7 @@ export class PictureService {
 
         const addedPaths: Path[] = []
         const removedPathIds: string[] = []
+        const modifiedPaths: Path[] = []
 
         for (const change of snapshot.docChanges()) {
           switch (change.type) {
@@ -153,10 +157,14 @@ export class PictureService {
             case 'removed':
               removedPathIds.push(change.doc.id)
               break
+
+            case 'modified':
+              modifiedPaths.push(change.doc.data())
+              break
           }
         }
 
-        callback({ addedPaths, removedPathIds })
+        callback({ addedPaths, removedPathIds, modifiedPaths })
       })
 
     return unwatch
@@ -249,22 +257,39 @@ const pathConverter: firestore.FirestoreDataConverter<Path> = {
       color: rawPath.color,
       id: doc.id,
       isBezier: !!rawPath.isBezier,
-      timestamp: rawPath.timestamp
+      timestamp: rawPath.timestamp,
+      offsetX: rawPath.offsetX ?? 0,
+      offsetY: rawPath.offsetY ?? 0
     }
   },
 
-  toFirestore({ points, color, width, isBezier, timestamp }: Path): firestore.DocumentData {
+  toFirestore({
+    points,
+    color,
+    width,
+    isBezier,
+    timestamp,
+    offsetX,
+    offsetY
+  }: Path): firestore.DocumentData {
     const newPoints: number[] = []
     for (const { x, y } of points) {
       newPoints.push(x, y)
     }
-    return {
+    const data: firestore.DocumentData = {
       color,
       width,
       points: newPoints,
       isBezier,
       timestamp: timestamp ?? firestore.FieldValue.serverTimestamp()
     }
+    if (offsetX !== 0) {
+      data.offsetX = offsetX
+    }
+    if (offsetY !== 0) {
+      data.offsetY = offsetY
+    }
+    return data
   }
 }
 
