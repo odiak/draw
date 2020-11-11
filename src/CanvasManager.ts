@@ -18,13 +18,6 @@ type Operation =
       paths: Path[]
     }>
 
-type PathBoundary = {
-  minX: number
-  minY: number
-  maxX: number
-  maxY: number
-}
-
 type PathWithBoundary = Path & { boundary?: PathBoundary }
 
 const zoomScaleFactor = 1.1
@@ -793,30 +786,7 @@ export class CanvasManager {
   }
 
   private getPathBoundary(path: PathWithBoundary): PathBoundary {
-    const { min, max } = Math
-
-    let boundary = path.boundary
-    if (boundary != null) {
-      return boundary
-    }
-
-    const { offsetX, offsetY } = path
-
-    let minX = Number.POSITIVE_INFINITY
-    let minY = Number.POSITIVE_INFINITY
-    let maxX = Number.NEGATIVE_INFINITY
-    let maxY = Number.NEGATIVE_INFINITY
-    for (const { x, y } of path.points) {
-      const xo = x + offsetX
-      const yo = y + offsetY
-      minX = min(minX, xo)
-      minY = min(minY, yo)
-      maxX = max(maxX, xo)
-      maxY = max(maxY, yo)
-    }
-    boundary = { minX, minY, maxX, maxY }
-    path.boundary = boundary
-    return boundary
+    return path.boundary ?? (path.boundary = new PathBoundary(path))
   }
 
   private draw() {
@@ -1403,5 +1373,45 @@ class Lasso {
   resetAccumulation() {
     this.accumulatedOffsetX = 0
     this.accumulatedOffsetY = 0
+  }
+}
+
+class PathBoundary {
+  private originalMinX: number
+  private originalMaxX: number
+  private originalMinY: number
+  private originalMaxY: number
+  private path: Path
+
+  constructor(path: Path) {
+    this.path = path
+    let minX = Number.POSITIVE_INFINITY
+    let minY = Number.POSITIVE_INFINITY
+    let maxX = Number.NEGATIVE_INFINITY
+    let maxY = Number.NEGATIVE_INFINITY
+    for (const { x, y } of path.points) {
+      minX = Math.min(minX, x)
+      minY = Math.min(minY, y)
+      maxX = Math.max(maxX, x)
+      maxY = Math.max(maxY, y)
+    }
+
+    this.originalMinX = minX
+    this.originalMaxX = maxX
+    this.originalMinY = minY
+    this.originalMaxY = maxY
+  }
+
+  get minX(): number {
+    return this.originalMinX + this.path.offsetX
+  }
+  get minY(): number {
+    return this.originalMinY + this.path.offsetY
+  }
+  get maxX(): number {
+    return this.originalMaxX + this.path.offsetX
+  }
+  get maxY(): number {
+    return this.originalMaxY + this.path.offsetY
   }
 }
