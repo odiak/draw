@@ -17,6 +17,12 @@ type Operation =
       type: 'remove'
       paths: Path[]
     }>
+  | Readonly<{
+      type: 'move'
+      paths: Path[]
+      dx: number
+      dy: number
+    }>
 
 type PathWithBoundary = Path & { boundary?: PathBoundary }
 
@@ -261,7 +267,7 @@ export class CanvasManager {
   }
 
   private updatePaths(paths: Path[]) {
-    addPaths(this.paths, paths)
+    updatePaths(this.paths, paths)
     if (paths.length > 0) {
       this.tickDraw()
     }
@@ -276,6 +282,19 @@ export class CanvasManager {
     const pathIds = paths.map((p) => p.id)
     removePaths(this.paths, pathIds)
     this.pictureService.removePaths(this.pictureId, pathIds)
+  }
+
+  private movePathsInternal(paths: Path[], dx: number, dy: number) {
+    const newPaths = paths.map((path) => ({
+      ...path,
+      offsetX: path.offsetX + dx,
+      offsetY: path.offsetY + dy
+    }))
+    updatePaths(this.paths, newPaths)
+    this.pictureService.updatePaths(
+      this.pictureId,
+      newPaths.map(({ id, offsetX, offsetY }) => ({ id, offsetX, offsetY }))
+    )
   }
 
   private checkOperationStack() {
@@ -299,6 +318,10 @@ export class CanvasManager {
       case 'remove':
         this.removePathsInternal(operation.paths)
         break
+
+      case 'move':
+        this.movePathsInternal(operation.paths, operation.dx, operation.dy)
+        break
     }
 
     this.tickDraw()
@@ -315,6 +338,10 @@ export class CanvasManager {
 
       case 'remove':
         this.addPathsInternal(operation.paths)
+        break
+
+      case 'move':
+        this.movePathsInternal(operation.paths, -operation.dx, -operation.dy)
         break
     }
 
@@ -615,7 +642,7 @@ export class CanvasManager {
         if (currentLasso != null && !currentLasso.isClosed) {
           this.postProcessLasso(currentLasso)
         } else if (currentLasso != null && this.isDraggingLasso) {
-          this.isDraggingLasso = false
+          this.finishDraggingLasso()
         }
         break
       }
@@ -813,30 +840,33 @@ export class CanvasManager {
     const maxXOnScreen = (this.width + scrollLeft) / scale
     const maxYOnScreen = (this.height + scrollTop) / scale
 
-    if (erasingPathIds == null) {
-      for (const path of this.paths.values()) {
-        const b = this.getPathBoundary(path)
-        if (
-          b.minX > maxXOnScreen ||
-          b.minY > maxYOnScreen ||
-          b.maxX < minXOnScreen ||
-          b.maxY < minYOnScreen
-        ) {
-          continue
-        }
-
-        drawPath(ctx, path, scrollLeft, scrollTop, dpr, scale)
+    for (const path of this.paths.values()) {
+      const b = this.getPathBoundary(path)
+      if (
+        b.minX > maxXOnScreen ||
+        b.minY > maxYOnScreen ||
+        b.maxX < minXOnScreen ||
+        b.maxY < minYOnScreen
+      ) {
+        continue
       }
-    } else {
-      for (const path of this.paths.values()) {
-        if (erasingPathIds.has(path.id)) continue
 
-        drawPath(ctx, path, scrollLeft, scrollTop, dpr, scale)
+      if (erasingPathIds != null && erasingPathIds.has(path.id)) {
+        continue
       }
+
+      let dx = 0
+      let dy = 0
+      if (currentLasso != null && currentLasso.overlappingPathIds.has(path.id)) {
+        dx = currentLasso.accumulatedOffsetX
+        dy = currentLasso.accumulatedOffsetY
+      }
+
+      drawPath(ctx, path, scrollLeft, scrollTop, dpr, scale, dx, dy)
     }
 
     if (drawingPath != null) {
-      drawPath(ctx, drawingPath, scrollLeft, scrollTop, dpr, scale)
+      drawPath(ctx, drawingPath, scrollLeft, scrollTop, dpr, scale, 0, 0)
     }
 
     if (currentLasso != null) {
@@ -993,32 +1023,46 @@ export class CanvasManager {
     }, step)
   }
 
-  dragLassoTo(lasso: Lasso, { x, y }: Point) {
+  private dragLassoTo(lasso: Lasso, { x, y }: Point) {
     const dx = x - this.prevX
     const dy = y - this.prevY
-
     lasso.move(dx, dy)
-
-    for (const pathId of lasso.overlappingPathIds) {
-      const path = this.paths.get(pathId)
-      if (path != null) {
-        path.offsetX += dx
-        path.offsetY += dy
-      }
-    }
 
     this.prevX = x
     this.prevY = y
     this.tickDraw()
   }
 
+  private finishDraggingLasso() {
+    const { currentLasso } = this
+    if (currentLasso == null) return
+
+    const dx = currentLasso.accumulatedOffsetX
+    const dy = currentLasso.accumulatedOffsetY
+    currentLasso.resetAccumulation()
+    if (dx === 0 && dy === 0) return
+
+    const paths: Path[] = []
+    for (const id of currentLasso.overlappingPathIds) {
+      const path = this.paths.get(id)
+      if (path != null) {
+        paths.push({ ...path })
+      }
+    }
+
+    if (paths.length === 0) return
+
+    this.doOperation({ type: 'move', paths, dx, dy })
+    this.isDraggingLasso = false
+  }
+
   // Call this after a lasso gets drawed
-  postProcessLasso(lasso: Lasso) {
+  private postProcessLasso(lasso: Lasso) {
     lasso.isClosed = true
     if (lassoLength(lasso, this.scale.value) < 50) {
       this.currentLasso = null
     } else {
-      lasso.overlappingPathIds = selectPathsOverlappingWithLasso(this.paths, lasso)
+      addToSet(lasso.overlappingPathIds, selectPathsOverlappingWithLasso(this.paths, lasso))
     }
     this.tickDraw()
   }
@@ -1030,7 +1074,9 @@ function drawPath(
   scrollLeft: number,
   scrollTop: number,
   dpr: number,
-  scale: number
+  scale: number,
+  dx: number,
+  dy: number
 ) {
   if (points.length === 0) {
     return
@@ -1043,8 +1089,8 @@ function drawPath(
   if (isBezier) {
     let args: number[] = []
     for (const { x, y } of points) {
-      const realX = ((x + offsetX) * scale - scrollLeft) * dpr
-      const realY = ((y + offsetY) * scale - scrollTop) * dpr
+      const realX = ((x + offsetX + dx) * scale - scrollLeft) * dpr
+      const realY = ((y + offsetY + dy) * scale - scrollTop) * dpr
       if (first) {
         ctx.moveTo(realX, realY)
         first = false
@@ -1238,6 +1284,12 @@ function addPaths(paths: Map<string, Path>, pathsToAdd: Path[]): number {
   return count
 }
 
+function updatePaths(paths: Map<string, Path>, pathsToAdd: Path[]) {
+  for (const path of pathsToAdd) {
+    paths.set(path.id, path)
+  }
+}
+
 function addToSet<T>(set: Set<T> | null | undefined, items: Iterable<T>) {
   if (set == null) return
 
@@ -1340,7 +1392,7 @@ class Lasso {
   isClosed = false
   offsetX = 0
   offsetY = 0
-  overlappingPathIds: string[] = []
+  overlappingPathIds = new Set<string>()
   accumulatedOffsetX = 0
   accumulatedOffsetY = 0
 
