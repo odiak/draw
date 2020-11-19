@@ -288,7 +288,8 @@ export class CanvasManager {
     const newPaths = paths.map((path) => ({
       ...path,
       offsetX: path.offsetX + dx,
-      offsetY: path.offsetY + dy
+      offsetY: path.offsetY + dy,
+      boundary: undefined
     }))
     updatePaths(this.paths, newPaths)
     this.pictureService.updatePaths(
@@ -341,7 +342,7 @@ export class CanvasManager {
         break
 
       case 'move':
-        this.movePathsInternal(operation.paths, -operation.dx, -operation.dy)
+        this.movePathsInternal(operation.paths, 0, 0)
         break
     }
 
@@ -812,10 +813,6 @@ export class CanvasManager {
     this.tickScroll()
   }
 
-  private getPathBoundary(path: PathWithBoundary): PathBoundary {
-    return path.boundary ?? (path.boundary = new PathBoundary(path))
-  }
-
   private draw() {
     const ctx = this.renderingContext
     if (ctx == null) return
@@ -841,7 +838,7 @@ export class CanvasManager {
     const maxYOnScreen = (this.height + scrollTop) / scale
 
     for (const path of this.paths.values()) {
-      const b = this.getPathBoundary(path)
+      const b = getPathBoundary(path)
       if (
         b.minX > maxXOnScreen ||
         b.minY > maxYOnScreen ||
@@ -886,7 +883,7 @@ export class CanvasManager {
     let maxDrawedX_ = Number.NEGATIVE_INFINITY
     let maxDrawedY_ = Number.NEGATIVE_INFINITY
     for (const path of this.paths.values()) {
-      const b = this.getPathBoundary(path)
+      const b = getPathBoundary(path)
       minDrawedX_ = min(minDrawedX_, b.minX)
       minDrawedY_ = min(minDrawedY_, b.minY)
       maxDrawedX_ = max(maxDrawedX_, b.maxX)
@@ -1050,9 +1047,10 @@ export class CanvasManager {
       }
     }
 
-    if (paths.length === 0) return
+    if (paths.length !== 0) {
+      this.doOperation({ type: 'move', paths, dx, dy })
+    }
 
-    this.doOperation({ type: 'move', paths, dx, dy })
     this.isDraggingLasso = false
   }
 
@@ -1330,14 +1328,14 @@ function isInsideLasso(p0: Point, {}: Lasso, { maxX, pointsWithOffset }: LassoIn
   for (let i = 0; i < pointsWithOffset.length; i++) {
     const q0 = i > 0 ? pointsWithOffset[i - 1] : pointsWithOffset[pointsWithOffset.length - 1]
     const q1 = pointsWithOffset[i]
-    if (isIntersect(p0, p1, q0, q1)) {
+    if (doesIntersect(p0, p1, q0, q1)) {
       c += 1
     }
   }
   return c % 2 === 1
 }
 
-function isIntersect(p0: Point, p1: Point, q0: Point, q1: Point): boolean {
+function doesIntersect(p0: Point, p1: Point, q0: Point, q1: Point): boolean {
   const vp = subtract(p1, p0)
   const vq = subtract(q1, q0)
   const d = subtract(q0, p0)
@@ -1377,6 +1375,10 @@ function selectPathsOverlappingWithLasso(
   const boundary = calculateLassoBoundary(lasso)
   const pathIds: string[] = []
   for (const [pathId, path] of paths) {
+    if (!areBoundariesOverlapping(getPathBoundary(path), lasso)) {
+      continue
+    }
+
     for (const p of iteratePathPoints(path, 1.0)) {
       if (isInsideLasso(p, lasso, boundary)) {
         pathIds.push(pathId)
@@ -1387,6 +1389,12 @@ function selectPathsOverlappingWithLasso(
   return pathIds
 }
 
+function areBoundariesOverlapping(b1: Boundary, b2: Boundary): boolean {
+  return b1.minX <= b2.maxX && b2.minX <= b1.maxX && b1.minY <= b2.maxY && b2.minY <= b1.maxY
+}
+
+type Boundary = { minX: number; minY: number; maxX: number; maxY: number }
+
 class Lasso {
   points: Point[]
   isClosed = false
@@ -1395,6 +1403,8 @@ class Lasso {
   overlappingPathIds = new Set<string>()
   accumulatedOffsetX = 0
   accumulatedOffsetY = 0
+
+  private originalBoundary: Boundary | null = null
 
   constructor(points: Point[] = []) {
     this.points = points
@@ -1425,6 +1435,36 @@ class Lasso {
   resetAccumulation() {
     this.accumulatedOffsetX = 0
     this.accumulatedOffsetY = 0
+  }
+
+  private calculateOriginalBoundary(): Boundary {
+    const { originalBoundary } = this
+    if (originalBoundary != null) return originalBoundary
+
+    let minX = Number.POSITIVE_INFINITY
+    let minY = Number.POSITIVE_INFINITY
+    let maxX = Number.NEGATIVE_INFINITY
+    let maxY = Number.NEGATIVE_INFINITY
+    for (const { x, y } of this.points) {
+      minX = Math.min(x, minX)
+      minY = Math.min(y, minY)
+      maxX = Math.max(x, maxX)
+      maxY = Math.max(y, maxY)
+    }
+    return (this.originalBoundary = { minX, minY, maxX, maxY })
+  }
+
+  get minX(): number {
+    return this.calculateOriginalBoundary().minX + this.offsetX
+  }
+  get minY(): number {
+    return this.calculateOriginalBoundary().minY + this.offsetY
+  }
+  get maxX(): number {
+    return this.calculateOriginalBoundary().maxX + this.offsetX
+  }
+  get maxY(): number {
+    return this.calculateOriginalBoundary().maxY + this.offsetY
   }
 }
 
@@ -1466,4 +1506,8 @@ class PathBoundary {
   get maxY(): number {
     return this.originalMaxY + this.path.offsetY
   }
+}
+
+function getPathBoundary(path: PathWithBoundary): PathBoundary {
+  return path.boundary ?? (path.boundary = new PathBoundary(path))
 }
