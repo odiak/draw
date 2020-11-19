@@ -22,6 +22,7 @@ type Operation =
       paths: Path[]
       dx: number
       dy: number
+      lassoId: string
     }>
 
 type PathWithBoundary = Path & { boundary?: PathBoundary }
@@ -298,6 +299,14 @@ export class CanvasManager {
     )
   }
 
+  private moveLassoById(id: string, dx: number, dy: number) {
+    const { currentLasso } = this
+    if (currentLasso == null || currentLasso.id !== id) return
+
+    currentLasso.offsetX += dx
+    currentLasso.offsetY += dy
+  }
+
   private checkOperationStack() {
     const canUndo = this.doneOperationStack.length !== 0
     const canRedo = this.undoneOperationStack.length !== 0
@@ -322,6 +331,9 @@ export class CanvasManager {
 
       case 'move':
         this.movePathsInternal(operation.paths, operation.dx, operation.dy)
+        if (redo) {
+          this.moveLassoById(operation.lassoId, operation.dx, operation.dy)
+        }
         break
     }
 
@@ -343,6 +355,7 @@ export class CanvasManager {
 
       case 'move':
         this.movePathsInternal(operation.paths, 0, 0)
+        this.moveLassoById(operation.lassoId, -operation.dx, -operation.dy)
         break
     }
 
@@ -1048,7 +1061,13 @@ export class CanvasManager {
     }
 
     if (paths.length !== 0) {
-      this.doOperation({ type: 'move', paths, dx, dy })
+      this.doOperation({
+        type: 'move',
+        lassoId: currentLasso.id,
+        paths,
+        dx,
+        dy
+      })
     }
 
     this.isDraggingLasso = false
@@ -1396,6 +1415,7 @@ function areBoundariesOverlapping(b1: Boundary, b2: Boundary): boolean {
 type Boundary = { minX: number; minY: number; maxX: number; maxY: number }
 
 class Lasso {
+  readonly id = generateId()
   points: Point[]
   isClosed = false
   offsetX = 0
