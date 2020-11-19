@@ -160,6 +160,13 @@ export class CanvasManager {
     this.palmRejection.subscribe(this.saveSettings.bind(this))
     this.strokeWidth.subscribe(this.saveSettings.bind(this))
     this.strokeColor.subscribe(this.saveSettings.bind(this))
+
+    this.tool.subscribe((tool) => {
+      if (tool !== 'lasso' && this.currentLasso != null) {
+        this.currentLasso = null
+        this.tickDraw()
+      }
+    })
   }
 
   private saveSettings(): void {
