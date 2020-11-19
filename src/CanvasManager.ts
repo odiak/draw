@@ -314,6 +314,12 @@ export class CanvasManager {
     currentLasso.offsetY += dy
   }
 
+  private removeLassoWithWrongId(id: string) {
+    if (this.currentLasso?.id !== id) {
+      this.currentLasso = null
+    }
+  }
+
   private checkOperationStack() {
     const canUndo = this.doneOperationStack.length !== 0
     const canRedo = this.undoneOperationStack.length !== 0
@@ -340,6 +346,7 @@ export class CanvasManager {
         this.movePathsInternal(operation.paths, operation.dx, operation.dy)
         if (redo) {
           this.moveLassoById(operation.lassoId, operation.dx, operation.dy)
+          this.removeLassoWithWrongId(operation.lassoId)
         }
         break
     }
@@ -363,6 +370,7 @@ export class CanvasManager {
       case 'move':
         this.movePathsInternal(operation.paths, 0, 0)
         this.moveLassoById(operation.lassoId, -operation.dx, -operation.dy)
+        this.removeLassoWithWrongId(operation.lassoId)
         break
     }
 
