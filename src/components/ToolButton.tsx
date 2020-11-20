@@ -1,5 +1,6 @@
 import React from 'react'
 import { faPen, faHandPaper, faEraser } from '@fortawesome/free-solid-svg-icons'
+import { faLasso } from '@fortawesome/pro-solid-svg-icons'
 import { Tool } from '../types/Tool'
 import classNames from 'classnames'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -8,7 +9,8 @@ import styled from 'styled-components'
 const icons = {
   pen: faPen,
   hand: faHandPaper,
-  eraser: faEraser
+  eraser: faEraser,
+  lasso: faLasso
 }
 
 type Props = {

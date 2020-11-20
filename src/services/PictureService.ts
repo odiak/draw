@@ -10,6 +10,8 @@ export type Path = {
   id: string
   isBezier: boolean
   timestamp?: firestore.Timestamp
+  offsetX: number
+  offsetY: number
 }
 
 export type AccessibilityLevel = 'public' | 'protected' | 'private'
@@ -25,6 +27,7 @@ export type PictureWithId = {
 export type PathsUpdate = Partial<{
   addedPaths: Path[]
   removedPathIds: string[]
+  modifiedPaths: Path[]
 }>
 
 export type Permission = {
@@ -114,6 +117,18 @@ export class PictureService {
     this.setPictureOwnerIfNotExist(pictureId)
   }
 
+  updatePaths(pictureId: string, updates: Array<Partial<Path> & Pick<Path, 'id'>>) {
+    const batch = this.db.batch()
+    const pathsCollection = this.pictureRefById(pictureId).collection('paths')
+
+    for (const { id, ...update } of updates) {
+      batch.set(pathsCollection.doc(id), update, { merge: true })
+    }
+    batch.commit()
+
+    this.setPictureOwnerIfNotExist(pictureId)
+  }
+
   watchPicture(
     pictureId: string,
     callback: (u: PictureWithId | null) => void,
@@ -143,20 +158,29 @@ export class PictureService {
 
         const addedPaths: Path[] = []
         const removedPathIds: string[] = []
+        const modifiedPaths: Path[] = []
 
         for (const change of snapshot.docChanges()) {
           switch (change.type) {
-            case 'added':
-              addedPaths.push(change.doc.data())
+            case 'added': {
+              const path = change.doc.data()
+              if (path != null) addedPaths.push(path)
               break
+            }
 
             case 'removed':
               removedPathIds.push(change.doc.id)
               break
+
+            case 'modified': {
+              const path = change.doc.data()
+              if (path != null) modifiedPaths.push(path)
+              break
+            }
           }
         }
 
-        callback({ addedPaths, removedPathIds })
+        callback({ addedPaths, removedPathIds, modifiedPaths })
       })
 
     return unwatch
@@ -234,10 +258,18 @@ const pictureConverter: firestore.FirestoreDataConverter<PictureWithId> = {
   }
 }
 
-const pathConverter: firestore.FirestoreDataConverter<Path> = {
-  fromFirestore(doc: firestore.QueryDocumentSnapshot): Path {
+const pathConverter: firestore.FirestoreDataConverter<Path | null> = {
+  fromFirestore(doc: firestore.QueryDocumentSnapshot): Path | null {
     const rawPath = doc.data()
     const rawPoints = rawPath.points as number[]
+    if (
+      !Array.isArray(rawPoints) ||
+      typeof rawPath.width !== 'number' ||
+      typeof rawPath.color !== 'string'
+    ) {
+      return null
+    }
+
     const length = rawPoints.length
     const points: Point[] = []
     for (let i = 0; i + 1 < length; i += 2) {
@@ -249,22 +281,42 @@ const pathConverter: firestore.FirestoreDataConverter<Path> = {
       color: rawPath.color,
       id: doc.id,
       isBezier: !!rawPath.isBezier,
-      timestamp: rawPath.timestamp
+      timestamp: rawPath.timestamp,
+      offsetX: rawPath.offsetX ?? 0,
+      offsetY: rawPath.offsetY ?? 0
     }
   },
 
-  toFirestore({ points, color, width, isBezier, timestamp }: Path): firestore.DocumentData {
-    const newPoints: number[] = []
-    for (const { x, y } of points) {
-      newPoints.push(x, y)
-    }
-    return {
-      color,
-      width,
-      points: newPoints,
-      isBezier,
+  toFirestore(path: Partial<Path> | null): firestore.DocumentData {
+    if (path == null) return {}
+
+    const { points, color, width, isBezier, timestamp, offsetX, offsetY } = path
+    const data: firestore.DocumentData = {
       timestamp: timestamp ?? firestore.FieldValue.serverTimestamp()
     }
+    if (points != null) {
+      const newPoints: number[] = []
+      for (const { x, y } of points) {
+        newPoints.push(x, y)
+      }
+      data.points = newPoints
+    }
+    if (color != null) {
+      data.color = color
+    }
+    if (width != null) {
+      data.width = width
+    }
+    if (isBezier != null) {
+      data.isBezier = isBezier
+    }
+    if (offsetX != null && offsetX !== 0) {
+      data.offsetX = offsetX
+    }
+    if (offsetY != null && offsetY !== 0) {
+      data.offsetY = offsetY
+    }
+    return data
   }
 }
 

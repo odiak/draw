@@ -22,7 +22,10 @@ export class SettingsService {
     const obj: { [key: string]: unknown } = JSON.parse(jsonStr)
 
     const { tool, palmRejection, strokeColor, strokeWidth } = obj
-    if (typeof tool === 'string' && (tool === 'pen' || tool === 'hand' || tool === 'eraser')) {
+    if (
+      typeof tool === 'string' &&
+      (tool === 'pen' || tool === 'hand' || tool === 'eraser' || tool === 'lasso')
+    ) {
       s.tool = tool
     }
     if (typeof palmRejection === 'boolean') {
