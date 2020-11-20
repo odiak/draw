@@ -721,6 +721,23 @@ export class CanvasManager {
       }
       // fall through
 
+      case 'lasso': {
+        const p = this.getPointFromTouchEvent(event)
+        if (p != null) {
+          const lasso = this.currentLasso
+          if (lasso != null && isInsideLasso(p, lasso, calculateLassoBoundary(lasso))) {
+            this.prevX = p.x
+            this.prevY = p.y
+            this.isDraggingLasso = true
+            break
+          }
+          this.currentLasso = new Lasso([p])
+          this.tickDraw()
+          break
+        }
+      }
+      // fall through
+
       default: {
         const p = this.getPointFromTouchEvent(event, true)
         if (p == null) break
@@ -768,6 +785,21 @@ export class CanvasManager {
       }
       // fall through
 
+      case 'lasso': {
+        const p = this.getPointFromTouchEvent(event)
+        if (p != null) {
+          const lasso = this.currentLasso
+          if (lasso != null && !lasso.isClosed) {
+            pushPoint(lasso.points, p)
+            this.tickDraw()
+          } else if (lasso != null && this.isDraggingLasso) {
+            this.dragLassoTo(lasso, p)
+          }
+          break
+        }
+      }
+      // fall through
+
       default: {
         const p = this.getPointFromTouchEvent(event, true)
         if (p == null) break
@@ -804,6 +836,20 @@ export class CanvasManager {
             erase(this.paths, p, { x: this.prevX, y: this.prevY }, this.eraserWidth)
           )
           this.removeErasingPaths()
+          break
+        }
+      }
+      // fall through
+
+      case 'lasso': {
+        const p = this.currentLasso
+        if (p != null) {
+          const lasso = this.currentLasso
+          if (lasso != null && !lasso.isClosed) {
+            this.postProcessLasso(lasso)
+          } else if (lasso != null && this.isDraggingLasso) {
+            this.finishDraggingLasso()
+          }
           break
         }
       }
