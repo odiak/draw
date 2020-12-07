@@ -3,6 +3,7 @@ import firebase from 'firebase/app'
 import 'firebase/firestore'
 import 'firebase/auth'
 import 'firebase/functions'
+import 'firebase/analytics'
 import { render } from 'react-dom'
 import { App } from './components/App'
 import { createGlobalStyle } from 'styled-components'
@@ -14,7 +15,15 @@ firebase.initializeApp({
   projectId: 'draw-9a1e4',
   storageBucket: 'draw-9a1e4.appspot.com',
   messagingSenderId: '251397130642',
-  appId: '1:251397130642:web:ae3b9c1dff554eea'
+  appId: '1:251397130642:web:ae3b9c1dff554eea',
+  measurementId: 'G-KC20B58HEQ'
+})
+firebase.analytics()
+
+firebase.auth().onAuthStateChanged((user) => {
+  if (user != null) {
+    firebase.analytics().setUserId(user.uid)
+  }
 })
 
 const GlobalStyle = createGlobalStyle`
