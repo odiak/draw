@@ -7,6 +7,8 @@ import 'firebase/analytics'
 import { render } from 'react-dom'
 import { App } from './components/App'
 import { createGlobalStyle } from 'styled-components'
+import * as Sentry from '@sentry/react'
+import { Integrations } from '@sentry/tracing'
 
 firebase.initializeApp({
   apiKey: 'AIzaSyC3uYAGMS5pIjJKlNyGkc4aqKn4U1fjV8w',
@@ -24,6 +26,12 @@ firebase.auth().onAuthStateChanged((user) => {
   if (user != null) {
     firebase.analytics().setUserId(user.uid)
   }
+})
+
+Sentry.init({
+  dsn: 'https://1960c22d4cb84d36a5c718b27604a428@o488873.ingest.sentry.io/5550015',
+  integrations: [new Integrations.BrowserTracing()],
+  tracesSampleRate: 1.0
 })
 
 const GlobalStyle = createGlobalStyle`
