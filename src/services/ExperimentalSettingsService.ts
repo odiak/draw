@@ -6,6 +6,7 @@ const drawingSettingsKey = 'KAKERU_EXPERIMENTAL_SETTINGS'
 
 type ExperimentalSettings = {
   hackForSamsungGalaxyNote: boolean
+  disableSmoothingPaths: boolean
 }
 
 export class ExperimentalSettingsService {
@@ -30,10 +31,14 @@ export class ExperimentalSettingsService {
     if (jsonStr == null) return s
     const obj: { [key: string]: unknown } = JSON.parse(jsonStr)
 
-    const { hackForSamsungGalaxyNote } = obj
+    const { hackForSamsungGalaxyNote, disableSmoothingPaths } = obj
 
     if (typeof hackForSamsungGalaxyNote === 'boolean') {
       s.hackForSamsungGalaxyNote = hackForSamsungGalaxyNote
+    }
+
+    if (typeof disableSmoothingPaths === 'boolean') {
+      s.disableSmoothingPaths = disableSmoothingPaths
     }
 
     return s

@@ -37,6 +37,16 @@ export const Flags: FC<{}> = () => {
         />
         This is a Samsung Galaxy Note (Use dirty hack for S-Pen detection)
       </Label>
+      <Label>
+        <input
+          type="checkbox"
+          checked={!!settings.disableSmoothingPaths}
+          onChange={(e) => {
+            setSettingsWithSave({ disableSmoothingPaths: e.target.checked })
+          }}
+        />
+        Disable smoothing paths
+      </Label>
     </Container>
   )
 }

@@ -658,7 +658,9 @@ export class CanvasManager {
   private handleGlobalMouseUp() {
     switch (this.actualCurrentTool) {
       case 'pen':
-        smoothPath(this.drawingPath, this.scale.value)
+        if (this.experimentalSettings.value.disableSmoothingPaths !== true) {
+          smoothPath(this.drawingPath, this.scale.value)
+        }
         this.addDrawingPath()
         break
 
@@ -820,7 +822,9 @@ export class CanvasManager {
         const p = this.getPointFromTouchEvent(event)
         if (p != null) {
           pushPoint(this.drawingPath?.points, p)
-          smoothPath(this.drawingPath, this.scale.value)
+          if (this.experimentalSettings.value.disableSmoothingPaths !== true) {
+            smoothPath(this.drawingPath, this.scale.value)
+          }
           this.addDrawingPath()
           this.drawingByTouch = false
           break
