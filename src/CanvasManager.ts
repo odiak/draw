@@ -205,7 +205,7 @@ export class CanvasManager {
       addEventListener(elem, 'mousemove', this.handleMouseMove.bind(this)),
       addEventListener(document.body, 'mouseup', this.handleGlobalMouseUp.bind(this)),
       addEventListener(elem, 'touchstart', this.handleTouchStart.bind(this), { passive: true }),
-      addEventListener(elem, 'touchmove', this.handleTouchMove.bind(this), { passive: true }),
+      addEventListener(elem, 'touchmove', this.handleTouchMove.bind(this)),
       addEventListener(elem, 'touchend', this.handleTouchEnd.bind(this), { passive: true }),
       addEventListener(window, 'keydown', this.handleWindowKeyDown.bind(this))
     ]
@@ -752,6 +752,7 @@ export class CanvasManager {
   }
 
   private handleTouchMove(event: TouchEvent) {
+    event.preventDefault()
     switch (this.actualCurrentTool) {
       case 'pen': {
         const p = this.getPointFromTouchEvent(event)
