@@ -1,16 +1,18 @@
 import React from 'react'
-import { faPen, faHandPaper, faEraser } from '@fortawesome/free-solid-svg-icons'
-import { faLasso } from '@fortawesome/pro-solid-svg-icons'
+import { Icon } from '@iconify/react'
+import penIcon from '@iconify-icons/fa-solid/pen'
+import handPaper from '@iconify-icons/fa-solid/hand-paper'
+import eraserIcon from '@iconify-icons/fa-solid/eraser'
+import lassoIcon from '@iconify-icons/mdi/lasso'
 import { Tool } from '../types/Tool'
 import classNames from 'classnames'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import styled from 'styled-components'
 
 const icons = {
-  pen: faPen,
-  hand: faHandPaper,
-  eraser: faEraser,
-  lasso: faLasso
+  pen: penIcon,
+  hand: handPaper,
+  eraser: eraserIcon,
+  lasso: lassoIcon
 }
 
 type Props = {
@@ -31,7 +33,7 @@ export function ToolButton({ tool, isSelected, onSelect }: Props) {
           : undefined
       }
     >
-      <FontAwesomeIcon icon={icons[tool]} className="icon" />
+      <Icon icon={icons[tool]} className="icon" />
     </Button>
   )
 }

@@ -1,14 +1,12 @@
-import React, { useState, useCallback, FC, useEffect } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {
-  faHandPointUp,
-  faSlash,
-  faSearchPlus,
-  faSearchMinus,
-  faEllipsisH,
-  faUndo,
-  faRedo
-} from '@fortawesome/free-solid-svg-icons'
+import React, { FC, useCallback, useEffect, useState } from 'react'
+import { Icon } from '@iconify/react'
+import handPointUp from '@iconify-icons/fa-solid/hand-point-up'
+import slashIcon from '@iconify-icons/fa-solid/slash'
+import searchPlus from '@iconify-icons/fa-solid/search-plus'
+import searchMinus from '@iconify-icons/fa-solid/search-minus'
+import ellipsisH from '@iconify-icons/fa-solid/ellipsis-h'
+import undoIcon from '@iconify-icons/fa-solid/undo'
+import redoIcon from '@iconify-icons/fa-solid/redo'
 import { ToolButton } from './ToolButton'
 import { Tool } from '../types/Tool'
 import classNames from 'classnames'
@@ -16,10 +14,10 @@ import styled, { css } from 'styled-components'
 import { copyToClipboard } from '../utils/copyToClipboard'
 import { useMenu } from '../utils/useMenu'
 import { useVariable } from '../utils/useVariable'
-import { PictureService, Permission, AccessibilityLevel } from '../services/PictureService'
+import { AccessibilityLevel, Permission, PictureService } from '../services/PictureService'
 import { CanvasManager } from '../CanvasManager'
 import { AccessibilityMenuButton } from './AccessibilityMenuButton'
-import { MenuDivider, MenuItem, MenuItemWithAnchor, Menu } from './Menu'
+import { Menu, MenuDivider, MenuItem, MenuItemWithAnchor } from './Menu'
 import { UserMenuButton } from './UserMenuButton'
 import { NewButton } from './NewButton'
 
@@ -39,6 +37,24 @@ const colors = [
 ]
 
 const widths: number[] = [1, 2, 3, 4, 5, 7, 9, 11]
+
+const StyledIcon = styled(Icon)``
+const LayerIcons = styled.span`
+  display: inline-block;
+  height: 1em;
+  position: relative;
+  text-align: center;
+  vertical-align: -0.125em;
+  width: 1.25em;
+  ${StyledIcon} {
+    bottom: 0;
+    left: 0;
+    margin: auto;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+`
 
 type Props = {
   pictureId: string
@@ -163,7 +179,7 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
         <StyledNewButton />
         <StyledUserMenuButton />
         <MenuButton ref={menuButtonRef}>
-          <FontAwesomeIcon icon={faEllipsisH} className="icon" />
+          <Icon icon={ellipsisH} className="icon" />
           <Menu ref={menuRef}>
             <MenuItemToCopy text={imageLink}>Copy image link</MenuItemToCopy>
             <MenuItemToCopy text={`[![](${imageLink})](${pageLink})`}>
@@ -220,15 +236,21 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
 
             <div className="tool-group">
               <button
-                className={classNames('tool-bar-button', { selected: palmRejection })}
+                className={classNames('tool-bar-button', {
+                  selected: palmRejection
+                })}
                 onClick={() => {
                   setPalmRejection(!palmRejection)
                 }}
               >
-                <span className="fa-layers fa-fw">
-                  <FontAwesomeIcon icon={faHandPointUp} className="icon" />
-                  <FontAwesomeIcon icon={faSlash} className="icon" />
-                </span>
+                <LayerIcons>
+                  <StyledIcon
+                    icon={handPointUp}
+                    className="icon"
+                    style={{ position: 'absolute' }}
+                  />
+                  <StyledIcon icon={slashIcon} className="icon fa-slash" style={{ position: 'absolute' }} />
+                </LayerIcons>
               </button>
             </div>
           </>
@@ -236,10 +258,10 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
 
         <div className="tool-group">
           <button className="tool-bar-button" onClick={zoomOut}>
-            <FontAwesomeIcon className="icon" icon={faSearchMinus} />
+            <Icon className="icon" icon={searchMinus} />
           </button>
           <button className="tool-bar-button" onClick={zoomIn}>
-            <FontAwesomeIcon className="icon" icon={faSearchPlus} />
+            <Icon className="icon" icon={searchPlus} />
           </button>
           <span>{(scale * 100).toFixed()}%</span>
         </div>
@@ -247,10 +269,10 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
         {permission?.writable && (
           <div className="tool-group">
             <button className="tool-bar-button" disabled={!canUndo} onClick={undo}>
-              <FontAwesomeIcon className="icon" icon={faUndo} />
+              <Icon className="icon" icon={undoIcon} />
             </button>
             <button className="tool-bar-button" disabled={!canRedo} onClick={redo}>
-              <FontAwesomeIcon className="icon" icon={faRedo} />
+              <Icon className="icon" icon={redoIcon} />
             </button>
           </div>
         )}

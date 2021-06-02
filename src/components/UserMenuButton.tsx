@@ -2,8 +2,8 @@ import React, { FC, useCallback } from 'react'
 import { AuthService } from '../services/AuthService'
 import { Link } from 'react-router-dom'
 import { Menu, MenuItem, MenuItemWithAnchor } from './Menu'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUser } from '@fortawesome/free-solid-svg-icons'
+import { Icon } from '@iconify/react'
+import userIcon from '@iconify-icons/fa-solid/user'
 import styled from 'styled-components'
 import { useMenu } from '../utils/useMenu'
 import { useVariable } from '../utils/useVariable'
@@ -31,7 +31,7 @@ export const UserMenuButton: FC<{ className?: string }> = ({ className }) => {
   return (
     <AccountButton ref={accountMenuButtonRef} className={className}>
       {currentUser == null || currentUser.isAnonymous || currentUser.photoURL == null ? (
-        <FontAwesomeIcon icon={faUser} className="icon" />
+        <Icon icon={userIcon} className="icon" />
       ) : (
         <AccountImage src={currentUser.photoURL} />
       )}

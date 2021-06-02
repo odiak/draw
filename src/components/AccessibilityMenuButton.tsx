@@ -1,22 +1,23 @@
 import React, { FC, useCallback } from 'react'
 import styled from 'styled-components'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLock, faLockOpen, faCheck } from '@fortawesome/free-solid-svg-icons'
+import { Icon } from '@iconify/react'
+import lockIcon from '@iconify-icons/fa-solid/lock'
+import lockOpen from '@iconify-icons/fa-solid/lock-open'
+import checkIcon from '@iconify-icons/fa-solid/check'
 import { Permission, AccessibilityLevel } from '../services/PictureService'
 import { Menu, MenuItem } from './Menu'
 import { useMenu } from '../utils/useMenu'
 
-const StyledFontAwesomeIcon = styled(FontAwesomeIcon)``
-const RedStyledFontAwesomeIcon = styled(StyledFontAwesomeIcon)`
+const StyledIcon = styled(Icon)``
+const RedStyledIcon = styled(Icon)`
   color: red;
 `
+const PublicIcon = () => <StyledIcon icon={lockOpen} />
+const ProtectedIcon = () => <StyledIcon icon={lockIcon} />
+const PrivateIcon = () => <RedStyledIcon icon={lockIcon} />
 
-const PublicIcon = () => <StyledFontAwesomeIcon icon={faLockOpen} fixedWidth />
-const ProtectedIcon = () => <StyledFontAwesomeIcon icon={faLock} fixedWidth />
-const PrivateIcon = () => <RedStyledFontAwesomeIcon icon={faLock} fixedWidth />
-
-const CheckIcon_ = styled(StyledFontAwesomeIcon)``
-const CheckIcon = () => <CheckIcon_ icon={faCheck} />
+const CheckIcon_ = styled(Icon)``
+const CheckIcon = () => <CheckIcon_ icon={checkIcon} />
 
 const Button = styled.button`
   background: #ddd;
@@ -29,13 +30,13 @@ const Button = styled.button`
   align-items: center;
   position: relative;
 
-  > ${StyledFontAwesomeIcon} {
+  > ${StyledIcon} {
     display: block;
   }
 `
 
 const StyledMenuItem = styled(MenuItem)`
-  ${StyledFontAwesomeIcon}:nth-of-type(1) {
+  ${StyledIcon}:nth-of-type(1) {
     margin-right: 4px;
   }
 
