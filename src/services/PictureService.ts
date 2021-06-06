@@ -94,37 +94,37 @@ export class PictureService {
   }
 
   addPaths(pictureId: string, pathsToAdd: Path[]) {
-    const batch = this.db.batch()
     const pathsCollection = this.pathsById(pictureId)
 
-    for (const path of pathsToAdd) {
-      batch.set(pathsCollection.doc(path.id), path, { merge: true })
-    }
-    batch.commit()
+    batchHelper(this.db, (doOp) => {
+      for (const path of pathsToAdd) {
+        doOp((batch) => batch.set(pathsCollection.doc(path.id), path, { merge: true }))
+      }
+    })
 
     this.setPictureOwnerIfNotExist(pictureId)
   }
 
   removePaths(pictureId: string, pathIdsToRemove: string[]) {
-    const batch = this.db.batch()
     const pathsCollection = this.pictureRefById(pictureId).collection('paths')
 
-    for (const pathId of pathIdsToRemove) {
-      batch.delete(pathsCollection.doc(pathId))
-    }
-    batch.commit()
+    batchHelper(this.db, (doOp) => {
+      for (const pathId of pathIdsToRemove) {
+        doOp((batch) => batch.delete(pathsCollection.doc(pathId)))
+      }
+    })
 
     this.setPictureOwnerIfNotExist(pictureId)
   }
 
   updatePaths(pictureId: string, updates: Array<Partial<Path> & Pick<Path, 'id'>>) {
-    const batch = this.db.batch()
     const pathsCollection = this.pictureRefById(pictureId).collection('paths')
 
-    for (const { id, ...update } of updates) {
-      batch.set(pathsCollection.doc(id), update, { merge: true })
-    }
-    batch.commit()
+    batchHelper(this.db, (doOp) => {
+      for (const { id, ...update } of updates) {
+        doOp((batch) => batch.set(pathsCollection.doc(id), update, { merge: true }))
+      }
+    })
 
     this.setPictureOwnerIfNotExist(pictureId)
   }
@@ -380,4 +380,25 @@ function combine<T1, T2>(callback: (v1: T1, v2: T2) => void): [(v1: T1) => void,
     }
   }
   return [callback1, callback2]
+}
+
+const maxOperationsInBatch = 500
+
+function batchHelper(
+  db: firebase.firestore.Firestore,
+  callback: (f: (doOperation: (batch: firebase.firestore.WriteBatch) => void) => void) => void
+): void {
+  const batch = db.batch()
+  let i = 0
+  callback((f) => {
+    f(batch)
+    i += 1
+    if (i >= maxOperationsInBatch) {
+      batch.commit()
+      i = 0
+    }
+  })
+  if (i > 0) {
+    batch.commit()
+  }
 }
