@@ -1084,7 +1084,7 @@ export class CanvasManager {
     const TOff = 500
     const step = 50
     let t = 0
-    this.hidingScrollBarTimer = setInterval(() => {
+    this.hidingScrollBarTimer = window.setInterval(() => {
       t += step
       this.scrollBarOpacity = Math.min(1, (T - t) / (T - TOff))
       if (t >= T) {
