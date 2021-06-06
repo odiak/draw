@@ -388,13 +388,14 @@ function batchHelper(
   db: firebase.firestore.Firestore,
   callback: (f: (doOperation: (batch: firebase.firestore.WriteBatch) => void) => void) => void
 ): void {
-  const batch = db.batch()
+  let batch = db.batch()
   let i = 0
   callback((f) => {
     f(batch)
     i += 1
     if (i >= maxOperationsInBatch) {
       batch.commit()
+      batch = db.batch()
       i = 0
     }
   })
