@@ -17,32 +17,14 @@ import { copyToClipboard } from '../utils/copyToClipboard'
 import { useMenu } from '../utils/useMenu'
 import { useVariable } from '../utils/useVariable'
 import { PictureService, Permission, AccessibilityLevel } from '../services/PictureService'
-import { CanvasManager } from '../CanvasManager'
 import { AccessibilityMenuButton } from './AccessibilityMenuButton'
 import { MenuDivider, MenuItem, MenuItemWithAnchor, Menu } from './Menu'
 import { UserMenuButton } from './UserMenuButton'
 import { NewButton } from './NewButton'
-
-const colors = [
-  '#c0c0c0',
-  '#808080',
-  '#000000',
-  '#800000',
-  '#ff0000',
-  '#ffa500',
-  '#ffff00',
-  '#008000',
-  '#0000ff',
-  '#ff00ff',
-  '#800080',
-  '#4b0082'
-]
-
-const widths: number[] = [1, 2, 3, 4, 5, 7, 9, 11]
+import { DrawingService, colors, widths } from '../services/DrawingService'
 
 type Props = {
   pictureId: string
-  canvasManager: CanvasManager
 }
 
 const WrappedToolButton: FC<{
@@ -83,8 +65,9 @@ const MenuItemWithLink: FC<{ link: string }> = ({ link, children }) => {
 
 const defaultTitle = 'Untitled'
 
-export function ToolBar({ pictureId, canvasManager }: Props) {
+export function ToolBar({ pictureId }: Props) {
   const pictureService = PictureService.instantiate()
+  const drawingService = DrawingService.instantiate()
 
   const { menuRef, buttonRef: menuButtonRef } = useMenu()
 
@@ -110,27 +93,27 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
   const imageLink = `https://i.kakeru.app/${pictureId}.svg`
   const pageLink = `https://kakeru.app/${pictureId}`
 
-  const [tool, setTool] = useVariable(canvasManager.tool)
-  const [palmRejection, setPalmRejection] = useVariable(canvasManager.palmRejection)
+  const [tool, setTool] = useVariable(drawingService.tool)
+  const [palmRejection, setPalmRejection] = useVariable(drawingService.palmRejectionEnabled)
 
-  const [scale] = useVariable(canvasManager.scale)
+  const [scale] = useVariable(drawingService.scale)
 
   const zoomIn = useCallback(() => {
-    canvasManager.zoomIn()
-  }, [canvasManager])
+    drawingService.onZoomIn.next(null)
+  }, [drawingService])
   const zoomOut = useCallback(() => {
-    canvasManager.zoomOut()
-  }, [canvasManager])
+    drawingService.onZoomOut.next(null)
+  }, [drawingService])
 
-  const [canUndo] = useVariable(canvasManager.canUndo)
-  const [canRedo] = useVariable(canvasManager.canRedo)
+  const [canUndo] = useVariable(drawingService.canUndo)
+  const [canRedo] = useVariable(drawingService.canRedo)
 
   const undo = useCallback(() => {
-    canvasManager.undo()
-  }, [canvasManager])
+    drawingService.onUndo.next(null)
+  }, [drawingService])
   const redo = useCallback(() => {
-    canvasManager.redo()
-  }, [canvasManager])
+    drawingService.onRedo.next(null)
+  }, [drawingService])
 
   const updateAccessibilityLevel = useCallback(
     (accLevel: AccessibilityLevel) => {
@@ -141,8 +124,8 @@ export function ToolBar({ pictureId, canvasManager }: Props) {
 
   const { buttonRef: colorWidthButtonRef, menuRef: colorWidthMenuRef } = useMenu()
 
-  const [strokeWidth, setStrokeWidth] = useVariable(canvasManager.strokeWidth)
-  const [strokeColor, setStrokeColor] = useVariable(canvasManager.strokeColor)
+  const [strokeWidth, setStrokeWidth] = useVariable(drawingService.strokeWidth)
+  const [strokeColor, setStrokeColor] = useVariable(drawingService.strokeColor)
 
   return (
     <Container>

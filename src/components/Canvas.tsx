@@ -1,12 +1,12 @@
-import { Tool } from './types/Tool'
-import { Path, PictureService, Point } from './services/PictureService'
-import { generateId } from './utils/generateId'
-import { Variable } from './utils/Variable'
-import { SettingsService } from './services/SettingsService'
-import { addEventListener } from './utils/addEventListener'
+import React from 'react'
+import { Tool } from '../types/Tool'
+import { Path, PictureService, Point } from '../services/PictureService'
+import { generateId } from '../utils/generateId'
+import { addEventListener } from '../utils/addEventListener'
 import { fitCurve } from '@odiak/fit-curve'
-import { ExperimentalSettingsService } from './services/ExperimentalSettingsService'
-import { Color } from './utils/Color'
+import { ExperimentalSettingsService } from '../services/ExperimentalSettingsService'
+import { Color } from '../utils/Color'
+import { DrawingService } from '../services/DrawingService'
 
 type Operation =
   | Readonly<{
@@ -35,7 +35,11 @@ const isLikeMacOs = /\bMac OS X\b/i.test(navigator.userAgent)
 const scrollBarColorV = Color.fromString('#0007')
 const scrollBarColorD = Color.fromString('#111a')
 
-export class CanvasManager {
+type Props = {
+  pictureId: string
+}
+
+export class Canvas extends React.Component<Props, {}> {
   private canvasElement: HTMLCanvasElement | null = null
   private parentElement: Element | null = null
   private renderingContext: CanvasRenderingContext2D | null = null
@@ -51,18 +55,13 @@ export class CanvasManager {
   private widthPP = 0
   private heightPP = 0
 
-  readonly tool = new Variable<Tool>('pen')
-  readonly palmRejection = new Variable(false)
-  readonly strokeWidth = new Variable(3)
-  readonly strokeColor = new Variable('#000000')
-
   private paths = new Map<string, PathWithBoundary>()
   private drawingPath: Path | null = null
   private erasingPathIds: Set<string> | null = null
   private currentLasso: Lasso | null = null
 
   private pictureService = PictureService.instantiate()
-  private settingsService = SettingsService.instantiate()
+  private drawingService = DrawingService.instantiate()
 
   private scrollLeft = 0
   private scrollTop = 0
@@ -79,19 +78,15 @@ export class CanvasManager {
 
   private canvasCleanUpHandler: (() => void) | null = null
 
-  readonly scale = new Variable(1.0)
-
   private doneOperationStack: Operation[] = []
   private undoneOperationStack: Operation[] = []
-
-  readonly canUndo = new Variable<boolean>(false)
-  readonly canRedo = new Variable<boolean>(false)
 
   private drawingByTouch = false
 
   private unwatchPaths: (() => void) | null = null
+  private unwatchPermission: (() => void) | null = null
 
-  readonly canvasRef = this.setCanvasElement.bind(this)
+  private canvasRef = this.setCanvasElement.bind(this)
 
   private writable = false
 
@@ -110,25 +105,78 @@ export class CanvasManager {
 
   private isDraggingLasso = false
 
-  constructor(private pictureId: string) {
-    this.scale.subscribe((scale, prevScale) => {
-      const r = scale / prevScale
-      let x: number
-      let y: number
-      if (this.isWheelZooming) {
-        x = this.wheelZoomX
-        y = this.wheelZoomY
-      } else {
-        x = this.width / 2
-        y = this.height / 2
-      }
-      this.scrollLeft = this.bufferedScrollLeft = x * (r - 1) + r * this.scrollLeft
-      this.scrollTop = this.bufferedScrollTop = y * (r - 1) + r * this.scrollTop
-      this.tickDraw()
-    })
+  private cleanUpFunctions: Array<() => void> = []
 
+  constructor(props: Props, context: unknown) {
+    super(props, context)
+
+    const fs: Array<() => void> = []
+
+    fs.push(
+      this.drawingService.onUndo.subscribe(() => {
+        this.undo()
+      })
+    )
+    fs.push(
+      this.drawingService.onRedo.subscribe(() => {
+        this.redo()
+      })
+    )
+    fs.push(
+      this.drawingService.onZoomIn.subscribe(() => {
+        this.zoomIn()
+      })
+    )
+    fs.push(
+      this.drawingService.onZoomOut.subscribe(() => {
+        this.zoomOut()
+      })
+    )
+
+    fs.push(
+      this.drawingService.scale.subscribe((scale, prevScale) => {
+        const r = scale / prevScale
+        let x: number
+        let y: number
+        if (this.isWheelZooming) {
+          x = this.wheelZoomX
+          y = this.wheelZoomY
+        } else {
+          x = this.width / 2
+          y = this.height / 2
+        }
+        this.scrollLeft = this.bufferedScrollLeft = x * (r - 1) + r * this.scrollLeft
+        this.scrollTop = this.bufferedScrollTop = y * (r - 1) + r * this.scrollTop
+        this.tickDraw()
+      })
+    )
+
+    fs.push(
+      this.drawingService.tool.subscribe((tool) => {
+        if (tool !== 'lasso' && this.currentLasso != null) {
+          this.currentLasso = null
+          this.tickDraw()
+        }
+      })
+    )
+
+    this.cleanUpFunctions = fs
+
+    this.onUpdatePictureId(true)
+  }
+
+  private onUpdatePictureId(first: boolean = false) {
+    if (!first) {
+      this.undoneOperationStack = []
+      this.doneOperationStack = []
+      this.paths = new Map()
+      this.drawingService.scale.next(1.0)
+    }
+    this.checkOperationStack()
+
+    this.unwatchPaths?.()
     this.unwatchPaths = this.pictureService.watchPaths(
-      pictureId,
+      this.props.pictureId,
       ({ addedPaths, removedPathIds, modifiedPaths }) => {
         if (addedPaths != null) {
           this.addPathsAndAdjustPosition(addedPaths)
@@ -142,45 +190,37 @@ export class CanvasManager {
       }
     )
 
-    const { tool, palmRejection, strokeWidth, strokeColor } = this.settingsService.drawingSettings
-    if (tool != null) {
-      this.tool.next(tool)
-    }
-    if (palmRejection != null) {
-      this.palmRejection.next(palmRejection)
-    }
-    if (strokeWidth != null) {
-      this.strokeWidth.next(strokeWidth)
-    }
-    if (strokeColor != null) {
-      this.strokeColor.next(strokeColor)
-    }
-
-    this.tool.subscribe(this.saveSettings.bind(this))
-    this.palmRejection.subscribe(this.saveSettings.bind(this))
-    this.strokeWidth.subscribe(this.saveSettings.bind(this))
-    this.strokeColor.subscribe(this.saveSettings.bind(this))
-
-    this.tool.subscribe((tool) => {
-      if (tool !== 'lasso' && this.currentLasso != null) {
-        this.currentLasso = null
-        this.tickDraw()
+    this.unwatchPermission?.()
+    this.unwatchPermission = this.pictureService.watchPermission(
+      this.props.pictureId,
+      (permission) => {
+        this.writable = permission.writable
       }
-    })
+    )
+
+    this.tickDraw()
   }
 
-  private saveSettings(): void {
-    this.settingsService.drawingSettings = {
-      tool: this.tool.value,
-      palmRejection: this.palmRejection.value,
-      strokeColor: this.strokeColor.value,
-      strokeWidth: this.strokeWidth.value
+  componentDidUpdate(prevProps: Props) {
+    if (this.props.pictureId !== prevProps.pictureId) {
+      this.onUpdatePictureId()
     }
+  }
+
+  componentWillUnmount() {
+    this.unwatchPaths?.()
+    this.unwatchPermission?.()
+    for (const f of this.cleanUpFunctions) f()
+    this.cleanUpCanvas()
+  }
+
+  render() {
+    return <canvas ref={this.canvasRef}></canvas>
   }
 
   setCanvasElement(elem: HTMLCanvasElement | null) {
     if (elem == null) {
-      this.cleanup()
+      this.cleanUpCanvas()
       return
     }
 
@@ -223,15 +263,11 @@ export class CanvasManager {
     }
   }
 
-  cleanup() {
-    const { canvasCleanUpHandler, unwatchPaths } = this
+  cleanUpCanvas() {
+    const { canvasCleanUpHandler } = this
     if (canvasCleanUpHandler != null) {
       canvasCleanUpHandler()
       this.canvasCleanUpHandler = null
-    }
-    if (unwatchPaths != null) {
-      unwatchPaths()
-      this.unwatchPaths = null
     }
 
     this.canvasElement = null
@@ -283,13 +319,13 @@ export class CanvasManager {
 
   private addPathsInternal(paths: Path[]) {
     addPaths(this.paths, paths)
-    this.pictureService.addPaths(this.pictureId, paths)
+    this.pictureService.addPaths(this.props.pictureId, paths)
   }
 
   private removePathsInternal(paths: Path[]) {
     const pathIds = paths.map((p) => p.id)
     removePaths(this.paths, pathIds)
-    this.pictureService.removePaths(this.pictureId, pathIds)
+    this.pictureService.removePaths(this.props.pictureId, pathIds)
   }
 
   private movePathsInternal(paths: Path[], dx: number, dy: number) {
@@ -301,7 +337,7 @@ export class CanvasManager {
     }))
     updatePaths(this.paths, newPaths)
     this.pictureService.updatePaths(
-      this.pictureId,
+      this.props.pictureId,
       newPaths.map(({ id, offsetX, offsetY }) => ({ id, offsetX, offsetY }))
     )
   }
@@ -324,8 +360,8 @@ export class CanvasManager {
     const canUndo = this.doneOperationStack.length !== 0
     const canRedo = this.undoneOperationStack.length !== 0
 
-    if (this.canUndo.value !== canUndo) this.canUndo.next(canUndo)
-    if (this.canRedo.value !== canRedo) this.canRedo.next(canRedo)
+    if (this.drawingService.canUndo.value !== canUndo) this.drawingService.canUndo.next(canUndo)
+    if (this.drawingService.canRedo.value !== canRedo) this.drawingService.canRedo.next(canRedo)
   }
 
   private doOperation(operation: Operation, redo: boolean = false) {
@@ -377,30 +413,30 @@ export class CanvasManager {
     this.tickDraw()
   }
 
-  zoomIn() {
-    this.scale.update((s) => s * zoomScaleFactor)
+  private zoomIn() {
+    this.drawingService.scale.update((s) => s * zoomScaleFactor)
     this.showScrollBar()
     this.hideScrollBarAfterDelay()
   }
 
-  zoomOut() {
-    this.scale.update((s) => s / zoomScaleFactor)
+  private zoomOut() {
+    this.drawingService.scale.update((s) => s / zoomScaleFactor)
     this.showScrollBar()
     this.hideScrollBarAfterDelay()
   }
 
-  zoomByWheel(delta: number, x: number, y: number) {
+  private zoomByWheel(delta: number, x: number, y: number) {
     this.isWheelZooming = true
     this.wheelZoomX = x
     this.wheelZoomY = y
-    this.scale.update((s) => s * zoomScaleFactorForWheel ** -delta)
+    this.drawingService.scale.update((s) => s * zoomScaleFactorForWheel ** -delta)
     this.isWheelZooming = false
 
     this.showScrollBar()
     this.hideScrollBarAfterDelay()
   }
 
-  undo(): boolean {
+  private undo(): boolean {
     const op = this.doneOperationStack.pop()
     this.checkOperationStack()
     if (op == null) return false
@@ -409,7 +445,7 @@ export class CanvasManager {
     return true
   }
 
-  redo(): boolean {
+  private redo(): boolean {
     const op = this.undoneOperationStack.pop()
     this.checkOperationStack()
     if (op == null) return false
@@ -467,7 +503,7 @@ export class CanvasManager {
     let y = event.clientY - this.offsetTop
 
     if (!ignoreScroll) {
-      const scale = this.scale.value
+      const scale = this.drawingService.scale.value
       x = (x + this.scrollLeft) / scale
       y = (y + this.scrollTop) / scale
     }
@@ -478,7 +514,7 @@ export class CanvasManager {
   private getTouch(event: TouchEvent, dontCareTouchType: boolean): Touch | null {
     const touches = event.changedTouches
 
-    if (!this.palmRejection.value || dontCareTouchType) {
+    if (!this.drawingService.palmRejectionEnabled.value || dontCareTouchType) {
       return touches[0] || null
     }
 
@@ -511,7 +547,7 @@ export class CanvasManager {
     let y = touch.clientY - this.offsetTop
 
     if (!ignoreScrollAndTouchType) {
-      const scale = this.scale.value
+      const scale = this.drawingService.scale.value
       x = (x + this.scrollLeft) / scale
       y = (y + this.scrollTop) / scale
     }
@@ -550,7 +586,7 @@ export class CanvasManager {
 
   private get actualCurrentTool(): Tool {
     if (!this.writable) return 'hand'
-    return this.tool.value
+    return this.drawingService.tool.value
   }
 
   private handleMouseDown(event: MouseEvent) {
@@ -559,8 +595,8 @@ export class CanvasManager {
         if (this.drawingPath == null) {
           this.drawingPath = {
             id: generateId(),
-            color: this.strokeColor.value,
-            width: this.strokeWidth.value,
+            color: this.drawingService.strokeColor.value,
+            width: this.drawingService.strokeWidth.value,
             points: [this.getPointFromMouseEvent(event)],
             isBezier: false,
             offsetX: 0,
@@ -659,7 +695,7 @@ export class CanvasManager {
     switch (this.actualCurrentTool) {
       case 'pen':
         if (this.experimentalSettings.value.disableSmoothingPaths !== true) {
-          smoothPath(this.drawingPath, this.scale.value)
+          smoothPath(this.drawingPath, this.drawingService.scale.value)
         }
         this.addDrawingPath()
         break
@@ -692,8 +728,8 @@ export class CanvasManager {
         if (p != null) {
           this.drawingPath = {
             id: generateId(),
-            color: this.strokeColor.value,
-            width: this.strokeWidth.value,
+            color: this.drawingService.strokeColor.value,
+            width: this.drawingService.strokeWidth.value,
             points: [p],
             isBezier: false,
             offsetX: 0,
@@ -824,7 +860,7 @@ export class CanvasManager {
         if (p != null) {
           pushPoint(this.drawingPath?.points, p)
           if (this.experimentalSettings.value.disableSmoothingPaths !== true) {
-            smoothPath(this.drawingPath, this.scale.value)
+            smoothPath(this.drawingPath, this.drawingService.scale.value)
           }
           this.addDrawingPath()
           this.drawingByTouch = false
@@ -896,15 +932,8 @@ export class CanvasManager {
     const ctx = this.renderingContext
     if (ctx == null) return
 
-    const {
-      erasingPathIds,
-      dpr,
-      scrollLeft,
-      scrollTop,
-      drawingPath,
-      scale: { value: scale },
-      currentLasso
-    } = this
+    const { erasingPathIds, dpr, scrollLeft, scrollTop, drawingPath, currentLasso } = this
+    const scale = this.drawingService.scale.value
 
     ctx.clearRect(0, 0, this.widthPP, this.heightPP)
 
@@ -969,14 +998,8 @@ export class CanvasManager {
       maxDrawedY_ = max(maxDrawedY_, b.maxY)
     }
 
-    const {
-      scale: { value: scale },
-      scrollLeft,
-      scrollTop,
-      width,
-      height,
-      dpr
-    } = this
+    const { scrollLeft, scrollTop, width, height, dpr } = this
+    const scale = this.drawingService.scale.value
     const minDrawedX = minDrawedX_ * scale - scrollLeft
     const minDrawedY = minDrawedY_ * scale - scrollTop
     const maxDrawedX = maxDrawedX_ * scale - scrollLeft
@@ -1142,7 +1165,7 @@ export class CanvasManager {
   // Call this after a lasso gets drawed
   private postProcessLasso(lasso: Lasso) {
     lasso.isClosed = true
-    if (lassoLength(lasso, this.scale.value) < 50) {
+    if (lassoLength(lasso, this.drawingService.scale.value) < 50) {
       this.currentLasso = null
     } else {
       addToSet(lasso.overlappingPathIds, selectPathsOverlappingWithLasso(this.paths, lasso))
