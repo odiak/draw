@@ -1,4 +1,4 @@
-import { firestore } from 'firebase/app'
+import firebase from 'firebase/app'
 import { AuthService, User } from './AuthService'
 import { memo } from '../utils/memo'
 
@@ -9,7 +9,7 @@ export type Path = {
   points: Point[]
   id: string
   isBezier: boolean
-  timestamp?: firestore.Timestamp
+  timestamp?: firebase.firestore.Timestamp
   offsetX: number
   offsetY: number
 }
@@ -21,7 +21,7 @@ export type PictureWithId = {
   title: string
   ownerId: string | null
   accessibilityLevel: AccessibilityLevel
-  createdAt?: firestore.Timestamp
+  createdAt?: firebase.firestore.Timestamp
 }
 
 export type PathsUpdate = Partial<{
@@ -41,12 +41,12 @@ export type WatchPictureOptions = {
   includesLocalChanges?: boolean
 }
 
-export type Anchor = firestore.Timestamp | undefined
+export type Anchor = firebase.firestore.Timestamp | undefined
 
 export class PictureService {
   static readonly instantiate = memo(() => new PictureService())
 
-  private db = firestore()
+  private db = firebase.firestore()
   private picturesCollection = this.db.collection('pictures').withConverter(pictureConverter)
 
   private titleUpdateTick = new Map<string, { timerId: number }>()
@@ -86,7 +86,7 @@ export class PictureService {
         update = {
           ...update,
           ownerId: currentUser.uid,
-          createdAt: firestore.Timestamp.now()
+          createdAt: firebase.firestore.Timestamp.now()
         }
       }
     }
@@ -94,37 +94,37 @@ export class PictureService {
   }
 
   addPaths(pictureId: string, pathsToAdd: Path[]) {
-    const batch = this.db.batch()
     const pathsCollection = this.pathsById(pictureId)
 
-    for (const path of pathsToAdd) {
-      batch.set(pathsCollection.doc(path.id), path, { merge: true })
-    }
-    batch.commit()
+    batchHelper(this.db, (doOp) => {
+      for (const path of pathsToAdd) {
+        doOp((batch) => batch.set(pathsCollection.doc(path.id), path, { merge: true }))
+      }
+    })
 
     this.setPictureOwnerIfNotExist(pictureId)
   }
 
   removePaths(pictureId: string, pathIdsToRemove: string[]) {
-    const batch = this.db.batch()
     const pathsCollection = this.pictureRefById(pictureId).collection('paths')
 
-    for (const pathId of pathIdsToRemove) {
-      batch.delete(pathsCollection.doc(pathId))
-    }
-    batch.commit()
+    batchHelper(this.db, (doOp) => {
+      for (const pathId of pathIdsToRemove) {
+        doOp((batch) => batch.delete(pathsCollection.doc(pathId)))
+      }
+    })
 
     this.setPictureOwnerIfNotExist(pictureId)
   }
 
   updatePaths(pictureId: string, updates: Array<Partial<Path> & Pick<Path, 'id'>>) {
-    const batch = this.db.batch()
     const pathsCollection = this.pictureRefById(pictureId).collection('paths')
 
-    for (const { id, ...update } of updates) {
-      batch.set(pathsCollection.doc(id), update, { merge: true })
-    }
-    batch.commit()
+    batchHelper(this.db, (doOp) => {
+      for (const { id, ...update } of updates) {
+        doOp((batch) => batch.set(pathsCollection.doc(id), update, { merge: true }))
+      }
+    })
 
     this.setPictureOwnerIfNotExist(pictureId)
   }
@@ -216,7 +216,7 @@ export class PictureService {
     await doc.set(
       {
         ownerId: currentUser.uid,
-        createdAt: firestore.Timestamp.now()
+        createdAt: firebase.firestore.Timestamp.now()
       },
       { merge: true }
     )
@@ -240,8 +240,8 @@ export class PictureService {
   }
 }
 
-const pictureConverter: firestore.FirestoreDataConverter<PictureWithId> = {
-  fromFirestore(doc: firestore.QueryDocumentSnapshot): PictureWithId {
+const pictureConverter: firebase.firestore.FirestoreDataConverter<PictureWithId> = {
+  fromFirestore(doc: firebase.firestore.QueryDocumentSnapshot): PictureWithId {
     const { id } = doc
     const { title, ownerId, accessibilityLevel, createdAt } = doc.data()
     return {
@@ -253,13 +253,13 @@ const pictureConverter: firestore.FirestoreDataConverter<PictureWithId> = {
     }
   },
 
-  toFirestore({ id: _id, ...restPicture }: PictureWithId): firestore.DocumentData {
+  toFirestore({ id: _id, ...restPicture }: PictureWithId): firebase.firestore.DocumentData {
     return restPicture
   }
 }
 
-const pathConverter: firestore.FirestoreDataConverter<Path | null> = {
-  fromFirestore(doc: firestore.QueryDocumentSnapshot): Path | null {
+const pathConverter: firebase.firestore.FirestoreDataConverter<Path | null> = {
+  fromFirestore(doc: firebase.firestore.QueryDocumentSnapshot): Path | null {
     const rawPath = doc.data()
     const rawPoints = rawPath.points as number[]
     if (
@@ -287,12 +287,12 @@ const pathConverter: firestore.FirestoreDataConverter<Path | null> = {
     }
   },
 
-  toFirestore(path: Partial<Path> | null): firestore.DocumentData {
+  toFirestore(path: Partial<Path> | null): firebase.firestore.DocumentData {
     if (path == null) return {}
 
     const { points, color, width, isBezier, timestamp, offsetX, offsetY } = path
-    const data: firestore.DocumentData = {
-      timestamp: timestamp ?? firestore.FieldValue.serverTimestamp()
+    const data: firebase.firestore.DocumentData = {
+      timestamp: timestamp ?? firebase.firestore.FieldValue.serverTimestamp()
     }
     if (points != null) {
       const newPoints: number[] = []
@@ -380,4 +380,26 @@ function combine<T1, T2>(callback: (v1: T1, v2: T2) => void): [(v1: T1) => void,
     }
   }
   return [callback1, callback2]
+}
+
+const maxOperationsInBatch = 500
+
+function batchHelper(
+  db: firebase.firestore.Firestore,
+  callback: (f: (doOperation: (batch: firebase.firestore.WriteBatch) => void) => void) => void
+): void {
+  let batch = db.batch()
+  let i = 0
+  callback((f) => {
+    f(batch)
+    i += 1
+    if (i >= maxOperationsInBatch) {
+      batch.commit()
+      batch = db.batch()
+      i = 0
+    }
+  })
+  if (i > 0) {
+    batch.commit()
+  }
 }

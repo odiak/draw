@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useMemo, useLayoutEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { ToolBar } from './ToolBar'
 import { useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { PictureService } from '../services/PictureService'
-import { CanvasManager } from '../CanvasManager'
 import { Title } from './Title'
+import { Canvas } from './Canvas'
 
 type Props = {}
 
@@ -14,15 +14,7 @@ export function DrawingScreen({}: Props) {
   const { pictureId } = useParams<{ pictureId: string }>()
   const pictureService = PictureService.instantiate()
 
-  const canvasManager = useMemo(() => new CanvasManager(pictureId), [pictureId])
-
   const [title, setTitle] = useState<string | null>(null)
-
-  useLayoutEffect(() => {
-    return () => {
-      canvasManager.cleanup()
-    }
-  }, [canvasManager])
 
   useEffect(() => {
     const unsubscribe = pictureService.watchPicture(
@@ -33,23 +25,18 @@ export function DrawingScreen({}: Props) {
       { includesLocalChanges: true }
     )
 
-    const unsubscribePermission = pictureService.watchPermission(pictureId, (permission) => {
-      canvasManager.setWritable(permission.writable)
-    })
-
     return () => {
       unsubscribe()
-      unsubscribePermission()
     }
-  }, [pictureService, pictureId, canvasManager])
+  }, [pictureService, pictureId])
 
   return (
     <>
       <Title>{title ?? defaultTitle}</Title>
       <Container>
-        <ToolBar pictureId={pictureId} canvasManager={canvasManager} />
+        <ToolBar pictureId={pictureId} />
         <div className="canvas-wrapper">
-          <canvas ref={canvasManager.canvasRef}></canvas>
+          <Canvas pictureId={pictureId} />
         </div>
       </Container>
     </>
