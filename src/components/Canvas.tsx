@@ -74,14 +74,12 @@ export class Canvas extends React.Component<Props, {}> {
 
   private prevX = 0
   private prevY = 0
-  private handScrollingByMouse = false
+  private isPanning = false
 
   private canvasCleanUpHandler: (() => void) | null = null
 
   private doneOperationStack: Operation[] = []
   private undoneOperationStack: Operation[] = []
-
-  private drawingByTouch = false
 
   private unwatchPaths: (() => void) | null = null
   private unwatchPermission: (() => void) | null = null
@@ -90,8 +88,8 @@ export class Canvas extends React.Component<Props, {}> {
 
   private writable = false
 
-  private readonly experimentalSettings = ExperimentalSettingsService.instantiate()
-    .experimentalSettings
+  private readonly experimentalSettings =
+    ExperimentalSettingsService.instantiate().experimentalSettings
 
   private eraserWidth = 3
 
@@ -215,7 +213,7 @@ export class Canvas extends React.Component<Props, {}> {
   }
 
   render() {
-    return <canvas ref={this.canvasRef}></canvas>
+    return <canvas ref={this.canvasRef} style={{}}></canvas>
   }
 
   setCanvasElement(elem: HTMLCanvasElement | null) {
@@ -241,12 +239,12 @@ export class Canvas extends React.Component<Props, {}> {
 
     const unsubscribers = [
       addEventListener(elem, 'wheel', this.handleWheel.bind(this)),
-      addEventListener(elem, 'mousedown', this.handleMouseDown.bind(this)),
-      addEventListener(elem, 'mousemove', this.handleMouseMove.bind(this)),
-      addEventListener(document.body, 'mouseup', this.handleGlobalMouseUp.bind(this)),
-      addEventListener(elem, 'touchstart', this.handleTouchStart.bind(this), { passive: true }),
-      addEventListener(elem, 'touchmove', this.handleTouchMove.bind(this)),
-      addEventListener(elem, 'touchend', this.handleTouchEnd.bind(this), { passive: true }),
+      addEventListener(elem, 'touchmove', (event) => {
+        event.preventDefault()
+      }),
+      addEventListener(elem, 'pointerdown', this.handlePointerDown.bind(this)),
+      addEventListener(elem, 'pointermove', this.handlePointerMove.bind(this)),
+      addEventListener(elem, 'pointerup', this.handlePointerUp.bind(this)),
       addEventListener(window, 'keydown', this.handleWindowKeyDown.bind(this))
     ]
 
@@ -536,21 +534,27 @@ export class Canvas extends React.Component<Props, {}> {
     return null
   }
 
-  private getPointFromTouchEvent(
-    event: TouchEvent,
+  private getPointFromPointerEvent(
+    event: PointerEvent,
     ignoreScrollAndTouchType: boolean = false
-  ): Point | null {
-    const touch = this.getTouch(event, ignoreScrollAndTouchType)
-    if (touch == null) return null
+  ): Point | undefined {
+    if (
+      !ignoreScrollAndTouchType &&
+      this.drawingService.palmRejectionEnabled.value &&
+      event.pointerType === 'touch'
+    ) {
+      return undefined
+    }
 
-    let x = touch.clientX - this.offsetLeft
-    let y = touch.clientY - this.offsetTop
+    let x = event.clientX - this.offsetLeft
+    let y = event.clientY - this.offsetTop
 
     if (!ignoreScrollAndTouchType) {
       const scale = this.drawingService.scale.value
       x = (x + this.scrollLeft) / scale
       y = (y + this.scrollTop) / scale
     }
+
     return { x, y }
   }
 
@@ -589,143 +593,12 @@ export class Canvas extends React.Component<Props, {}> {
     return this.drawingService.tool.value
   }
 
-  private handleMouseDown(event: MouseEvent) {
-    switch (this.actualCurrentTool) {
-      case 'pen':
-        if (this.drawingPath == null) {
-          this.drawingPath = {
-            id: generateId(),
-            color: this.drawingService.strokeColor.value,
-            width: this.drawingService.strokeWidth.value,
-            points: [this.getPointFromMouseEvent(event)],
-            isBezier: false,
-            offsetX: 0,
-            offsetY: 0
-          }
-        }
-        break
-
-      case 'eraser': {
-        const p = this.getPointFromMouseEvent(event)
-        this.erasingPathIds = new Set(erase(this.paths, p, null, this.eraserWidth))
-        this.tickDraw()
-        this.prevX = p.x
-        this.prevY = p.y
-        break
-      }
-
-      case 'lasso': {
-        const p = this.getPointFromMouseEvent(event)
-        const lasso = this.currentLasso
-        if (lasso != null && isInsideLasso(p, lasso, calculateLassoBoundary(lasso))) {
-          this.prevX = p.x
-          this.prevY = p.y
-          this.isDraggingLasso = true
-          break
-        }
-        this.currentLasso = new Lasso([p])
-        this.tickDraw()
-        break
-      }
-
-      case 'hand': {
-        const { x, y } = this.getPointFromMouseEvent(event, true)
-        this.prevX = x
-        this.prevY = y
-        this.handScrollingByMouse = true
-        this.showScrollBar()
-        break
-      }
-    }
-  }
-
-  private handleMouseMove(event: MouseEvent) {
+  private handlePointerDown(event: PointerEvent) {
     switch (this.actualCurrentTool) {
       case 'pen': {
-        const { drawingPath } = this
-        if (drawingPath != null && !this.drawingByTouch) {
-          pushPoint(drawingPath.points, this.getPointFromMouseEvent(event))
-          this.tickDraw()
-        }
-        break
-      }
-
-      case 'eraser': {
-        const { erasingPathIds } = this
-        if (erasingPathIds != null) {
-          const p = this.getPointFromMouseEvent(event)
-          addToSet(
-            erasingPathIds,
-            erase(this.paths, p, { x: this.prevX, y: this.prevY }, this.eraserWidth)
-          )
-          this.tickDraw()
-          this.prevX = p.x
-          this.prevY = p.y
-        }
-        break
-      }
-
-      case 'lasso': {
-        const { currentLasso } = this
-        const p = this.getPointFromMouseEvent(event)
-        if (currentLasso != null && !currentLasso.isClosed) {
-          pushPoint(currentLasso.points, p)
-          this.tickDraw()
-        } else if (currentLasso != null && this.isDraggingLasso) {
-          this.dragLassoTo(currentLasso, p)
-        }
-        break
-      }
-
-      case 'hand': {
-        if (this.handScrollingByMouse) {
-          const { x, y } = this.getPointFromMouseEvent(event, true)
-          this.bufferedScrollLeft += this.prevX - x
-          this.bufferedScrollTop += this.prevY - y
-          this.prevX = x
-          this.prevY = y
-          this.tickScroll()
-        }
-        break
-      }
-    }
-  }
-
-  private handleGlobalMouseUp() {
-    switch (this.actualCurrentTool) {
-      case 'pen':
-        if (this.experimentalSettings.value.disableSmoothingPaths !== true) {
-          smoothPath(this.drawingPath, this.drawingService.scale.value)
-        }
-        this.addDrawingPath()
-        break
-
-      case 'eraser':
-        this.removeErasingPaths()
-        break
-
-      case 'lasso': {
-        const { currentLasso } = this
-        if (currentLasso != null && !currentLasso.isClosed) {
-          this.postProcessLasso(currentLasso)
-        } else if (currentLasso != null && this.isDraggingLasso) {
-          this.finishDraggingLasso()
-        }
-        break
-      }
-
-      case 'hand':
-        this.handScrollingByMouse = false
-        this.hideScrollBarAfterDelay()
-        break
-    }
-  }
-
-  private handleTouchStart(event: TouchEvent) {
-    switch (this.actualCurrentTool) {
-      case 'pen': {
-        const p = this.getPointFromTouchEvent(event)
+        const p = this.getPointFromPointerEvent(event)
         if (p != null) {
+          this.canvasElement?.setPointerCapture(event.pointerId)
           this.drawingPath = {
             id: generateId(),
             color: this.drawingService.strokeColor.value,
@@ -735,14 +608,13 @@ export class Canvas extends React.Component<Props, {}> {
             offsetX: 0,
             offsetY: 0
           }
-          this.drawingByTouch = true
           break
         }
       }
       // fall through
 
       case 'eraser': {
-        const p = this.getPointFromTouchEvent(event)
+        const p = this.getPointFromPointerEvent(event)
         if (p != null) {
           const pathIdsToRemove = erase(this.paths, p, null, this.eraserWidth)
           const { erasingPathIds } = this
@@ -760,7 +632,7 @@ export class Canvas extends React.Component<Props, {}> {
       // fall through
 
       case 'lasso': {
-        const p = this.getPointFromTouchEvent(event)
+        const p = this.getPointFromPointerEvent(event)
         if (p != null) {
           const lasso = this.currentLasso
           if (lasso != null && isInsideLasso(p, lasso, calculateLassoBoundary(lasso))) {
@@ -777,21 +649,21 @@ export class Canvas extends React.Component<Props, {}> {
       // fall through
 
       default: {
-        const p = this.getPointFromTouchEvent(event, true)
+        const p = this.getPointFromPointerEvent(event, true)
         if (p == null) break
         this.prevX = p.x
         this.prevY = p.y
         this.showScrollBar()
+        this.isPanning = true
         break
       }
     }
   }
 
-  private handleTouchMove(event: TouchEvent) {
-    event.preventDefault()
+  private handlePointerMove(event: PointerEvent) {
     switch (this.actualCurrentTool) {
       case 'pen': {
-        const p = this.getPointFromTouchEvent(event)
+        const p = this.getPointFromPointerEvent(event)
         if (p != null) {
           const { drawingPath } = this
           if (drawingPath != null) {
@@ -804,7 +676,7 @@ export class Canvas extends React.Component<Props, {}> {
       // fall through
 
       case 'eraser': {
-        const p = this.getPointFromTouchEvent(event)
+        const p = this.getPointFromPointerEvent(event)
         if (p != null) {
           const { erasingPathIds } = this
           if (erasingPathIds != null) {
@@ -825,7 +697,7 @@ export class Canvas extends React.Component<Props, {}> {
       // fall through
 
       case 'lasso': {
-        const p = this.getPointFromTouchEvent(event)
+        const p = this.getPointFromPointerEvent(event)
         if (p != null) {
           const lasso = this.currentLasso
           if (lasso != null && !lasso.isClosed) {
@@ -840,37 +712,38 @@ export class Canvas extends React.Component<Props, {}> {
       // fall through
 
       default: {
-        const p = this.getPointFromTouchEvent(event, true)
+        const p = this.getPointFromPointerEvent(event, true)
         if (p == null) break
-        this.bufferedScrollLeft += this.prevX - p.x
-        this.bufferedScrollTop += this.prevY - p.y
-        this.prevX = p.x
-        this.prevY = p.y
+        if (this.isPanning) {
+          this.bufferedScrollLeft += this.prevX - p.x
+          this.bufferedScrollTop += this.prevY - p.y
+          this.prevX = p.x
+          this.prevY = p.y
 
-        this.tickScroll()
+          this.tickScroll()
+        }
         break
       }
     }
   }
 
-  private handleTouchEnd(event: TouchEvent) {
+  private handlePointerUp(event: PointerEvent) {
     switch (this.actualCurrentTool) {
       case 'pen': {
-        const p = this.getPointFromTouchEvent(event)
+        const p = this.getPointFromPointerEvent(event)
         if (p != null) {
           pushPoint(this.drawingPath?.points, p)
           if (this.experimentalSettings.value.disableSmoothingPaths !== true) {
             smoothPath(this.drawingPath, this.drawingService.scale.value)
           }
           this.addDrawingPath()
-          this.drawingByTouch = false
           break
         }
       }
       // fall through
 
       case 'eraser': {
-        const p = this.getPointFromTouchEvent(event)
+        const p = this.getPointFromPointerEvent(event)
         if (p != null) {
           addToSet(
             this.erasingPathIds,
@@ -897,15 +770,19 @@ export class Canvas extends React.Component<Props, {}> {
       // fall through
 
       default: {
-        const p = this.getPointFromTouchEvent(event, true)
+        const p = this.getPointFromPointerEvent(event, true)
         if (p == null) break
-        this.bufferedScrollLeft += this.prevX - p.x
-        this.bufferedScrollLeft += this.prevY - p.y
-        this.prevX = p.x
-        this.prevY = p.y
+        if (this.isPanning) {
+          this.bufferedScrollLeft += this.prevX - p.x
+          this.bufferedScrollLeft += this.prevY - p.y
+          this.prevX = p.x
+          this.prevY = p.y
 
-        this.tickScroll()
-        this.hideScrollBarAfterDelay()
+          this.tickScroll()
+          this.hideScrollBarAfterDelay()
+
+          this.isPanning = false
+        }
         break
       }
     }
