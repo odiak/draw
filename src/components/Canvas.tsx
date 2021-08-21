@@ -509,31 +509,6 @@ export class Canvas extends React.Component<Props, {}> {
     return { x, y }
   }
 
-  private getTouch(event: TouchEvent, dontCareTouchType: boolean): Touch | null {
-    const touches = event.changedTouches
-
-    if (!this.drawingService.palmRejectionEnabled.value || dontCareTouchType) {
-      return touches[0] || null
-    }
-
-    for (const touch of Array.from(touches)) {
-      if (touch.touchType === 'stylus') {
-        return touch
-      }
-
-      // Hack for Samsung Galaxy Note: radiuses of its stylus (S-Pen)
-      // become zero (and non-zero for fingers).
-      if (
-        this.experimentalSettings.value.hackForSamsungGalaxyNote &&
-        touch.radiusX === 0 &&
-        touch.radiusY === 0
-      ) {
-        return touch
-      }
-    }
-    return null
-  }
-
   private getPointFromPointerEvent(
     event: PointerEvent,
     ignoreScrollAndTouchType: boolean = false
