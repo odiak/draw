@@ -29,6 +29,19 @@ type PathWithBoundary = Path & { boundary?: PathBoundary }
 
 type Pointer = {
   id: number
+  type: string
+  clientX: number
+  clientY: number
+}
+
+type GestureInfo = {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+  distance: number
+  centerX: number
+  centerY: number
 }
 
 const zoomScaleFactor = 1.1
@@ -98,6 +111,7 @@ export class Canvas extends React.Component<Props, {}> {
   private eraserWidth = 3
 
   private isWheelZooming = false
+  private isGestureZooming = false
   private wheelZoomX = 0
   private wheelZoomY = 0
 
@@ -110,6 +124,8 @@ export class Canvas extends React.Component<Props, {}> {
   private cleanUpFunctions: Array<() => void> = []
 
   private activePointers: Map<number, Pointer> = new Map()
+
+  private gestureInfo: GestureInfo | undefined = undefined
 
   constructor(props: Props, context: unknown) {
     super(props, context)
@@ -142,7 +158,7 @@ export class Canvas extends React.Component<Props, {}> {
         const r = scale / prevScale
         let x: number
         let y: number
-        if (this.isWheelZooming) {
+        if (this.isWheelZooming || this.isGestureZooming) {
           x = this.wheelZoomX
           y = this.wheelZoomY
         } else {
@@ -151,7 +167,7 @@ export class Canvas extends React.Component<Props, {}> {
         }
         this.scrollLeft = this.bufferedScrollLeft = x * (r - 1) + r * this.scrollLeft
         this.scrollTop = this.bufferedScrollTop = y * (r - 1) + r * this.scrollTop
-        this.tickDraw()
+        if (!this.isGestureZooming) this.tickDraw()
       })
     )
 
@@ -442,6 +458,14 @@ export class Canvas extends React.Component<Props, {}> {
     this.hideScrollBarAfterDelay()
   }
 
+  private zoomByGesture(factor: number, x: number, y: number) {
+    this.isGestureZooming = true
+    this.wheelZoomX = x
+    this.wheelZoomY = y
+    this.drawingService.scale.update((s) => s * factor)
+    this.isGestureZooming = false
+  }
+
   private undo(): boolean {
     const op = this.doneOperationStack.pop()
     this.checkOperationStack()
@@ -517,28 +541,34 @@ export class Canvas extends React.Component<Props, {}> {
     return { x, y }
   }
 
-  private getPointFromPointerEvent(
-    event: PointerEvent,
-    ignoreScrollAndTouchType: boolean = false
-  ): Point | undefined {
-    if (
-      !ignoreScrollAndTouchType &&
-      this.drawingService.palmRejectionEnabled.value &&
-      event.pointerType === 'touch'
-    ) {
-      return undefined
-    }
+  private getPoint(event: PointerEvent): Point | undefined {
+    const palmRejection = this.drawingService.palmRejectionEnabled.value
 
-    let x = event.clientX - this.offsetLeft
-    let y = event.clientY - this.offsetTop
+    for (const pointer of this.activePointers.values()) {
+      if (palmRejection && pointer.type === 'touch') continue
 
-    if (!ignoreScrollAndTouchType) {
+      if (pointer.id !== event.pointerId) return undefined
+
+      const rawX = pointer.clientX - this.offsetLeft
+      const rawY = pointer.clientY - this.offsetTop
+
       const scale = this.drawingService.scale.value
-      x = (x + this.scrollLeft) / scale
-      y = (y + this.scrollTop) / scale
+      const x = (rawX + this.scrollLeft) / scale
+      const y = (rawY + this.scrollTop) / scale
+
+      return { x, y }
     }
 
-    return { x, y }
+    return undefined
+  }
+
+  private getPointsForPanning(): [Point?, Point?] {
+    const ps: Point[] = []
+    for (const { clientX, clientY } of this.activePointers.values()) {
+      ps.push({ x: clientX - this.offsetLeft, y: clientY - this.offsetTop })
+      if (ps.length === 2) break
+    }
+    return ps as [Point?, Point?]
   }
 
   private addDrawingPath() {
@@ -576,13 +606,43 @@ export class Canvas extends React.Component<Props, {}> {
     return this.drawingService.tool.value
   }
 
+  private isDuringOperationExceptPanning(): boolean {
+    return this.drawingPath != null || this.erasingPathIds != null || this.currentLasso != null
+  }
+
+  private handleTwoPoints(p1: Point, p2: Point) {
+    const { x: x1, y: y1 } = p1
+    const { x: x2, y: y2 } = p2
+    const distance = Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+    const centerX = (x1 + x2) / 2
+    const centerY = (y1 + y2) / 2
+
+    if (this.gestureInfo) {
+      const {
+        distance: prevDistance,
+        centerX: prevCenterX,
+        centerY: prevCenterY
+      } = this.gestureInfo
+      this.bufferedScrollLeft += prevCenterX - centerX
+      this.bufferedScrollTop += prevCenterY - centerY
+      this.scrollLeft = this.bufferedScrollLeft
+      this.scrollTop = this.bufferedScrollTop
+      this.zoomByGesture(distance / prevDistance, centerX, centerY)
+      this.tickScroll()
+    }
+
+    this.gestureInfo = { x1, y1, x2, y2, distance, centerX, centerY }
+  }
+
   private handlePointerDown(event: PointerEvent) {
+    if (this.activePointers.size >= 2) return
+
     this.canvasElement!.setPointerCapture(event.pointerId)
     this.activePointers.set(event.pointerId, toPointer(event))
 
     switch (this.actualCurrentTool) {
       case 'pen': {
-        const p = this.getPointFromPointerEvent(event)
+        const p = this.getPoint(event)
         if (p != null) {
           this.drawingPath = {
             id: generateId(),
@@ -599,7 +659,7 @@ export class Canvas extends React.Component<Props, {}> {
       // fall through
 
       case 'eraser': {
-        const p = this.getPointFromPointerEvent(event)
+        const p = this.getPoint(event)
         if (p != null) {
           const pathIdsToRemove = erase(this.paths, p, null, this.eraserWidth)
           const { erasingPathIds } = this
@@ -617,7 +677,7 @@ export class Canvas extends React.Component<Props, {}> {
       // fall through
 
       case 'lasso': {
-        const p = this.getPointFromPointerEvent(event)
+        const p = this.getPoint(event)
         if (p != null) {
           const lasso = this.currentLasso
           if (lasso != null && isInsideLasso(p, lasso, calculateLassoBoundary(lasso))) {
@@ -634,10 +694,16 @@ export class Canvas extends React.Component<Props, {}> {
       // fall through
 
       default: {
-        const p = this.getPointFromPointerEvent(event, true)
-        if (p == null) break
-        this.prevX = p.x
-        this.prevY = p.y
+        if (this.isDuringOperationExceptPanning()) break
+
+        const [p1, p2] = this.getPointsForPanning()
+        if (p1 == null) break
+        if (p2 == null) {
+          this.prevX = p1.x
+          this.prevY = p1.y
+        } else {
+          this.handleTwoPoints(p1, p2)
+        }
         this.showScrollBar()
         this.isPanning = true
         break
@@ -648,9 +714,11 @@ export class Canvas extends React.Component<Props, {}> {
   private handlePointerMove(event: PointerEvent) {
     if (!this.activePointers.has(event.pointerId)) return
 
+    this.activePointers.set(event.pointerId, toPointer(event))
+
     switch (this.actualCurrentTool) {
       case 'pen': {
-        const p = this.getPointFromPointerEvent(event)
+        const p = this.getPoint(event)
         if (p != null) {
           const { drawingPath } = this
           if (drawingPath != null) {
@@ -663,7 +731,7 @@ export class Canvas extends React.Component<Props, {}> {
       // fall through
 
       case 'eraser': {
-        const p = this.getPointFromPointerEvent(event)
+        const p = this.getPoint(event)
         if (p != null) {
           const { erasingPathIds } = this
           if (erasingPathIds != null) {
@@ -684,7 +752,7 @@ export class Canvas extends React.Component<Props, {}> {
       // fall through
 
       case 'lasso': {
-        const p = this.getPointFromPointerEvent(event)
+        const p = this.getPoint(event)
         if (p != null) {
           const lasso = this.currentLasso
           if (lasso != null && !lasso.isClosed) {
@@ -699,15 +767,20 @@ export class Canvas extends React.Component<Props, {}> {
       // fall through
 
       default: {
-        const p = this.getPointFromPointerEvent(event, true)
-        if (p == null) break
-        if (this.isPanning) {
-          this.bufferedScrollLeft += this.prevX - p.x
-          this.bufferedScrollTop += this.prevY - p.y
-          this.prevX = p.x
-          this.prevY = p.y
+        if (this.isDuringOperationExceptPanning()) break
 
-          this.tickScroll()
+        const [p1, p2] = this.getPointsForPanning()
+        if (p1 == null) break
+        if (this.isPanning) {
+          if (p2 == null) {
+            this.bufferedScrollLeft += this.prevX - p1.x
+            this.bufferedScrollTop += this.prevY - p1.y
+            this.prevX = p1.x
+            this.prevY = p1.y
+            this.tickScroll()
+          } else {
+            this.handleTwoPoints(p1, p2)
+          }
         }
         break
       }
@@ -719,7 +792,7 @@ export class Canvas extends React.Component<Props, {}> {
 
     switch (this.actualCurrentTool) {
       case 'pen': {
-        const p = this.getPointFromPointerEvent(event)
+        const p = this.getPoint(event)
         if (p != null) {
           pushPoint(this.drawingPath?.points, p)
           if (this.experimentalSettings.value.disableSmoothingPaths !== true) {
@@ -732,7 +805,7 @@ export class Canvas extends React.Component<Props, {}> {
       // fall through
 
       case 'eraser': {
-        const p = this.getPointFromPointerEvent(event)
+        const p = this.getPoint(event)
         if (p != null) {
           addToSet(
             this.erasingPathIds,
@@ -745,7 +818,7 @@ export class Canvas extends React.Component<Props, {}> {
       // fall through
 
       case 'lasso': {
-        const p = this.getPointFromPointerEvent(event)
+        const p = this.getPoint(event)
         if (p != null) {
           const lasso = this.currentLasso
           if (lasso != null && !lasso.isClosed) {
@@ -759,18 +832,25 @@ export class Canvas extends React.Component<Props, {}> {
       // fall through
 
       default: {
-        const p = this.getPointFromPointerEvent(event, true)
-        if (p == null) break
-        if (this.isPanning) {
-          this.bufferedScrollLeft += this.prevX - p.x
-          this.bufferedScrollLeft += this.prevY - p.y
-          this.prevX = p.x
-          this.prevY = p.y
+        if (this.isDuringOperationExceptPanning()) break
 
-          this.tickScroll()
+        const [p1, p2] = this.getPointsForPanning()
+        if (p1 == null) break
+        if (this.isPanning) {
+          if (p2 == null) {
+            this.bufferedScrollLeft += this.prevX - p1.x
+            this.bufferedScrollLeft += this.prevY - p1.y
+            this.prevX = p1.x
+            this.prevY = p1.y
+            this.tickScroll()
+          } else {
+            this.handleTwoPoints(p1, p2)
+          }
+
           this.hideScrollBarAfterDelay()
 
           this.isPanning = false
+          this.gestureInfo = undefined
         }
         break
       }
@@ -787,7 +867,7 @@ export class Canvas extends React.Component<Props, {}> {
 
     switch (this.actualCurrentTool) {
       case 'pen': {
-        const p = this.getPointFromPointerEvent(event)
+        const p = this.getPoint(event)
         if (p != null) {
           if (this.experimentalSettings.value.disableSmoothingPaths !== true) {
             smoothPath(this.drawingPath, this.drawingService.scale.value)
@@ -799,7 +879,7 @@ export class Canvas extends React.Component<Props, {}> {
       // fall through
 
       case 'eraser': {
-        const p = this.getPointFromPointerEvent(event)
+        const p = this.getPoint(event)
         if (p != null) {
           this.removeErasingPaths()
           break
@@ -808,7 +888,7 @@ export class Canvas extends React.Component<Props, {}> {
       // fall through
 
       case 'lasso': {
-        const p = this.getPointFromPointerEvent(event)
+        const p = this.getPoint(event)
         if (p != null) {
           const lasso = this.currentLasso
           if (lasso != null && !lasso.isClosed) {
@@ -822,11 +902,12 @@ export class Canvas extends React.Component<Props, {}> {
       // fall through
 
       default: {
-        const p = this.getPointFromPointerEvent(event, true)
-        if (p == null) break
+        if (this.isDuringOperationExceptPanning()) break
+
         if (this.isPanning) {
           this.hideScrollBarAfterDelay()
           this.isPanning = false
+          this.gestureInfo = undefined
         }
         break
       }
@@ -1549,6 +1630,6 @@ function getPathBoundary(path: PathWithBoundary): PathBoundary {
 }
 
 function toPointer(event: PointerEvent): Pointer {
-  const { pointerId: id } = event
-  return { id }
+  const { pointerId: id, pointerType: type, clientX, clientY } = event
+  return { id, type, clientX, clientY }
 }
