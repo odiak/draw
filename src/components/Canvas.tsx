@@ -27,6 +27,10 @@ type Operation =
 
 type PathWithBoundary = Path & { boundary?: PathBoundary }
 
+type Pointer = {
+  id: number
+}
+
 const zoomScaleFactor = 1.1
 const zoomScaleFactorForWheel = 1.05
 
@@ -105,6 +109,8 @@ export class Canvas extends React.Component<Props, {}> {
 
   private cleanUpFunctions: Array<() => void> = []
 
+  private activePointers: Map<number, Pointer> = new Map()
+
   constructor(props: Props, context: unknown) {
     super(props, context)
 
@@ -169,6 +175,7 @@ export class Canvas extends React.Component<Props, {}> {
       this.doneOperationStack = []
       this.paths = new Map()
       this.drawingService.scale.next(1.0)
+      this.activePointers = new Map()
     }
     this.checkOperationStack()
 
@@ -245,6 +252,7 @@ export class Canvas extends React.Component<Props, {}> {
       addEventListener(elem, 'pointerdown', this.handlePointerDown.bind(this)),
       addEventListener(elem, 'pointermove', this.handlePointerMove.bind(this)),
       addEventListener(elem, 'pointerup', this.handlePointerUp.bind(this)),
+      addEventListener(elem, 'pointercancel', this.handlePointerCancel.bind(this)),
       addEventListener(window, 'keydown', this.handleWindowKeyDown.bind(this))
     ]
 
@@ -569,11 +577,13 @@ export class Canvas extends React.Component<Props, {}> {
   }
 
   private handlePointerDown(event: PointerEvent) {
+    this.canvasElement!.setPointerCapture(event.pointerId)
+    this.activePointers.set(event.pointerId, toPointer(event))
+
     switch (this.actualCurrentTool) {
       case 'pen': {
         const p = this.getPointFromPointerEvent(event)
         if (p != null) {
-          this.canvasElement?.setPointerCapture(event.pointerId)
           this.drawingPath = {
             id: generateId(),
             color: this.drawingService.strokeColor.value,
@@ -636,6 +646,8 @@ export class Canvas extends React.Component<Props, {}> {
   }
 
   private handlePointerMove(event: PointerEvent) {
+    if (!this.activePointers.has(event.pointerId)) return
+
     switch (this.actualCurrentTool) {
       case 'pen': {
         const p = this.getPointFromPointerEvent(event)
@@ -703,6 +715,8 @@ export class Canvas extends React.Component<Props, {}> {
   }
 
   private handlePointerUp(event: PointerEvent) {
+    if (!this.activePointers.has(event.pointerId)) return
+
     switch (this.actualCurrentTool) {
       case 'pen': {
         const p = this.getPointFromPointerEvent(event)
@@ -731,7 +745,7 @@ export class Canvas extends React.Component<Props, {}> {
       // fall through
 
       case 'lasso': {
-        const p = this.currentLasso
+        const p = this.getPointFromPointerEvent(event)
         if (p != null) {
           const lasso = this.currentLasso
           if (lasso != null && !lasso.isClosed) {
@@ -760,6 +774,67 @@ export class Canvas extends React.Component<Props, {}> {
         }
         break
       }
+    }
+
+    this.activePointers.delete(event.pointerId)
+    if (this.canvasElement!.hasPointerCapture(event.pointerId)) {
+      this.canvasElement!.releasePointerCapture(event.pointerId)
+    }
+  }
+
+  private handlePointerCancel(event: PointerEvent) {
+    if (!this.activePointers.has(event.pointerId)) return
+
+    switch (this.actualCurrentTool) {
+      case 'pen': {
+        const p = this.getPointFromPointerEvent(event)
+        if (p != null) {
+          if (this.experimentalSettings.value.disableSmoothingPaths !== true) {
+            smoothPath(this.drawingPath, this.drawingService.scale.value)
+          }
+          this.addDrawingPath()
+          break
+        }
+      }
+      // fall through
+
+      case 'eraser': {
+        const p = this.getPointFromPointerEvent(event)
+        if (p != null) {
+          this.removeErasingPaths()
+          break
+        }
+      }
+      // fall through
+
+      case 'lasso': {
+        const p = this.getPointFromPointerEvent(event)
+        if (p != null) {
+          const lasso = this.currentLasso
+          if (lasso != null && !lasso.isClosed) {
+            this.postProcessLasso(lasso)
+          } else if (lasso != null && this.isDraggingLasso) {
+            this.finishDraggingLasso()
+          }
+          break
+        }
+      }
+      // fall through
+
+      default: {
+        const p = this.getPointFromPointerEvent(event, true)
+        if (p == null) break
+        if (this.isPanning) {
+          this.hideScrollBarAfterDelay()
+          this.isPanning = false
+        }
+        break
+      }
+    }
+
+    this.activePointers.delete(event.pointerId)
+    if (this.canvasElement!.hasPointerCapture(event.pointerId)) {
+      this.canvasElement!.releasePointerCapture(event.pointerId)
     }
   }
 
@@ -1471,4 +1546,9 @@ class PathBoundary {
 
 function getPathBoundary(path: PathWithBoundary): PathBoundary {
   return path.boundary ?? (path.boundary = new PathBoundary(path))
+}
+
+function toPointer(event: PointerEvent): Pointer {
+  const { pointerId: id } = event
+  return { id }
 }
