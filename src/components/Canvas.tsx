@@ -637,6 +637,9 @@ export class Canvas extends React.Component<Props, {}> {
   private handlePointerDown(event: PointerEvent) {
     if (this.activePointers.size >= 2) return
 
+    // ignore non-primary button
+    if (event.button > 1) return
+
     this.canvasElement!.setPointerCapture(event.pointerId)
     this.activePointers.set(event.pointerId, toPointer(event))
 
