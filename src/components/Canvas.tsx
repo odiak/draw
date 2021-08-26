@@ -9,6 +9,7 @@ import { Color } from '../utils/Color'
 import { DrawingService } from '../services/DrawingService'
 import firebase from 'firebase'
 import { encode, decode } from '@msgpack/msgpack'
+import styled from 'styled-components'
 
 type Operation =
   | Readonly<{
@@ -64,7 +65,52 @@ type Props = {
   pictureId: string
 }
 
-export class Canvas extends React.Component<Props, {}> {
+type BottomMenuState = {
+  type: 'lasso'
+  state: 'idle' | 'drawing' | 'closed'
+}
+
+type State = {
+  bottomMenuState: BottomMenuState | undefined
+}
+
+const safeAreaInsetBottom = (() => {
+  const propKey = '--kakeru-saib'
+  document.body.style.setProperty(propKey, 'env(safe-area-inset-bottom, 0px)')
+  const val = getComputedStyle(document.body).getPropertyValue(propKey)
+  const m = val.match(/^(\d+)px$/)
+  return m == null ? 0 : parseInt(m[1], 10)
+})()
+
+const BottomMenu = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0;
+  padding-bottom: 16px;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  text-align: center;
+`
+
+const BottomMenuItem = styled.button`
+  margin: 0;
+  padding: 5px;
+  display: inline-block;
+  background: #aaab;
+  border: 0;
+  border-radius: 2px;
+  & + & {
+    margin-left: 5px;
+  }
+`
+
+export class Canvas extends React.Component<Props, State> {
+  state: State = {
+    bottomMenuState: undefined
+  }
+
   private canvasElement: HTMLCanvasElement | null = null
   private parentElement: Element | null = null
   private renderingContext: CanvasRenderingContext2D | null = null
@@ -180,17 +226,42 @@ export class Canvas extends React.Component<Props, {}> {
     )
 
     fs.push(
-      this.drawingService.tool.subscribe((tool) => {
+      this.drawingService.tool.subscribe((tool, prev) => {
         if (tool !== 'lasso' && this.currentLasso != null) {
           this.currentLasso = null
           this.tickDraw()
         }
+
+        this.refreshBottomMenuState(tool, prev)
       })
     )
 
     this.cleanUpFunctions = fs
 
     this.onUpdatePictureId(true)
+
+    this.refreshBottomMenuState(this.drawingService.tool.value)
+  }
+
+  private refreshBottomMenuState(currentTool: Tool, prevTool?: Tool) {
+    if (prevTool === currentTool) return
+
+    let state: State
+    switch (currentTool) {
+      case 'lasso':
+        state = { bottomMenuState: { type: 'lasso', state: 'idle' } }
+        break
+
+      default:
+        state = { bottomMenuState: undefined }
+    }
+
+    if (prevTool == null) {
+      // eslint-disable-next-line react/no-direct-mutation-state
+      this.state = state
+    } else {
+      this.setState(state)
+    }
   }
 
   private onUpdatePictureId(first: boolean = false) {
@@ -200,6 +271,7 @@ export class Canvas extends React.Component<Props, {}> {
       this.paths = new Map()
       this.drawingService.scale.next(1.0)
       this.activePointers = new Map()
+      this.setState({ bottomMenuState: undefined })
     }
     this.checkOperationStack()
 
@@ -244,7 +316,44 @@ export class Canvas extends React.Component<Props, {}> {
   }
 
   render() {
-    return <canvas ref={this.canvasRef} style={{}}></canvas>
+    return (
+      <>
+        <canvas ref={this.canvasRef}></canvas>
+        {this.bottomMenu()}
+      </>
+    )
+  }
+
+  bottomMenu() {
+    const state = this.state.bottomMenuState
+    if (state == null) return null
+
+    switch (state.type) {
+      case 'lasso': {
+        switch (state.state) {
+          case 'idle':
+            return (
+              <BottomMenu>
+                <BottomMenuItem onClick={() => this.handlePaste()}>Paste</BottomMenuItem>
+              </BottomMenu>
+            )
+          case 'drawing':
+            return null
+          case 'closed':
+            return (
+              <BottomMenu>
+                <BottomMenuItem onClick={() => this.handlePaste()}>Paste</BottomMenuItem>
+                <BottomMenuItem onClick={() => this.handleDelete()}>Delete</BottomMenuItem>
+                <BottomMenuItem onClick={() => this.handleCopy()}>Copy</BottomMenuItem>
+              </BottomMenu>
+            )
+        }
+        break
+      }
+
+      default:
+        return null
+    }
   }
 
   setCanvasElement(elem: HTMLCanvasElement | null) {
@@ -550,6 +659,10 @@ export class Canvas extends React.Component<Props, {}> {
         this.undo()
       }
     }
+
+    if (event.key === 'Delete' || event.key === 'Backspace') {
+      this.handleDelete()
+    }
   }
 
   private async handleCopy() {
@@ -575,8 +688,19 @@ export class Canvas extends React.Component<Props, {}> {
     this.doOperation({ type: 'remove', paths })
   }
 
-  private async handlePaste(event: ClipboardEvent) {
-    const paths = await readPathsFromClipboardEvent(event)
+  private handleDelete() {
+    const { currentLasso } = this
+    if (currentLasso == null) return
+
+    const paths = getOverlappingPaths(currentLasso, this.paths)
+    if (paths.length === 0) return
+
+    this.currentLasso = null
+    this.doOperation({ type: 'remove', paths })
+  }
+
+  private async handlePaste(event?: ClipboardEvent) {
+    const paths = await readPathsFromClipboard(event)
     if (paths == null || paths.length === 0) return
 
     const { scrollLeft, scrollTop } = this
@@ -765,6 +889,7 @@ export class Canvas extends React.Component<Props, {}> {
             break
           }
           this.currentLasso = new Lasso([p])
+          this.setState({ bottomMenuState: { type: 'lasso', state: 'drawing' } })
           this.tickDraw()
           break
         }
@@ -1101,7 +1226,7 @@ export class Canvas extends React.Component<Props, {}> {
     const maxX = max(maxViewX, maxDrawedX)
     const maxY = max(maxViewY, maxDrawedY)
     const horizontalBarLength = width - offsetP * 2
-    const verticalBarLength = height - offsetP * 2
+    const verticalBarLength = height - offsetP * 2 - safeAreaInsetBottom
     const shiftX = -minX
     const shiftY = -minY
     const scaleX = horizontalBarLength / (maxX - minX)
@@ -1115,7 +1240,7 @@ export class Canvas extends React.Component<Props, {}> {
     ctx.fillStyle = colorV.toString()
     ctx.fillRect(
       ((minViewX + shiftX) * scaleX + offsetP) * dpr,
-      (height - offsetO1 - barWidth1) * dpr,
+      (height - offsetO1 - barWidth1 - safeAreaInsetBottom) * dpr,
       (maxViewX - minViewX) * scaleX * dpr,
       barWidth1 * dpr
     )
@@ -1130,7 +1255,7 @@ export class Canvas extends React.Component<Props, {}> {
       ctx.fillStyle = colorD.toString()
       ctx.fillRect(
         ((minDrawedX + shiftX) * scaleX + offsetP) * dpr,
-        (height - offsetO2 - barWidth2) * dpr,
+        (height - offsetO2 - barWidth2 - safeAreaInsetBottom) * dpr,
         (maxDrawedX - minDrawedX) * scaleX * dpr,
         barWidth2 * dpr
       )
@@ -1242,8 +1367,10 @@ export class Canvas extends React.Component<Props, {}> {
     lasso.isClosed = true
     if (lassoLength(lasso, this.drawingService.scale.value) < 50) {
       this.currentLasso = null
+      this.setState({ bottomMenuState: { type: 'lasso', state: 'idle' } })
     } else {
       addToSet(lasso.overlappingPathIds, selectPathsOverlappingWithLasso(this.paths, lasso))
+      this.setState({ bottomMenuState: { type: 'lasso', state: 'closed' } })
     }
     this.tickDraw()
   }
@@ -1720,14 +1847,26 @@ async function writePathsToClipboard(paths: Path[]): Promise<void> {
   await navigator.clipboard.write([item])
 }
 
-async function readPathsFromClipboardEvent(event: ClipboardEvent): Promise<Path[] | undefined> {
-  const items = event.clipboardData?.items
-  if (items == null) return
-  const item = Array.from(items).find((it) => it.type === 'text/html')
-  if (item == null) return
-  const data = await new Promise<string>((resolve) => {
-    item.getAsString((data) => resolve(data))
-  })
+async function readPathsFromClipboard(event?: ClipboardEvent): Promise<Path[] | undefined> {
+  let data: string
+  if (event == null) {
+    const [item] = await navigator.clipboard.read()
+    let blob: Blob
+    try {
+      blob = await item.getType('text/html')
+    } catch (e: unknown) {
+      return
+    }
+    data = await blob.text()
+  } else {
+    const items = event.clipboardData?.items
+    if (items == null) return
+    const item = Array.from(items).find((it) => it.type === 'text/html')
+    if (item == null) return
+    data = await new Promise<string>((resolve) => {
+      item.getAsString((data) => resolve(data))
+    })
+  }
 
   try {
     const match = data.match(/\bdata-kakeru-paths-msgpack="([^"]+)"/)
