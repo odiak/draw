@@ -1842,8 +1842,11 @@ async function writePathsToClipboard(paths: Path[]): Promise<void> {
     })
   )
   const msgpackBase64 = btoa(String.fromCharCode(...encode(encodedPaths)))
-  const html = `<meta charset="utf-8"/><div data-kakeru-paths-msgpack="${msgpackBase64}"></div>`
-  const item = new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }) })
+  const html = `<meta charset="utf-8"/><div data-kakeru-paths-msgpack="${msgpackBase64}"> </div>`
+  const item = new ClipboardItem({
+    'text/html': new Blob([html], { type: 'text/html' }),
+    'text/plain': new Blob([' '], { type: 'text/plain' })
+  })
   await navigator.clipboard.write([item])
 }
 
@@ -1851,9 +1854,10 @@ async function readPathsFromClipboard(event?: ClipboardEvent): Promise<Path[] | 
   let data: string
   if (event == null) {
     const [item] = await navigator.clipboard.read()
-    let blob: Blob
+    let blob: Blob | null
     try {
       blob = await item.getType('text/html')
+      if (blob == null) return
     } catch (e: unknown) {
       return
     }

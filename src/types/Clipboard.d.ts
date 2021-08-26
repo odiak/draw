@@ -1,5 +1,5 @@
 declare class ClipboardItem {
-  constructor(data: { [mimeType: string]: Blob })
+  constructor(data: { [mimeType: string]: Blob | string | Promise<Blob> | Promise<string> })
   types: Array<string>
   getType(type: string): Promise<Blob>
 }
