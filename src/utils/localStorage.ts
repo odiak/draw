@@ -1,5 +1,5 @@
 class DummyLocalStorage implements Storage {
-  private data: {[k: string]: string} = {}
+  private data: { [k: string]: string } = {}
 
   get length(): number {
     return Object.getOwnPropertyNames(this.data).length
