@@ -1,6 +1,19 @@
+/** 色情報を保持するclass */
 export class Color {
+  /** rgbaの4値から`Color`を作成する
+   *
+   * @param r red
+   * @param g green
+   * @param b blue
+   * @param a 透明度
+   */
   constructor(public r: number, public g: number, public b: number, public a: number) {}
 
+  /** 16進数カラーコードから`Color`を作成する
+   *
+   * @param colorStr 16進数カラーコード
+   * @return 作成した`Color`オブジェクト
+   */
   static fromString(colorStr: string): Color {
     let r = 1,
       g = 1,
@@ -50,10 +63,18 @@ export class Color {
     return new Color(r, g, b, a)
   }
 
+  /** 色情報を複製する
+   *
+   * @return 複製した色情報
+   */
   copy(): Color {
     return new Color(this.r, this.g, this.b, this.a)
   }
 
+  /** `rgba()`関数に変換し、文字列として返す
+   *
+   * @return rgba()関数の文字列に変換した色
+   */
   toString(): string {
     return `rgba(${[this.r, this.g, this.b, this.a]
       .map((n) => `${(n * 100).toFixed(2)}%`)
