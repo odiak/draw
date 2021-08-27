@@ -643,6 +643,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@msgpack/msgpack@npm:^2.7.0":
+  version: 2.7.0
+  resolution: "@msgpack/msgpack@npm:2.7.0"
+  checksum: 18a991fc5cf12bc7a36a4be85db33888d15349cac29bc4441884842fcafb4604a5f7e089397950c0714a144deac0e5b61eb5717f8cdfc221df544393e2f3d80f
+  languageName: node
+  linkType: hard
+
 "@nodelib/fs.scandir@npm:2.1.5":
   version: 2.1.5
   resolution: "@nodelib/fs.scandir@npm:2.1.5"
@@ -2897,6 +2904,7 @@ __metadata:
     "@fortawesome/free-solid-svg-icons": ^5.15.1
     "@fortawesome/pro-solid-svg-icons": ^5.15.1
     "@fortawesome/react-fontawesome": ^0.1.12
+    "@msgpack/msgpack": ^2.7.0
     "@odiak/fit-curve": ^0.3.2
     "@odiak/iterate": ^0.0.4
     "@sentry/react": ^6.5.1
@@ -2917,7 +2925,9 @@ __metadata:
     eslint-plugin-react: ^7.20.3
     eslint-plugin-react-hooks: ^4.0.8
     firebase: ^8.6.5
+    fp-ts: ^2.11.1
     html-webpack-plugin: ^5.3.1
+    io-ts: ^2.2.16
     pnp-webpack-plugin: ^1.6.4
     prettier: ^2.0.5
     react: ^17.0.2
@@ -3662,6 +3672,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fp-ts@npm:^2.11.1":
+  version: 2.11.1
+  resolution: "fp-ts@npm:2.11.1"
+  checksum: 3c13ef05919de51466039ad01d1002093adb38a239c3d096271aad1433f0d7b3ba753b27eafdbd0d1139971f48f1d4044d99ec2b6c452b8d2b17916b9faf98a2
+  languageName: node
+  linkType: hard
+
 "fragment-cache@npm:^0.2.1":
   version: 0.2.1
   resolution: "fragment-cache@npm:0.2.1"
@@ -4344,6 +4361,15 @@ fsevents@^1.2.7:
   version: 2.2.0
   resolution: "interpret@npm:2.2.0"
   checksum: f51efef7cb8d02da16408ffa3504cd6053014c5aeb7bb8c223727e053e4235bf565e45d67028b0c8740d917c603807aa3c27d7bd2f21bf20b6417e2bb3e5fd6e
+  languageName: node
+  linkType: hard
+
+"io-ts@npm:^2.2.16":
+  version: 2.2.16
+  resolution: "io-ts@npm:2.2.16"
+  peerDependencies:
+    fp-ts: ^2.5.0
+  checksum: 1b5855682e413cc92cfb5c51d0bdb24c99e407ab4e67821a53078f5d8dedbc387840c5b240cb19dd5d542bbdd2e2317ece17674a674f3de561ca0f00ae765bba
   languageName: node
   linkType: hard
 
