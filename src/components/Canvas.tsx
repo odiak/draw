@@ -775,7 +775,7 @@ export class Canvas extends React.Component<Props, State> {
     if (drawingPath == null) return
 
     this.drawingPath = null
-    if (drawingPath.points.length > 1) {
+    if (drawingPath.points.length >= 1) {
       this.doOperation({ type: 'add', paths: [drawingPath] })
     }
   }
@@ -1394,6 +1394,17 @@ function drawPath(
   ctx.strokeStyle = color
   let first = true
   ctx.beginPath()
+
+  if (points.length === 1) {
+    const { x, y } = points[0]
+    const realX = ((x + offsetX + dx) * scale - scrollLeft) * dpr
+    const realY = ((y + offsetY + dy) * scale - scrollTop) * dpr
+    ctx.fillStyle = color
+    ctx.arc(realX, realY, (width * scale * dpr) / 2, 0, Math.PI * 2)
+    ctx.fill()
+    return
+  }
+
   if (isBezier) {
     let args: number[] = []
     for (const { x, y } of points) {
@@ -1519,6 +1530,11 @@ function* iteratePathPoints(
       yield* iterateBezierPoints(p0, p1, p2, p3, offsetX, offsetY, f)
     }
   } else {
+    if (points.length === 1) {
+      yield points[0]
+      return
+    }
+
     for (let i = 1; i < points.length; i++) {
       const pp = points[i - 1]
       const np = points[i]
@@ -1607,7 +1623,7 @@ function addToSet<T>(set: Set<T> | null | undefined, items: Iterable<T>) {
 }
 
 function smoothPath(path: Path | null, scale: number): void {
-  if (path == null) return
+  if (path == null || path.points.length < 2) return
   path.points = fitCurve(path.points, 5 / scale).flatMap((c, i) => (i === 0 ? c : c.slice(1)))
   path.isBezier = true
 }
