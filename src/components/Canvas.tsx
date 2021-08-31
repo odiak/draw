@@ -19,6 +19,7 @@ type Operation =
   | Readonly<{
       type: 'remove'
       paths: Path[]
+      lasso?: Lasso
     }>
   | Readonly<{
       type: 'move'
@@ -518,6 +519,9 @@ export class Canvas extends React.Component<Props, State> {
 
       case 'remove':
         this.removePathsInternal(operation.paths)
+        if (operation.lasso != null) {
+          this.currentLasso = null
+        }
         break
 
       case 'move': {
@@ -552,6 +556,9 @@ export class Canvas extends React.Component<Props, State> {
 
       case 'remove':
         this.addPathsInternal(operation.paths)
+        if (operation.lasso != null) {
+          this.currentLasso = operation.lasso.copy()
+        }
         break
 
       case 'move':
@@ -684,8 +691,7 @@ export class Canvas extends React.Component<Props, State> {
 
     await writePathsToClipboard(paths)
 
-    this.currentLasso = null
-    this.doOperation({ type: 'remove', paths })
+    this.doOperation({ type: 'remove', paths, lasso: currentLasso.copy() })
   }
 
   private handleDelete() {
@@ -695,8 +701,7 @@ export class Canvas extends React.Component<Props, State> {
     const paths = getOverlappingPaths(currentLasso, this.paths)
     if (paths.length === 0) return
 
-    this.currentLasso = null
-    this.doOperation({ type: 'remove', paths })
+    this.doOperation({ type: 'remove', paths, lasso: currentLasso.copy() })
   }
 
   private async handlePaste(event?: ClipboardEvent) {
