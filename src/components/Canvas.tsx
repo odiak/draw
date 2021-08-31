@@ -25,7 +25,7 @@ type Operation =
       paths: Path[]
       dx: number
       dy: number
-      lassoId: string
+      lasso: Lasso
     }>
   | Readonly<{
       type: 'paste'
@@ -520,13 +520,14 @@ export class Canvas extends React.Component<Props, State> {
         this.removePathsInternal(operation.paths)
         break
 
-      case 'move':
+      case 'move': {
         this.movePathsInternal(operation.paths, operation.dx, operation.dy)
-        if (redo) {
-          this.moveLassoById(operation.lassoId, operation.dx, operation.dy)
-          this.removeLassoWithWrongId(operation.lassoId)
-        }
+        const lasso = operation.lasso.copy()
+        lasso.offsetX += operation.dx
+        lasso.offsetY += operation.dy
+        this.currentLasso = lasso
         break
+      }
 
       case 'paste':
         this.addPathsInternal(operation.paths)
@@ -555,8 +556,7 @@ export class Canvas extends React.Component<Props, State> {
 
       case 'move':
         this.movePathsInternal(operation.paths, 0, 0)
-        this.moveLassoById(operation.lassoId, -operation.dx, -operation.dy)
-        this.removeLassoWithWrongId(operation.lassoId)
+        this.currentLasso = operation.lasso.copy()
         break
 
       case 'paste':
@@ -1350,9 +1350,12 @@ export class Canvas extends React.Component<Props, State> {
     const paths = getOverlappingPaths(currentLasso, this.paths)
 
     if (paths.length !== 0) {
+      const lasso = currentLasso.copy()
+      lasso.offsetX -= dx
+      lasso.offsetY -= dy
       this.doOperation({
         type: 'move',
-        lassoId: currentLasso.id,
+        lasso,
         paths,
         dx,
         dy
