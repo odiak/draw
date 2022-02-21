@@ -7,6 +7,9 @@ import { fitCurve } from '@odiak/fit-curve'
 import { ExperimentalSettingsService } from '../services/ExperimentalSettingsService'
 import { Color } from '../utils/Color'
 import { DrawingService } from '../services/DrawingService'
+import firebase from 'firebase'
+import { encode, decode } from '@msgpack/msgpack'
+import styled from 'styled-components'
 
 type Operation =
   | Readonly<{
@@ -16,13 +19,20 @@ type Operation =
   | Readonly<{
       type: 'remove'
       paths: Path[]
+      lasso?: Lasso
     }>
   | Readonly<{
       type: 'move'
       paths: Path[]
       dx: number
       dy: number
-      lassoId: string
+      lasso: Lasso
+    }>
+  | Readonly<{
+      type: 'paste'
+      paths: Path[]
+      offsetX: number
+      offsetY: number
     }>
 
 type PathWithBoundary = Path & { boundary?: PathBoundary }
@@ -56,7 +66,52 @@ type Props = {
   pictureId: string
 }
 
-export class Canvas extends React.Component<Props, {}> {
+type BottomMenuState = {
+  type: 'lasso'
+  state: 'idle' | 'drawing' | 'closed'
+}
+
+type State = {
+  bottomMenuState: BottomMenuState | undefined
+}
+
+const safeAreaInsetBottom = (() => {
+  const propKey = '--kakeru-saib'
+  document.body.style.setProperty(propKey, 'env(safe-area-inset-bottom, 0px)')
+  const val = getComputedStyle(document.body).getPropertyValue(propKey)
+  const m = val.match(/^(\d+)px$/)
+  return m == null ? 0 : parseInt(m[1], 10)
+})()
+
+const BottomMenu = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0;
+  padding-bottom: 16px;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  text-align: center;
+`
+
+const BottomMenuItem = styled.button`
+  margin: 0;
+  padding: 5px;
+  display: inline-block;
+  background: #aaab;
+  border: 0;
+  border-radius: 2px;
+  & + & {
+    margin-left: 5px;
+  }
+`
+
+export class Canvas extends React.Component<Props, State> {
+  state: State = {
+    bottomMenuState: undefined
+  }
+
   private canvasElement: HTMLCanvasElement | null = null
   private parentElement: Element | null = null
   private renderingContext: CanvasRenderingContext2D | null = null
@@ -172,17 +227,42 @@ export class Canvas extends React.Component<Props, {}> {
     )
 
     fs.push(
-      this.drawingService.tool.subscribe((tool) => {
+      this.drawingService.tool.subscribe((tool, prev) => {
         if (tool !== 'lasso' && this.currentLasso != null) {
           this.currentLasso = null
           this.tickDraw()
         }
+
+        this.refreshBottomMenuState(tool, prev)
       })
     )
 
     this.cleanUpFunctions = fs
 
     this.onUpdatePictureId(true)
+
+    this.refreshBottomMenuState(this.drawingService.tool.value)
+  }
+
+  private refreshBottomMenuState(currentTool: Tool, prevTool?: Tool) {
+    if (prevTool === currentTool) return
+
+    let state: State
+    switch (currentTool) {
+      case 'lasso':
+        state = { bottomMenuState: { type: 'lasso', state: 'idle' } }
+        break
+
+      default:
+        state = { bottomMenuState: undefined }
+    }
+
+    if (prevTool == null) {
+      // eslint-disable-next-line react/no-direct-mutation-state
+      this.state = state
+    } else {
+      this.setState(state)
+    }
   }
 
   private onUpdatePictureId(first: boolean = false) {
@@ -192,6 +272,7 @@ export class Canvas extends React.Component<Props, {}> {
       this.paths = new Map()
       this.drawingService.scale.next(1.0)
       this.activePointers = new Map()
+      this.setState({ bottomMenuState: undefined })
     }
     this.checkOperationStack()
 
@@ -236,7 +317,44 @@ export class Canvas extends React.Component<Props, {}> {
   }
 
   render() {
-    return <canvas ref={this.canvasRef} style={{}}></canvas>
+    return (
+      <>
+        <canvas ref={this.canvasRef}></canvas>
+        {this.bottomMenu()}
+      </>
+    )
+  }
+
+  bottomMenu() {
+    const state = this.state.bottomMenuState
+    if (state == null) return null
+
+    switch (state.type) {
+      case 'lasso': {
+        switch (state.state) {
+          case 'idle':
+            return (
+              <BottomMenu>
+                <BottomMenuItem onClick={() => this.handlePaste()}>Paste</BottomMenuItem>
+              </BottomMenu>
+            )
+          case 'drawing':
+            return null
+          case 'closed':
+            return (
+              <BottomMenu>
+                <BottomMenuItem onClick={() => this.handlePaste()}>Paste</BottomMenuItem>
+                <BottomMenuItem onClick={() => this.handleDelete()}>Delete</BottomMenuItem>
+                <BottomMenuItem onClick={() => this.handleCopy()}>Copy</BottomMenuItem>
+              </BottomMenu>
+            )
+        }
+        break
+      }
+
+      default:
+        return null
+    }
   }
 
   setCanvasElement(elem: HTMLCanvasElement | null) {
@@ -269,7 +387,10 @@ export class Canvas extends React.Component<Props, {}> {
       addEventListener(elem, 'pointermove', this.handlePointerMove.bind(this)),
       addEventListener(elem, 'pointerup', this.handlePointerUp.bind(this)),
       addEventListener(elem, 'pointercancel', this.handlePointerCancel.bind(this)),
-      addEventListener(window, 'keydown', this.handleWindowKeyDown.bind(this))
+      addEventListener(window, 'keydown', this.handleWindowKeyDown.bind(this)),
+      addEventListener(document, 'copy', this.handleCopy.bind(this)),
+      addEventListener(document, 'cut', this.handleCut.bind(this)),
+      addEventListener(document, 'paste', this.handlePaste.bind(this))
     ]
 
     const ro = new ResizeObserver(() => {
@@ -398,13 +519,25 @@ export class Canvas extends React.Component<Props, {}> {
 
       case 'remove':
         this.removePathsInternal(operation.paths)
+        if (operation.lasso != null) {
+          this.currentLasso = null
+        }
         break
 
-      case 'move':
+      case 'move': {
         this.movePathsInternal(operation.paths, operation.dx, operation.dy)
-        if (redo) {
-          this.moveLassoById(operation.lassoId, operation.dx, operation.dy)
-          this.removeLassoWithWrongId(operation.lassoId)
+        const lasso = operation.lasso.copy()
+        lasso.offsetX += operation.dx
+        lasso.offsetY += operation.dy
+        this.currentLasso = lasso
+        break
+      }
+
+      case 'paste':
+        this.addPathsInternal(operation.paths)
+        this.currentLasso = createLassoFromOperation(operation)
+        if (this.drawingService.tool.value !== 'lasso') {
+          this.drawingService.tool.next('lasso')
         }
         break
     }
@@ -423,12 +556,19 @@ export class Canvas extends React.Component<Props, {}> {
 
       case 'remove':
         this.addPathsInternal(operation.paths)
+        if (operation.lasso != null) {
+          this.currentLasso = operation.lasso.copy()
+        }
         break
 
       case 'move':
         this.movePathsInternal(operation.paths, 0, 0)
-        this.moveLassoById(operation.lassoId, -operation.dx, -operation.dy)
-        this.removeLassoWithWrongId(operation.lassoId)
+        this.currentLasso = operation.lasso.copy()
+        break
+
+      case 'paste':
+        this.removePathsInternal(operation.paths)
+        this.currentLasso = null
         break
     }
 
@@ -526,6 +666,70 @@ export class Canvas extends React.Component<Props, {}> {
         this.undo()
       }
     }
+
+    if (event.key === 'Delete' || event.key === 'Backspace') {
+      this.handleDelete()
+    }
+  }
+
+  private async handleCopy() {
+    const { currentLasso } = this
+    if (currentLasso == null) return
+
+    const paths = getOverlappingPaths(currentLasso, this.paths)
+    if (paths.length === 0) return
+
+    await writePathsToClipboard(paths)
+  }
+
+  private async handleCut() {
+    const { currentLasso } = this
+    if (currentLasso == null) return
+
+    const paths = getOverlappingPaths(currentLasso, this.paths)
+    if (paths.length === 0) return
+
+    await writePathsToClipboard(paths)
+
+    this.doOperation({ type: 'remove', paths, lasso: currentLasso.copy() })
+  }
+
+  private handleDelete() {
+    const { currentLasso } = this
+    if (currentLasso == null) return
+
+    const paths = getOverlappingPaths(currentLasso, this.paths)
+    if (paths.length === 0) return
+
+    this.doOperation({ type: 'remove', paths, lasso: currentLasso.copy() })
+  }
+
+  private async handlePaste(event?: ClipboardEvent) {
+    const paths = await readPathsFromClipboard(event)
+    if (paths == null || paths.length === 0) return
+
+    const { scrollLeft, scrollTop } = this
+    const scale = this.drawingService.scale.value
+
+    const { minX, minY, maxX, maxY } = calculatePathsBoundary(paths)
+    const pathsWidth = maxX - minX
+    const pathsHeight = maxY - minY
+    const minScreenX = scrollLeft / scale
+    const minScreenY = scrollTop / scale
+    const screenWidth = this.width / scale
+    const screenHeight = this.height / scale
+
+    const idealMinX = minScreenX + (screenWidth - pathsWidth) / 2
+    const idealMinY = minScreenY + (screenHeight - pathsHeight) / 2
+
+    const dx = idealMinX - minX
+    const dy = idealMinY - minY
+    for (const path of paths) {
+      path.offsetX += dx
+      path.offsetY += dy
+    }
+
+    this.doOperation({ type: 'paste', paths, offsetX: idealMinX, offsetY: idealMinY })
   }
 
   private getPointFromMouseEvent(event: MouseEvent, ignoreScroll: boolean = false): Point {
@@ -576,7 +780,7 @@ export class Canvas extends React.Component<Props, {}> {
     if (drawingPath == null) return
 
     this.drawingPath = null
-    if (drawingPath.points.length > 1) {
+    if (drawingPath.points.length >= 1) {
       this.doOperation({ type: 'add', paths: [drawingPath] })
     }
   }
@@ -637,6 +841,9 @@ export class Canvas extends React.Component<Props, {}> {
   private handlePointerDown(event: PointerEvent) {
     if (this.activePointers.size >= 2) return
 
+    // ignore non-primary button
+    if (event.button > 1) return
+
     this.canvasElement!.setPointerCapture(event.pointerId)
     this.activePointers.set(event.pointerId, toPointer(event))
 
@@ -687,6 +894,7 @@ export class Canvas extends React.Component<Props, {}> {
             break
           }
           this.currentLasso = new Lasso([p])
+          this.setState({ bottomMenuState: { type: 'lasso', state: 'drawing' } })
           this.tickDraw()
           break
         }
@@ -994,17 +1202,12 @@ export class Canvas extends React.Component<Props, {}> {
   drawScrollBar(ctx: CanvasRenderingContext2D) {
     const { min, max } = Math
 
-    let minDrawedX_ = Number.POSITIVE_INFINITY
-    let minDrawedY_ = Number.POSITIVE_INFINITY
-    let maxDrawedX_ = Number.NEGATIVE_INFINITY
-    let maxDrawedY_ = Number.NEGATIVE_INFINITY
-    for (const path of this.paths.values()) {
-      const b = getPathBoundary(path)
-      minDrawedX_ = min(minDrawedX_, b.minX)
-      minDrawedY_ = min(minDrawedY_, b.minY)
-      maxDrawedX_ = max(maxDrawedX_, b.maxX)
-      maxDrawedY_ = max(maxDrawedY_, b.maxY)
-    }
+    const {
+      minX: minDrawedX_,
+      minY: minDrawedY_,
+      maxX: maxDrawedX_,
+      maxY: maxDrawedY_
+    } = calculatePathsBoundary(this.paths.values())
 
     const { scrollLeft, scrollTop, width, height, dpr } = this
     const scale = this.drawingService.scale.value
@@ -1028,7 +1231,7 @@ export class Canvas extends React.Component<Props, {}> {
     const maxX = max(maxViewX, maxDrawedX)
     const maxY = max(maxViewY, maxDrawedY)
     const horizontalBarLength = width - offsetP * 2
-    const verticalBarLength = height - offsetP * 2
+    const verticalBarLength = height - offsetP * 2 - safeAreaInsetBottom
     const shiftX = -minX
     const shiftY = -minY
     const scaleX = horizontalBarLength / (maxX - minX)
@@ -1042,7 +1245,7 @@ export class Canvas extends React.Component<Props, {}> {
     ctx.fillStyle = colorV.toString()
     ctx.fillRect(
       ((minViewX + shiftX) * scaleX + offsetP) * dpr,
-      (height - offsetO1 - barWidth1) * dpr,
+      (height - offsetO1 - barWidth1 - safeAreaInsetBottom) * dpr,
       (maxViewX - minViewX) * scaleX * dpr,
       barWidth1 * dpr
     )
@@ -1057,7 +1260,7 @@ export class Canvas extends React.Component<Props, {}> {
       ctx.fillStyle = colorD.toString()
       ctx.fillRect(
         ((minDrawedX + shiftX) * scaleX + offsetP) * dpr,
-        (height - offsetO2 - barWidth2) * dpr,
+        (height - offsetO2 - barWidth2 - safeAreaInsetBottom) * dpr,
         (maxDrawedX - minDrawedX) * scaleX * dpr,
         barWidth2 * dpr
       )
@@ -1149,18 +1352,15 @@ export class Canvas extends React.Component<Props, {}> {
     currentLasso.resetAccumulation()
     if (dx === 0 && dy === 0) return
 
-    const paths: Path[] = []
-    for (const id of currentLasso.overlappingPathIds) {
-      const path = this.paths.get(id)
-      if (path != null) {
-        paths.push({ ...path })
-      }
-    }
+    const paths = getOverlappingPaths(currentLasso, this.paths)
 
     if (paths.length !== 0) {
+      const lasso = currentLasso.copy()
+      lasso.offsetX -= dx
+      lasso.offsetY -= dy
       this.doOperation({
         type: 'move',
-        lassoId: currentLasso.id,
+        lasso,
         paths,
         dx,
         dy
@@ -1175,8 +1375,10 @@ export class Canvas extends React.Component<Props, {}> {
     lasso.isClosed = true
     if (lassoLength(lasso, this.drawingService.scale.value) < 50) {
       this.currentLasso = null
+      this.setState({ bottomMenuState: { type: 'lasso', state: 'idle' } })
     } else {
       addToSet(lasso.overlappingPathIds, selectPathsOverlappingWithLasso(this.paths, lasso))
+      this.setState({ bottomMenuState: { type: 'lasso', state: 'closed' } })
     }
     this.tickDraw()
   }
@@ -1200,6 +1402,17 @@ function drawPath(
   ctx.strokeStyle = color
   let first = true
   ctx.beginPath()
+
+  if (points.length === 1) {
+    const { x, y } = points[0]
+    const realX = ((x + offsetX + dx) * scale - scrollLeft) * dpr
+    const realY = ((y + offsetY + dy) * scale - scrollTop) * dpr
+    ctx.fillStyle = color
+    ctx.arc(realX, realY, (width * scale * dpr) / 2, 0, Math.PI * 2)
+    ctx.fill()
+    return
+  }
+
   if (isBezier) {
     let args: number[] = []
     for (const { x, y } of points) {
@@ -1325,6 +1538,11 @@ function* iteratePathPoints(
       yield* iterateBezierPoints(p0, p1, p2, p3, offsetX, offsetY, f)
     }
   } else {
+    if (points.length === 1) {
+      yield points[0]
+      return
+    }
+
     for (let i = 1; i < points.length; i++) {
       const pp = points[i - 1]
       const np = points[i]
@@ -1413,7 +1631,7 @@ function addToSet<T>(set: Set<T> | null | undefined, items: Iterable<T>) {
 }
 
 function smoothPath(path: Path | null, scale: number): void {
-  if (path == null) return
+  if (path == null || path.points.length < 2) return
   path.points = fitCurve(path.points, 5 / scale).flatMap((c, i) => (i === 0 ? c : c.slice(1)))
   path.isBezier = true
 }
@@ -1583,6 +1801,10 @@ class Lasso {
   get maxY(): number {
     return this.calculateOriginalBoundary().maxY + this.offsetY
   }
+
+  copy(): Lasso {
+    return Object.assign(new Lasso(), this)
+  }
 }
 
 class PathBoundary {
@@ -1598,11 +1820,12 @@ class PathBoundary {
     let minY = Number.POSITIVE_INFINITY
     let maxX = Number.NEGATIVE_INFINITY
     let maxY = Number.NEGATIVE_INFINITY
+    const w2 = path.width / 2
     for (const { x, y } of path.points) {
-      minX = Math.min(minX, x)
-      minY = Math.min(minY, y)
-      maxX = Math.max(maxX, x)
-      maxY = Math.max(maxY, y)
+      minX = Math.min(minX, x - w2)
+      minY = Math.min(minY, y - w2)
+      maxX = Math.max(maxX, x + w2)
+      maxY = Math.max(maxY, y + w2)
     }
 
     this.originalMinX = minX
@@ -1632,4 +1855,141 @@ function getPathBoundary(path: PathWithBoundary): PathBoundary {
 function toPointer(event: PointerEvent): Pointer {
   const { pointerId: id, pointerType: type, clientX, clientY } = event
   return { id, type, clientX, clientY }
+}
+
+async function writePathsToClipboard(paths: Path[]): Promise<void> {
+  const encodedPaths = (paths as Array<PathWithBoundary>).map(
+    ({ id: _id, boundary: _boundary, ...path }) => ({
+      ...path,
+      points: path.points.flatMap(({ x, y }) => [x, y]),
+      timestamp: path.timestamp?.toMillis()
+    })
+  )
+  const msgpackBase64 = btoa(String.fromCharCode(...encode(encodedPaths)))
+  const html = `<meta charset="utf-8"/><div data-kakeru-paths-msgpack="${msgpackBase64}"> </div>`
+  const item = new ClipboardItem({
+    'text/html': new Blob([html], { type: 'text/html' }),
+    'text/plain': new Blob([' '], { type: 'text/plain' })
+  })
+  await navigator.clipboard.write([item])
+}
+
+async function readPathsFromClipboard(event?: ClipboardEvent): Promise<Path[] | undefined> {
+  let data: string
+  if (event == null) {
+    const [item] = await navigator.clipboard.read()
+    let blob: Blob | null
+    try {
+      blob = await item.getType('text/html')
+      if (blob == null) return
+    } catch (e: unknown) {
+      return
+    }
+    data = await blob.text()
+  } else {
+    const items = event.clipboardData?.items
+    if (items == null) return
+    const item = Array.from(items).find((it) => it.type === 'text/html')
+    if (item == null) return
+    data = await new Promise<string>((resolve) => {
+      item.getAsString((data) => resolve(data))
+    })
+  }
+
+  try {
+    const match = data.match(/\bdata-kakeru-paths-msgpack="([^"]+)"/)
+    if (match == null) return
+    const rawPaths = decode(Uint8Array.from([...atob(match[1])].map((c) => c.charCodeAt(0))))
+    return checkPaths(rawPaths)
+  } catch (error: unknown) {
+    console.error(error)
+    return undefined
+  }
+}
+
+function checkPaths(rawPaths: unknown): Path[] {
+  if (!Array.isArray(rawPaths)) throw new Error()
+
+  return (rawPaths as Array<Record<string, unknown>>).map(
+    ({ color, width, points: rawPoints, offsetX, offsetY, isBezier, timestamp: rawTimestamp }) => {
+      if (
+        typeof color !== 'string' ||
+        typeof width !== 'number' ||
+        !Array.isArray(rawPoints) ||
+        typeof offsetX !== 'number' ||
+        typeof offsetY !== 'number' ||
+        typeof isBezier !== 'boolean' ||
+        typeof rawTimestamp !== 'number'
+      ) {
+        throw new Error()
+      }
+      const points: Array<Point> = []
+      let prev = -1
+      rawPoints.forEach((p, i) => {
+        if (typeof p !== 'number') throw new Error()
+        if (i % 2 === 0) {
+          prev = p
+        } else {
+          points.push({ x: prev, y: p })
+        }
+      })
+
+      const timestamp =
+        rawTimestamp != null ? firebase.firestore.Timestamp.fromMillis(rawTimestamp) : undefined
+      return {
+        id: generateId(),
+        color,
+        width,
+        points,
+        offsetX,
+        offsetY,
+        isBezier,
+        timestamp
+      }
+    }
+  )
+}
+
+function getOverlappingPaths(lasso: Lasso, pathsMap: Map<string, Path>): Array<Path> {
+  const paths: Array<Path> = []
+  for (const id of lasso.overlappingPathIds) {
+    const path = pathsMap.get(id)
+    if (path != null) {
+      paths.push({ ...path })
+    }
+  }
+  return paths
+}
+
+function calculatePathsBoundary(paths: Iterable<Path>): Boundary {
+  let minX = Number.POSITIVE_INFINITY
+  let minY = Number.POSITIVE_INFINITY
+  let maxX = Number.NEGATIVE_INFINITY
+  let maxY = Number.NEGATIVE_INFINITY
+  for (const path of paths) {
+    const b = getPathBoundary(path)
+    minX = Math.min(minX, b.minX)
+    minY = Math.min(minY, b.minY)
+    maxX = Math.max(maxX, b.maxX)
+    maxY = Math.max(maxY, b.maxY)
+  }
+  return { minX, minY, maxX, maxY }
+}
+
+function createLassoFromOperation(operation: Extract<Operation, { type: 'paste' }>): Lasso {
+  const { minX, minY, maxX, maxY } = calculatePathsBoundary(operation.paths)
+  const width = maxX - minX
+  const height = maxY - minY
+  const { offsetX, offsetY } = operation
+  const lasso = new Lasso([
+    { x: offsetX, y: offsetY },
+    { x: offsetX, y: offsetY + height },
+    { x: offsetX + width, y: offsetY + height },
+    { x: offsetX + width, y: offsetY }
+  ])
+  lasso.offsetX = 0
+  lasso.offsetY = 0
+  lasso.isClosed = true
+  lasso.overlappingPathIds = new Set(operation.paths.map(({ id }) => id))
+  return lasso
 }
