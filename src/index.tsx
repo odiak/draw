@@ -25,6 +25,7 @@ firebase.analytics()
 firebase.auth().onAuthStateChanged((user) => {
   if (user != null) {
     firebase.analytics().setUserId(user.uid)
+    firebase.analytics().setUserProperties({ anonymous: user.isAnonymous })
   }
 })
 

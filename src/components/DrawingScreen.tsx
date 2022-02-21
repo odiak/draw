@@ -1,16 +1,17 @@
-import React, { useEffect, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { ToolBar } from './ToolBar'
 import { useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { PictureService } from '../services/PictureService'
 import { Title } from './Title'
 import { Canvas } from './Canvas'
-
-type Props = {}
+import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
 
 const defaultTitle = 'Untitled'
 
-export function DrawingScreen({}: Props) {
+export const DrawingScreen: FC = () => {
+  useSetCurrentScreen('drawing')
+
   const { pictureId } = useParams<{ pictureId: string }>()
   const pictureService = PictureService.instantiate()
 

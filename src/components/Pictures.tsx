@@ -7,10 +7,13 @@ import { UserMenuButton } from './UserMenuButton'
 import { AuthService } from '../services/AuthService'
 import { useVariable } from '../utils/useVariable'
 import { NewButton } from './NewButton'
+import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
 
 type LoadingState = 'initial' | 'loading' | 'loaded'
 
-export const Pictures: FC<{}> = () => {
+export const Pictures: FC = () => {
+  useSetCurrentScreen('list')
+
   const pictureService = PictureService.instantiate()
   const authService = AuthService.instantiate()
 

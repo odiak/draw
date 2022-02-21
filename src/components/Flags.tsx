@@ -2,6 +2,7 @@ import React, { FC, useCallback } from 'react'
 import { ExperimentalSettingsService } from '../services/ExperimentalSettingsService'
 import styled from 'styled-components'
 import { useVariable } from '../utils/useVariable'
+import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
 
 const Container = styled.div`
   padding: 5px 10px;
@@ -13,6 +14,8 @@ const Label = styled.label`
 `
 
 export const Flags: FC<{}> = () => {
+  useSetCurrentScreen('flags')
+
   const settingsService = ExperimentalSettingsService.instantiate()
   const [settings] = useVariable(settingsService.experimentalSettings)
 
