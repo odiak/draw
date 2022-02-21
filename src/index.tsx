@@ -10,16 +10,7 @@ import { createGlobalStyle } from 'styled-components'
 import * as Sentry from '@sentry/react'
 import { Integrations } from '@sentry/tracing'
 
-firebase.initializeApp({
-  apiKey: 'AIzaSyC3uYAGMS5pIjJKlNyGkc4aqKn4U1fjV8w',
-  authDomain: 'draw-9a1e4.firebaseapp.com',
-  databaseURL: 'https://draw-9a1e4.firebaseio.com',
-  projectId: 'draw-9a1e4',
-  storageBucket: 'draw-9a1e4.appspot.com',
-  messagingSenderId: '251397130642',
-  appId: '1:251397130642:web:ae3b9c1dff554eea',
-  measurementId: 'G-KC20B58HEQ'
-})
+firebase.initializeApp(JSON.parse(process.env.FIREBASE_CONFIG!))
 firebase.analytics()
 
 firebase.auth().onAuthStateChanged((user) => {
@@ -30,7 +21,7 @@ firebase.auth().onAuthStateChanged((user) => {
 })
 
 Sentry.init({
-  dsn: 'https://1960c22d4cb84d36a5c718b27604a428@o488873.ingest.sentry.io/5550015',
+  dsn: process.env.SENTRY_DSN,
   integrations: [new Integrations.BrowserTracing()],
   tracesSampleRate: 1.0
 })
