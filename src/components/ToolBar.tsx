@@ -18,7 +18,7 @@ import { useMenu } from '../utils/useMenu'
 import { useVariable } from '../utils/useVariable'
 import { PictureService, Permission, AccessibilityLevel } from '../services/PictureService'
 import { AccessibilityMenuButton } from './AccessibilityMenuButton'
-import { MenuDivider, MenuItem, MenuItemWithAnchor, Menu } from './Menu'
+import { MenuDivider, MenuItem, MenuItemWithAnchor, Menu, MenuItemText } from './Menu'
 import { UserMenuButton } from './UserMenuButton'
 import { NewButton } from './NewButton'
 import { DrawingService, colors, widths } from '../services/DrawingService'
@@ -148,13 +148,19 @@ export function ToolBar({ pictureId }: Props) {
         <MenuButton ref={menuButtonRef}>
           <FontAwesomeIcon icon={faEllipsisH} className="icon" />
           <Menu ref={menuRef}>
-            <MenuItemToCopy text={imageLink}>Copy image link</MenuItemToCopy>
-            <MenuItemToCopy text={`[![](${imageLink})](${pageLink})`}>
-              Copy image link for Markdown
-            </MenuItemToCopy>
-            <MenuItemToCopy text={`[${pageLink} ${imageLink}]`}>
-              Copy image link for Scrapbox
-            </MenuItemToCopy>
+            {permission?.accessibilityLevel === 'private' ? (
+              <MenuItemText>No image link for this access level</MenuItemText>
+            ) : (
+              <>
+                <MenuItemToCopy text={imageLink}>Copy image link</MenuItemToCopy>
+                <MenuItemToCopy text={`[![](${imageLink})](${pageLink})`}>
+                  Copy image link for Markdown
+                </MenuItemToCopy>
+                <MenuItemToCopy text={`[${pageLink} ${imageLink}]`}>
+                  Copy image link for Scrapbox
+                </MenuItemToCopy>
+              </>
+            )}
             <MenuDivider />
             <MenuItemWithLink link="https://about.kakeru.app/">About Kakeru</MenuItemWithLink>
             <MenuItemWithLink link="/flags">Experimental flags</MenuItemWithLink>

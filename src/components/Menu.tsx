@@ -27,6 +27,10 @@ export const MenuItem = styled.li`
   }
 `
 
+export const MenuItemText = styled.li`
+  padding: 6px 8px;
+`
+
 export const MenuItemWithAnchor = styled.li`
   padding: 0;
   cursor: pointer;
