@@ -55,6 +55,8 @@ export class PictureService {
 
   private authService = AuthService.instantiate()
 
+  private touching: { pictureId: string } | undefined
+
   private pathsById(pictureId: string) {
     return this.picturesCollection.doc(pictureId).collection('paths').withConverter(pathConverter)
   }
@@ -103,6 +105,7 @@ export class PictureService {
     })
 
     this.setPictureOwnerIfNotExist(pictureId)
+    this.touchPicture(pictureId)
   }
 
   removePaths(pictureId: string, pathIdsToRemove: string[]) {
@@ -115,6 +118,7 @@ export class PictureService {
     })
 
     this.setPictureOwnerIfNotExist(pictureId)
+    this.touchPicture(pictureId)
   }
 
   updatePaths(pictureId: string, updates: Array<Partial<Path> & Pick<Path, 'id'>>) {
@@ -127,6 +131,7 @@ export class PictureService {
     })
 
     this.setPictureOwnerIfNotExist(pictureId)
+    this.touchPicture(pictureId)
   }
 
   watchPicture(
@@ -237,6 +242,21 @@ export class PictureService {
       qs.docs.map((ds) => ({ ...ds.data(), id: ds.id })),
       qs.docs[limit - 1]?.data()?.createdAt
     ]
+  }
+
+  private async touchPicture(pictureId: string) {
+    if (this.touching?.pictureId === pictureId) return
+
+    const touching = { pictureId }
+    this.touching = touching
+    setTimeout(async () => {
+      await fetch(`https://i.kakeru.app/update/${pictureId}`, { method: 'POST' }).catch(
+        () => undefined
+      )
+      if (this.touching === touching) {
+        this.touching = undefined
+      }
+    }, 1000)
   }
 }
 
