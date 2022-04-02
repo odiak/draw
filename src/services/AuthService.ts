@@ -1,14 +1,22 @@
 import { memo } from '../utils/memo'
-import firebase from 'firebase/app'
 import { Variable } from '../utils/Variable'
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInAnonymously,
+  signInWithPopup,
+  signInWithRedirect,
+  User,
+  UserCredential
+} from 'firebase/auth'
 
-export type User = firebase.User
+export { User }
 
 export class AuthService {
   static readonly instantiate = memo(() => new AuthService())
 
-  private auth = firebase.auth()
-  private googleAuthProvider = new firebase.auth.GoogleAuthProvider()
+  private auth = getAuth()
+  private googleAuthProvider = new GoogleAuthProvider()
 
   readonly currentUser = new Variable<User | null>(null)
 
@@ -17,7 +25,7 @@ export class AuthService {
 
     this.auth.onAuthStateChanged(async (user) => {
       if (user == null) {
-        const { user: anonUser } = await this.auth.signInAnonymously()
+        const { user: anonUser } = await signInAnonymously(this.auth)
         if (anonUser != null) {
           this.currentUser.next(anonUser)
         }
@@ -27,13 +35,13 @@ export class AuthService {
     })
   }
 
-  async signInWithGoogle(usePopup: boolean = true): Promise<firebase.auth.UserCredential | null> {
+  async signInWithGoogle(usePopup: boolean = true): Promise<UserCredential | null> {
     if (!usePopup) {
-      await this.auth.signInWithRedirect(this.googleAuthProvider)
+      await signInWithRedirect(this.auth, this.googleAuthProvider)
       return null
     }
 
-    const cred = await this.auth.signInWithPopup(this.googleAuthProvider).catch((e: unknown) => {
+    const cred = await signInWithPopup(this.auth, this.googleAuthProvider).catch((e: unknown) => {
       console.error(e)
       const message = extractMessage(e)
       if (

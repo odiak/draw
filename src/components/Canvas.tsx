@@ -7,7 +7,6 @@ import { fitCurve } from '@odiak/fit-curve'
 import { ExperimentalSettingsService } from '../services/ExperimentalSettingsService'
 import { Color } from '../utils/Color'
 import { DrawingService } from '../services/DrawingService'
-import firebase from 'firebase'
 import { encode, decode } from '@msgpack/msgpack'
 import styled from 'styled-components'
 
@@ -1862,7 +1861,7 @@ async function writePathsToClipboard(paths: Path[]): Promise<void> {
     ({ id: _id, boundary: _boundary, ...path }) => ({
       ...path,
       points: path.points.flatMap(({ x, y }) => [x, y]),
-      timestamp: path.timestamp?.toMillis()
+      timestamp: path.timestamp?.getTime()
     })
   )
   const msgpackBase64 = btoa(String.fromCharCode(...encode(encodedPaths)))
@@ -1934,8 +1933,7 @@ function checkPaths(rawPaths: unknown): Path[] {
         }
       })
 
-      const timestamp =
-        rawTimestamp != null ? firebase.firestore.Timestamp.fromMillis(rawTimestamp) : undefined
+      const timestamp = rawTimestamp != null ? new Date(rawTimestamp) : undefined
       return {
         id: generateId(),
         color,

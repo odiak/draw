@@ -1,8 +1,18 @@
 import { memo } from '../utils/memo'
-import firebase from 'firebase/app'
-import { AuthService, User } from './AuthService'
+import { AuthService } from './AuthService'
 import { localStorage } from '../utils/localStorage'
-import { Variable } from '../utils/Variable'
+import {
+  collection,
+  doc,
+  getDocs,
+  getFirestore,
+  limit,
+  orderBy,
+  query,
+  setDoc,
+  where
+} from 'firebase/firestore'
+import { getFunctions, httpsCallable } from 'firebase/functions'
 
 const migrationTokenKey = 'KAKERU_MIGRATION_TOKEN'
 
@@ -15,13 +25,13 @@ export class MigrationService {
   static readonly instantiate = memo(() => new MigrationService())
 
   private authService = AuthService.instantiate()
-  private db = firebase.firestore()
-  private migrationTokensCollection = this.db.collection('migrationTokens')
-  private picturesCollection = this.db.collection('pictures')
-  private migrateDataFunction: MigrateDataFunctionType = firebase
-    .app()
-    .functions('asia-northeast1')
-    .httpsCallable('migrateData')
+  private db = getFirestore()
+  private migrationTokensCollection = collection(this.db, 'migrationTokens')
+  private picturesCollection = collection(this.db, 'pictures')
+  private migrateDataFunction: MigrateDataFunctionType = httpsCallable(
+    getFunctions(undefined, 'asia-northeast1'),
+    'migrateData'
+  )
 
   private readonly migrationFinishedCallbacks = new Set<() => void>()
 
@@ -30,11 +40,14 @@ export class MigrationService {
     if (currentUser == null || !currentUser.isAnonymous) return
 
     // check if there are some drawings
-    const qs = await this.picturesCollection
-      .where('ownerId', '==', currentUser.uid)
-      .limit(1)
-      .orderBy('createdAt', 'desc')
-      .get()
+    const qs = await getDocs(
+      query(
+        this.picturesCollection,
+        where('ownerId', '==', currentUser.uid),
+        limit(1),
+        orderBy('createdAt', 'desc')
+      )
+    )
     if (qs.docs.length === 0) return
 
     const token = Array.from(crypto.getRandomValues(new Uint8Array(30)))
@@ -47,7 +60,7 @@ export class MigrationService {
       // nothing
     }
 
-    await this.migrationTokensCollection.doc(token).set({ uid: currentUser.uid })
+    await setDoc(doc(this.migrationTokensCollection, token), { uid: currentUser.uid })
   }
 
   async migrateData(): Promise<void> {

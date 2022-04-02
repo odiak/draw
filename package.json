@@ -44,7 +44,7 @@
     "@types/react-router-dom": "^5.1.5",
     "@types/styled-components": "^5.1.1",
     "classnames": "^2.2.6",
-    "firebase": "^8.6.5",
+    "firebase": "^9.6.10",
     "fp-ts": "^2.11.1",
     "io-ts": "^2.2.16",
     "react": "^17.0.2",
