@@ -1,4 +1,4 @@
-import React, { FC, useCallback } from 'react'
+import { FC, useCallback } from 'react'
 import { ExperimentalSettingsService } from '../services/ExperimentalSettingsService'
 import styled from 'styled-components'
 import { useVariable } from '../utils/useVariable'
@@ -13,7 +13,7 @@ const Label = styled.label`
   margin-bottom: 14px;
 `
 
-export const Flags: FC<{}> = () => {
+const Flags: FC<{}> = () => {
   useSetCurrentScreen('flags')
 
   const settingsService = ExperimentalSettingsService.instantiate()
@@ -53,3 +53,4 @@ export const Flags: FC<{}> = () => {
     </Container>
   )
 }
+export default Flags

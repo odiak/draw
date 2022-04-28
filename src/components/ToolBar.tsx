@@ -30,7 +30,7 @@ type Props = {
 const WrappedToolButton: FC<{
   tool: Tool
   selectedTool: Tool
-  onSelectedToolChange: (tool: Tool) => void
+  onSelectedToolChange: (_tool: Tool) => void
 }> = ({ tool, selectedTool, onSelectedToolChange }) => {
   return (
     <ToolButton

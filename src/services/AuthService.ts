@@ -10,7 +10,7 @@ import {
   UserCredential
 } from 'firebase/auth'
 
-export { User }
+export type { User }
 
 export class AuthService {
   static readonly instantiate = memo(() => new AuthService())

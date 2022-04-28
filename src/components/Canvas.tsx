@@ -56,7 +56,7 @@ type GestureInfo = {
 const zoomScaleFactor = 1.1
 const zoomScaleFactorForWheel = 1.05
 
-const isLikeMacOs = /\bMac OS X\b/i.test(navigator.userAgent)
+const isLikeMacOs = typeof navigator !== 'undefined' && /\bMac OS X\b/i.test(navigator.userAgent)
 
 const scrollBarColorV = Color.fromString('#0007')
 const scrollBarColorD = Color.fromString('#111a')
@@ -75,6 +75,8 @@ type State = {
 }
 
 const safeAreaInsetBottom = (() => {
+  if (typeof document === 'undefined') return 0
+
   const propKey = '--kakeru-saib'
   document.body.style.setProperty(propKey, 'env(safe-area-inset-bottom, 0px)')
   const val = getComputedStyle(document.body).getPropertyValue(propKey)

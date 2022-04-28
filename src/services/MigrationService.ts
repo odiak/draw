@@ -1,3 +1,4 @@
+import '../firebase'
 import { memo } from '../utils/memo'
 import { AuthService } from './AuthService'
 import { localStorage } from '../utils/localStorage'
@@ -16,7 +17,7 @@ import { getFunctions, httpsCallable } from 'firebase/functions'
 
 const migrationTokenKey = 'KAKERU_MIGRATION_TOKEN'
 
-type MigrateDataFunctionType = (data: { token: string }) => Promise<{ data: any }>
+type MigrateDataFunctionType = (_data: { token: string }) => Promise<{ data: any }>
 
 /**
  * A service class to migrate drawings of anonymous account to non-anonymous account.

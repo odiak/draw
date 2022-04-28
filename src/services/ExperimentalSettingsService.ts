@@ -17,11 +17,13 @@ export class ExperimentalSettingsService {
   constructor() {
     this.experimentalSettings = new Variable(this.deserializeExperimentalSettings())
 
-    window.addEventListener('storage', (event) => {
-      if (event.key === drawingSettingsKey && event.storageArea === localStorage) {
-        this.experimentalSettings.next(this.deserializeExperimentalSettings())
-      }
-    })
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', (event) => {
+        if (event.key === drawingSettingsKey && event.storageArea === localStorage) {
+          this.experimentalSettings.next(this.deserializeExperimentalSettings())
+        }
+      })
+    }
   }
 
   private deserializeExperimentalSettings(): Partial<ExperimentalSettings> {
