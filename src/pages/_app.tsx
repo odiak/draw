@@ -3,6 +3,10 @@ import Head from 'next/head'
 import { FC, useEffect } from 'react'
 import { createGlobalStyle } from 'styled-components'
 import { MigrationService } from '../services/MigrationService'
+import { config } from '@fortawesome/fontawesome-svg-core'
+import '@fortawesome/fontawesome-svg-core/styles.css'
+
+config.autoAddCss = false
 
 const GlobalStyle = createGlobalStyle`
   html {
@@ -11,7 +15,7 @@ const GlobalStyle = createGlobalStyle`
 
   html,
   body,
-  #app {
+  #__next {
     width: 100%;
     height: 100%;
     margin: 0;
