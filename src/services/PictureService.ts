@@ -1,3 +1,4 @@
+import '../firebase'
 import { AuthService, User } from './AuthService'
 import { memo } from '../utils/memo'
 import {
@@ -20,7 +21,8 @@ import {
   query,
   startAfter,
   onSnapshot,
-  setDoc
+  setDoc,
+  getDoc
 } from 'firebase/firestore'
 
 export type Point = { x: number; y: number }
@@ -175,6 +177,10 @@ export class PictureService {
     )
 
     return unwatch
+  }
+
+  async fetchPicture(pictureId: string): Promise<PictureWithId | null> {
+    return (await getDoc(this.pictureRefById(pictureId))).data() ?? null
   }
 
   watchPaths(pictureId: string, callback: (u: PathsUpdate) => void): () => void {

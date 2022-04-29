@@ -1,3 +1,4 @@
+import '../firebase'
 import { getAnalytics, setCurrentScreen } from 'firebase/analytics'
 import { useEffect } from 'react'
 

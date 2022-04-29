@@ -6,7 +6,8 @@
   "extends": [
     "eslint:recommended",
     "plugin:react/recommended",
-    "plugin:@typescript-eslint/eslint-recommended"
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@next/next/recommended"
   ],
   "globals": {
     "Atomics": "readonly",
@@ -32,6 +33,7 @@
     ],
     "eqeqeq": ["error", "always", { "null": "ignore" }],
     "react/prop-types": "off",
-    "no-extra-semi": "off"
+    "no-extra-semi": "off",
+    "react/react-in-jsx-scope": "off"
   }
 }

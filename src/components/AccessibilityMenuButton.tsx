@@ -47,7 +47,7 @@ const StyledMenuItem = styled(MenuItem)`
 export const AccessibilityMenuButton: FC<{
   className?: string
   permission: Permission
-  onAccessibilityLevelChange?: (accLevel: AccessibilityLevel) => void
+  onAccessibilityLevelChange?: (_accLevel: AccessibilityLevel) => void
 }> = ({ className, permission, onAccessibilityLevelChange }) => {
   const { menuRef, buttonRef } = useMenu()
 

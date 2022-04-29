@@ -2,7 +2,7 @@ import React, { FC, useState, useEffect, useCallback } from 'react'
 import styled from 'styled-components'
 import { Title } from './Title'
 import { PictureService, PictureWithId, Anchor } from '../services/PictureService'
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import { UserMenuButton } from './UserMenuButton'
 import { AuthService } from '../services/AuthService'
 import { useVariable } from '../utils/useVariable'
@@ -41,9 +41,10 @@ export const Pictures: FC = () => {
   )
 
   useEffect(() => {
-    if (currentUser != null) {
+    if (currentUser != null && typeof window !== 'undefined') {
       fetchPictures(undefined)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser])
 
   const onClick = useCallback(() => {
@@ -62,10 +63,12 @@ export const Pictures: FC = () => {
         <H>My boards</H>
         <PictureList>
           {pictures.map((p) => (
-            <PictureListItem key={p.id} to={`/${p.id}`}>
-              <PictureThumnail src={`https://i.kakeru.app/${p.id}-w380-h300.png`} />
-              <PictureTitle>{p.title ?? 'Untitled'}</PictureTitle>
-            </PictureListItem>
+            <Link key={p.id} href={`/${p.id}`} passHref>
+              <PictureListItem>
+                <PictureThumnail src={`https://i.kakeru.app/${p.id}-w380-h300.png`} />
+                <PictureTitle>{p.title ?? 'Untitled'}</PictureTitle>
+              </PictureListItem>
+            </Link>
           ))}
         </PictureList>
         {loadingState === 'loaded' && anchor != null && <Button onClick={onClick}>More</Button>}
@@ -99,7 +102,7 @@ const PictureList = styled.div`
   flex-wrap: wrap;
 `
 
-const PictureListItem = styled(Link)`
+const PictureListItem = styled.a`
   width: 190px;
   height: 150px;
   margin: 5px;

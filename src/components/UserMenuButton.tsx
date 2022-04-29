@@ -1,6 +1,6 @@
 import React, { FC, useCallback } from 'react'
 import { AuthService } from '../services/AuthService'
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import { Menu, MenuItem, MenuItemWithAnchor } from './Menu'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser } from '@fortawesome/free-solid-svg-icons'
@@ -37,7 +37,9 @@ export const UserMenuButton: FC<{ className?: string }> = ({ className }) => {
       )}
       <Menu ref={accountMenuRef}>
         <MenuItemWithAnchor>
-          <Link to="/boards">My boards</Link>
+          <Link href="/boards">
+            <a>My boards</a>
+          </Link>
         </MenuItemWithAnchor>
         {currentUser != null &&
           (currentUser.isAnonymous ? (
