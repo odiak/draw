@@ -41,7 +41,7 @@ export const Pictures: FC = () => {
   )
 
   useEffect(() => {
-    if (currentUser != null) {
+    if (currentUser != null && typeof window !== 'undefined') {
       fetchPictures(undefined)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
