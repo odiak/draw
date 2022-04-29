@@ -4,9 +4,8 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "start": "webpack serve",
-    "build": "webpack",
-    "build:prod": "webpack --config webpack.config.production.js"
+    "start": "next dev",
+    "build": "next build"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^12.1.5",
