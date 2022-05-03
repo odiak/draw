@@ -24,6 +24,7 @@ import {
   setDoc,
   getDoc
 } from 'firebase/firestore'
+import { imageBaseUrl } from '../constants'
 
 export type Point = { x: number; y: number }
 export type Path = {
@@ -281,9 +282,7 @@ export class PictureService {
     const touching = { pictureId }
     this.touching = touching
     setTimeout(async () => {
-      await fetch(`https://i.kakeru.app/update/${pictureId}`, { method: 'POST' }).catch(
-        () => undefined
-      )
+      await fetch(`${imageBaseUrl}/update/${pictureId}`, { method: 'POST' }).catch(() => undefined)
       if (this.touching === touching) {
         this.touching = undefined
       }

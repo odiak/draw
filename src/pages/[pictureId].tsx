@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import { Canvas } from '../components/Canvas'
 import { TitleAndOgp } from '../components/TitleAndOgp'
 import { ToolBar } from '../components/ToolBar'
-import { baseUrl } from '../constants'
+import { baseUrl, imageBaseUrl } from '../constants'
 import { PictureService, PictureWithId } from '../services/PictureService'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
 
@@ -42,6 +42,7 @@ const DrawingPage: FC<Props> = ({ pictureId, picture }) => {
       <TitleAndOgp
         noOgp={picture === null || picture.accessibilityLevel === 'private'}
         title={title === null || emptyPattern.test(title) ? defaultTitle : title}
+        image={`${imageBaseUrl}/${pictureId}-w500-h280-x70-opaque.png`}
         url={`${baseUrl}/${pictureId}`}
       />
       <Container>

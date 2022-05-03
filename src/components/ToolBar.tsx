@@ -22,6 +22,7 @@ import { MenuDivider, MenuItem, MenuItemWithAnchor, Menu, MenuItemText } from '.
 import { UserMenuButton } from './UserMenuButton'
 import { NewButton } from './NewButton'
 import { DrawingService, colors, widths } from '../services/DrawingService'
+import { baseUrl, imageBaseUrl } from '../constants'
 
 type Props = {
   pictureId: string
@@ -90,8 +91,8 @@ export function ToolBar({ pictureId }: Props) {
     return pictureService.watchPermission(pictureId, setPermission)
   }, [pictureService, pictureId])
 
-  const imageLink = `https://i.kakeru.app/${pictureId}.svg`
-  const pageLink = `https://kakeru.app/${pictureId}`
+  const imageLink = `${imageBaseUrl}/${pictureId}.svg`
+  const pageLink = `${baseUrl}/${pictureId}`
 
   const [tool, setTool] = useVariable(drawingService.tool)
   const [palmRejection, setPalmRejection] = useVariable(drawingService.palmRejectionEnabled)

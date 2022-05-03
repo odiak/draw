@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import { FC } from 'react'
-import { baseUrl } from '../constants'
+import { baseUrl, imageBaseUrl } from '../constants'
 
 type Props = {
   title: string
@@ -33,7 +33,9 @@ export const TitleAndOgp: FC<Props> = ({
           <meta property="og:type" content="article" />
           <meta
             property="og:image"
-            content={image ?? 'https://i.kakeru.app/3479fc77f3e5a0074a87e844cc44712f-w500-h300.png'}
+            content={
+              image ?? `${imageBaseUrl}/3479fc77f3e5a0074a87e844cc44712f-w500-h300-opaque.png`
+            }
           />
           <meta property="og:url" content={url ?? baseUrl} />
           {!noSiteName && <meta property="og:site_name" content="Kakeru" />}

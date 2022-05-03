@@ -8,6 +8,7 @@ import { AuthService } from '../services/AuthService'
 import { useVariable } from '../utils/useVariable'
 import { NewButton } from './NewButton'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
+import { imageBaseUrl } from '../constants'
 
 type LoadingState = 'initial' | 'loading' | 'loaded'
 
@@ -65,7 +66,7 @@ export const Pictures: FC = () => {
           {pictures.map((p) => (
             <Link key={p.id} href={`/${p.id}`} passHref>
               <PictureListItem>
-                <PictureThumnail src={`https://i.kakeru.app/${p.id}-w380-h300.png`} />
+                <PictureThumnail src={`${imageBaseUrl}/${p.id}-w380-h300.png`} />
                 <PictureTitle>{p.title ?? 'Untitled'}</PictureTitle>
               </PictureListItem>
             </Link>
