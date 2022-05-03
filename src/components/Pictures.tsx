@@ -1,6 +1,6 @@
 import React, { FC, useState, useEffect, useCallback } from 'react'
 import styled from 'styled-components'
-import { Title } from './Title'
+import { TitleAndOgp } from './TitleAndOgp'
 import { PictureService, PictureWithId, Anchor } from '../services/PictureService'
 import Link from 'next/link'
 import { UserMenuButton } from './UserMenuButton'
@@ -57,7 +57,7 @@ export const Pictures: FC = () => {
         <StyledNewButton />
         <StyledUserMenuButton />
       </ButtonsContainer>
-      <Title>My boards</Title>
+      <TitleAndOgp title="My boards" />
 
       <ContentContainer>
         <H>My boards</H>

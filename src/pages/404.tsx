@@ -1,9 +1,9 @@
 import { FC } from 'react'
-import { Title } from '../components/Title'
+import { TitleAndOgp } from '../components/TitleAndOgp'
 
 const NotFound: FC = () => (
   <>
-    <Title>Not Found</Title>
+    <TitleAndOgp noOgp title="Not Found" />
     <p>404 Not found</p>
   </>
 )

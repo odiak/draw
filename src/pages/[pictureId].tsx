@@ -2,24 +2,26 @@ import { GetServerSideProps } from 'next'
 import { FC, useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { Canvas } from '../components/Canvas'
-import { Title } from '../components/Title'
+import { TitleAndOgp } from '../components/TitleAndOgp'
 import { ToolBar } from '../components/ToolBar'
-import { PictureService } from '../services/PictureService'
+import { baseUrl } from '../constants'
+import { PictureService, PictureWithId } from '../services/PictureService'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
 
 type Props = {
   pictureId: string
-  title: string | null
+  picture: Pick<PictureWithId, 'title' | 'accessibilityLevel'> | null
 }
 
 const defaultTitle = 'Untitled'
+const emptyPattern = /^\s*$/
 
-const DrawingPage: FC<Props> = ({ pictureId, title: initialTitle }) => {
+const DrawingPage: FC<Props> = ({ pictureId, picture }) => {
   useSetCurrentScreen('drawing')
 
   const pictureService = PictureService.instantiate()
 
-  const [title, setTitle] = useState<string | null>(initialTitle)
+  const [title, setTitle] = useState<string | null>(picture?.title ?? null)
 
   useEffect(() => {
     const unsubscribe = pictureService.watchPicture(
@@ -37,7 +39,11 @@ const DrawingPage: FC<Props> = ({ pictureId, title: initialTitle }) => {
 
   return (
     <>
-      <Title>{title ?? defaultTitle}</Title>
+      <TitleAndOgp
+        noOgp={picture === null || picture.accessibilityLevel === 'private'}
+        title={title === null || emptyPattern.test(title) ? defaultTitle : title}
+        url={`${baseUrl}/${pictureId}`}
+      />
       <Container>
         <ToolBar pictureId={pictureId} />
         <div className="canvas-wrapper" suppressHydrationWarning>
@@ -74,15 +80,16 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
     return { notFound: true }
   }
 
-  const title = PictureService.instantiate()
+  const picture = PictureService.instantiate()
     .fetchPicture(pictureId)
-    .then((picture) => picture?.title ?? null)
     .catch(() => null)
 
   return {
-    props: title.then((title) => ({
+    props: picture.then((picture) => ({
       pictureId,
-      title
+      picture: picture
+        ? { title: picture.title, accessibilityLevel: picture.accessibilityLevel }
+        : null
     }))
   }
 }
