@@ -77,6 +77,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   const title = PictureService.instantiate()
     .fetchPicture(pictureId)
     .then((picture) => picture?.title ?? null)
+    .catch(() => null)
 
   return {
     props: title.then((title) => ({
