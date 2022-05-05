@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
+  "name": "Kakeru",
+  "short_name": "Kakeru",
+  "description": "A whiteboard app on the Web",
+  "start_url": "https://kakeru.app",
+  "theme_color": "#555555"
+}

@@ -52,6 +52,7 @@ const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
         <link rel="shortcut icon" href="/favicon.png" />
         <title key="title">Kakeru</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="manifest" href="/manifest.json" />
       </Head>
       <Component {...pageProps} />
     </>
