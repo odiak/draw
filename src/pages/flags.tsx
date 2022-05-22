@@ -3,6 +3,7 @@ import { ExperimentalSettingsService } from '../services/ExperimentalSettingsSer
 import styled from 'styled-components'
 import { useVariable } from '../utils/useVariable'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
+import { GetServerSideProps } from 'next'
 
 const Container = styled.div`
   padding: 5px 10px;
@@ -54,3 +55,5 @@ const Flags: FC<{}> = () => {
   )
 }
 export default Flags
+
+export const getServerSideProps: GetServerSideProps<{}> = async () => ({ props: {} })

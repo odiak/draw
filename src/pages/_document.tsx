@@ -14,6 +14,8 @@ import { Integrations } from '@sentry/tracing'
 import { initializeAnalytics, isSupported, setUserId, setUserProperties } from 'firebase/analytics'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
 import { getApp } from 'firebase/app'
+import { acceptLanguage } from 'next/dist/server/accept-header'
+import { defaultLanguage, Language, LanguageContext, languages } from '../LanguageContext'
 
 const app = getApp()
 
@@ -36,10 +38,15 @@ Sentry.init({
   tracesSampleRate: 1.0
 })
 
-class MyDocument extends Document {
-  static async getInitialProps(ctx: DocumentContext): Promise<DocumentInitialProps> {
+class MyDocument extends Document<{ lang: Language | undefined }> {
+  static async getInitialProps(
+    ctx: DocumentContext
+  ): Promise<DocumentInitialProps & { lang: Language | undefined }> {
     const sheet = new ServerStyleSheet()
     const originalRenderPage = ctx.renderPage
+
+    const rawLanguage = ctx.req?.headers?.['accept-language']
+    const lang = (acceptLanguage(rawLanguage, languages) as Language | '') || undefined
 
     try {
       ctx.renderPage = () =>
@@ -55,7 +62,8 @@ class MyDocument extends Document {
             {initialProps.styles}
             {sheet.getStyleElement()}
           </Fragment>
-        ]
+        ],
+        lang
       }
     } finally {
       sheet.seal()
@@ -64,10 +72,12 @@ class MyDocument extends Document {
 
   render() {
     return (
-      <Html lang="en" prefix="og: https://ogp.me/ns#">
+      <Html lang={this.props.lang} prefix="og: https://ogp.me/ns#">
         <Head />
         <body>
-          <Main />
+          <LanguageContext.Provider value={this.props.lang}>
+            <Main />
+          </LanguageContext.Provider>
           <NextScript />
         </body>
       </Html>

@@ -1,3 +1,4 @@
+import { GetServerSideProps } from 'next'
 import { useRouter } from 'next/router'
 import { FC, useEffect } from 'react'
 import { TitleAndOgp } from '../components/TitleAndOgp'
@@ -21,3 +22,5 @@ const NewPicture: FC = () => {
   )
 }
 export default NewPicture
+
+export const getServerSideProps: GetServerSideProps<{}> = async () => ({ props: {} })
