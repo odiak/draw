@@ -1,25 +1,23 @@
 import Link from 'next/link'
 import { FC } from 'react'
 import { TitleAndOgp } from '../components/TitleAndOgp'
-import { Translate } from '../components/Translate'
+import { useTranslate } from '../i18n/translate'
 
-const NotFound: FC = () => (
-  <>
-    <Translate name="notFound.shortMessage">
-      {(text) => <TitleAndOgp noOgp title={text} />}
-    </Translate>
+const NotFound: FC = () => {
+  const t = useTranslate('notFound')
 
-    <h1>404</h1>
-    <p>
-      <Translate name="notFound.message" />
-    </p>
-    <p>
-      <Link href="/boards" passHref>
-        <a>
-          <Translate name="notFound.goToBoardsList" />
-        </a>
-      </Link>
-    </p>
-  </>
-)
+  return (
+    <>
+      <TitleAndOgp noOgp title={t('shortMessage')} />
+
+      <h1>404</h1>
+      <p>{t('message')}</p>
+      <p>
+        <Link href="/boards" passHref>
+          <a>{t('goToBoardsList')}</a>
+        </Link>
+      </p>
+    </>
+  )
+}
 export default NotFound

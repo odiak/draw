@@ -1,8 +1,9 @@
-import { defaultLanguage, Language, languages } from '../LanguageContext'
+import { useContext, useMemo } from 'react'
+import { defaultLanguage, Language, LanguageContext, languages } from '../LanguageContext'
 import { en } from './en'
 import { ja } from './ja'
 
-type Value = string | ((..._args: any[]) => string)
+type Value = string | ((...args: any[]) => string)
 type AllKeys<Data, Keys = keyof Data> = Keys extends keyof Data
   ? Keys extends string
     ? Data[Keys] extends Value
@@ -19,12 +20,38 @@ type Dig<Data, Keys extends string> = Keys extends `${infer Key}.${infer Rest}`
   ? Data[Keys]
   : never
 
+type RemovePrefix<
+  Keys extends string,
+  Prefix extends string
+> = Keys extends `${Prefix}.${infer Rest}` ? Rest : Prefix extends '' ? Keys : never
+
+type AllPrefixes<Keys extends string> = Keys extends `${infer Prefix}.${infer Rest}`
+  ? Prefix
+  : never
+
+// ↑ general things
+
 type Data = typeof en
 export type Keys = AllKeys<Data>
+type KeysWithoutPrefix<Prefix extends string> = RemovePrefix<Keys, Prefix>
+type Prefixes = AllPrefixes<Keys> | ''
 
-export type Args<K extends Keys> = Dig<Data, K> extends (..._args: infer A) => string ? A : []
+export type Args<K> = K extends Keys
+  ? Dig<Data, K> extends (...args: infer A) => string
+    ? A
+    : []
+  : []
 
 const dataByLanguage: Record<Language, Data> = { en, ja }
+
+function fallbackLanguage(): Language {
+  if (typeof window === 'undefined') {
+    return defaultLanguage
+  } else {
+    const language = navigator.language
+    return languages.find((lg) => language.startsWith(lg)) ?? defaultLanguage
+  }
+}
 
 export function translate<K extends Keys>(
   lang: Language | undefined,
@@ -32,12 +59,7 @@ export function translate<K extends Keys>(
   ...args: Args<K>
 ): string {
   if (lang === undefined) {
-    if (typeof window === 'undefined') {
-      lang = defaultLanguage
-    } else {
-      const language = navigator.language
-      lang = languages.find((lg) => language.startsWith(lg)) ?? defaultLanguage
-    }
+    lang = fallbackLanguage()
   }
 
   const value = key
@@ -45,5 +67,32 @@ export function translate<K extends Keys>(
     .reduce((v: Record<string, any>, k) => v[k], dataByLanguage[lang]) as Dig<Data, K>
 
   if (typeof value === 'string') return value
-  return (value as (..._args: any[]) => string)(...args)
+  return (value as (...args: any[]) => string)(...args)
+}
+
+type UseTranslateResult<Prefix extends string = ''> = <K extends KeysWithoutPrefix<Prefix>>(
+  key: K,
+  ...args: Args<Prefix extends '' ? K : `${Prefix}.${K}`>
+) => string
+
+export function useTranslate(): UseTranslateResult
+export function useTranslate<Prefix extends Exclude<Prefixes, ''>>(
+  prefix: Prefix
+): UseTranslateResult<Prefix>
+export function useTranslate<Prefix extends Prefixes>(prefix?: Prefix): UseTranslateResult<Prefix> {
+  const lang = useContext(LanguageContext)
+
+  const t = useMemo(() => {
+    const normalizedLang = lang ?? fallbackLanguage()
+
+    if (prefix === undefined || prefix === '') {
+      return ((key: Keys, ...args: Args<Keys>) =>
+        translate(normalizedLang, key, ...args)) as UseTranslateResult<''>
+    } else {
+      return (restKey: KeysWithoutPrefix<Prefix>, ...args: Args<Keys>) =>
+        translate(normalizedLang, `${prefix}.${restKey}` as Keys, ...args)
+    }
+  }, [prefix, lang])
+
+  return t as UseTranslateResult<Prefix>
 }
