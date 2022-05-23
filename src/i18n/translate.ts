@@ -26,7 +26,7 @@ type RemovePrefix<
 > = Keys extends `${Prefix}.${infer Rest}` ? Rest : Prefix extends '' ? Keys : never
 
 type AllPrefixes<Keys extends string> = Keys extends `${infer Prefix}.${infer Rest}`
-  ? Prefix
+  ? Prefix | `${Prefix}.${AllPrefixes<Rest>}`
   : never
 
 // ↑ general things

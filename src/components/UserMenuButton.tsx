@@ -8,8 +8,11 @@ import styled from 'styled-components'
 import { useMenu } from '../utils/useMenu'
 import { useVariable } from '../utils/useVariable'
 import { MigrationService } from '../services/MigrationService'
+import { useTranslate } from '../i18n/translate'
 
 export const UserMenuButton: FC<{ className?: string }> = ({ className }) => {
+  const t = useTranslate('menu')
+
   const authService = AuthService.instantiate()
   const [currentUser] = useVariable(authService.currentUser)
   const migrationService = MigrationService.instantiate()
@@ -20,7 +23,7 @@ export const UserMenuButton: FC<{ className?: string }> = ({ className }) => {
     await migrationService.registerMigrationToken()
     const c = await authService.signInWithGoogle()
     if (c == null) {
-      alert('Failed to sign in')
+      alert(t('failedToSignIn'))
     }
   }, [authService, migrationService])
 
@@ -38,14 +41,14 @@ export const UserMenuButton: FC<{ className?: string }> = ({ className }) => {
       <Menu ref={accountMenuRef}>
         <MenuItemWithAnchor>
           <Link href="/boards">
-            <a>My boards</a>
+            <a>{t('myBoards')}</a>
           </Link>
         </MenuItemWithAnchor>
         {currentUser != null &&
           (currentUser.isAnonymous ? (
-            <MenuItem onClick={signIn}>Sign in with Google</MenuItem>
+            <MenuItem onClick={signIn}>{t('signInWithGoogle')}</MenuItem>
           ) : (
-            <MenuItem onClick={signOut}>Sign out</MenuItem>
+            <MenuItem onClick={signOut}>{t('signOut')}</MenuItem>
           ))}
       </Menu>
     </AccountButton>

@@ -5,6 +5,7 @@ import { createGlobalStyle } from 'styled-components'
 import { MigrationService } from '../services/MigrationService'
 import { config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
+import { useTranslate } from '../i18n/translate'
 
 config.autoAddCss = false
 
@@ -28,20 +29,22 @@ const GlobalStyle = createGlobalStyle`
 `
 
 const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
+  const t = useTranslate('global')
+
   useEffect(() => {
     if (typeof window === 'undefined') return
 
     const migrationService = MigrationService.instantiate()
     return migrationService.addMigrationReadyCallback(async () => {
-      if (!confirm('Do you migrate data created before signing in?')) return
+      if (!confirm(t('migrationConfirmation'))) return
       try {
         await migrationService.migrateData()
       } catch (e) {
         console.log(e)
-        alert('Failed to migrate data.')
+        alert(t('migrationFailed'))
         return
       }
-      alert('Data was successfully migrated!')
+      alert(t('migrationSucceeded'))
     })
   }, [])
 

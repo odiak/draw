@@ -23,6 +23,7 @@ import { UserMenuButton } from './UserMenuButton'
 import { NewButton } from './NewButton'
 import { DrawingService, colors, widths } from '../services/DrawingService'
 import { baseUrl, imageBaseUrl } from '../constants'
+import { useTranslate } from '../i18n/translate'
 
 type Props = {
   pictureId: string
@@ -67,6 +68,9 @@ const MenuItemWithLink: FC<{ link: string }> = ({ link, children }) => {
 const defaultTitle = 'Untitled'
 
 export function ToolBar({ pictureId }: Props) {
+  const t = useTranslate('menu')
+  const tToolBar = useTranslate('toolBar')
+
   const pictureService = PictureService.instantiate()
   const drawingService = DrawingService.instantiate()
 
@@ -134,7 +138,7 @@ export function ToolBar({ pictureId }: Props) {
         type="text"
         value={title ?? defaultTitle}
         onChange={(e) => setTitleWithUpdate(e.target.value)}
-        placeholder="Title"
+        placeholder={tToolBar('title')}
         disabled={permission == null || !permission.writable}
       />
       <RightButtonsContainer>
@@ -150,21 +154,21 @@ export function ToolBar({ pictureId }: Props) {
           <FontAwesomeIcon icon={faEllipsisH} className="icon" />
           <Menu ref={menuRef}>
             {permission?.accessibilityLevel === 'private' ? (
-              <MenuItemText>No image link for this access level</MenuItemText>
+              <MenuItemText>{t('noImageLink')}</MenuItemText>
             ) : (
               <>
-                <MenuItemToCopy text={imageLink}>Copy image link</MenuItemToCopy>
+                <MenuItemToCopy text={imageLink}>{t('copyImageLink')}</MenuItemToCopy>
                 <MenuItemToCopy text={`[![](${imageLink})](${pageLink})`}>
-                  Copy image link for Markdown
+                  {t('copyImageLinkForMarkdown')}
                 </MenuItemToCopy>
                 <MenuItemToCopy text={`[${pageLink} ${imageLink}]`}>
-                  Copy image link for Scrapbox
+                  {t('copyImageLinkForScrapbox')}
                 </MenuItemToCopy>
               </>
             )}
             <MenuDivider />
-            <MenuItemWithLink link="https://about.kakeru.app/">About Kakeru</MenuItemWithLink>
-            <MenuItemWithLink link="/flags">Experimental flags</MenuItemWithLink>
+            <MenuItemWithLink link="https://about.kakeru.app/">{t('aboutKakeru')}</MenuItemWithLink>
+            <MenuItemWithLink link="/flags">{t('experimentalFlags')} </MenuItemWithLink>
           </Menu>
         </MenuButton>
       </RightButtonsContainer>

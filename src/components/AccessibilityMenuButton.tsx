@@ -5,6 +5,7 @@ import { faLock, faLockOpen, faCheck } from '@fortawesome/free-solid-svg-icons'
 import { Permission, AccessibilityLevel } from '../services/PictureService'
 import { Menu, MenuItem } from './Menu'
 import { useMenu } from '../utils/useMenu'
+import { useTranslate } from '../i18n/translate'
 
 const StyledFontAwesomeIcon = styled(FontAwesomeIcon)``
 const RedStyledFontAwesomeIcon = styled(StyledFontAwesomeIcon)`
@@ -49,6 +50,8 @@ export const AccessibilityMenuButton: FC<{
   permission: Permission
   onAccessibilityLevelChange?: (_accLevel: AccessibilityLevel) => void
 }> = ({ className, permission, onAccessibilityLevelChange }) => {
+  const t = useTranslate('menu.accessibilities')
+
   const { menuRef, buttonRef } = useMenu()
 
   const [isPublic, isProtected, isPrivate] = ['public', 'protected', 'private'].map(
@@ -81,17 +84,17 @@ export const AccessibilityMenuButton: FC<{
       <Menu ref={menuRef}>
         <StyledMenuItem onClick={makePublic}>
           <PublicIcon />
-          Everyone can see and draw
+          {t('public')}
           {isPublic && <CheckIcon />}
         </StyledMenuItem>
         <StyledMenuItem onClick={makeProtected}>
           <ProtectedIcon />
-          Everyone can see, only you can draw
+          {t('protected')}
           {isProtected && <CheckIcon />}
         </StyledMenuItem>
         <StyledMenuItem onClick={makePrivate}>
           <PrivateIcon />
-          Only you can see and draw
+          {t('private')}
           {isPrivate && <CheckIcon />}
         </StyledMenuItem>
       </Menu>

@@ -9,11 +9,14 @@ import { useVariable } from '../utils/useVariable'
 import { NewButton } from './NewButton'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
 import { imageBaseUrl } from '../constants'
+import { useTranslate } from '../i18n/translate'
 
 type LoadingState = 'initial' | 'loading' | 'loaded'
 
 export const Pictures: FC = () => {
   useSetCurrentScreen('list')
+
+  const t = useTranslate('boards')
 
   const pictureService = PictureService.instantiate()
   const authService = AuthService.instantiate()
@@ -58,25 +61,25 @@ export const Pictures: FC = () => {
         <StyledNewButton />
         <StyledUserMenuButton />
       </ButtonsContainer>
-      <TitleAndOgp title="My boards" />
+      <TitleAndOgp title={t('title')} />
 
       <ContentContainer>
-        <H>My boards</H>
+        <H>{t('title')}</H>
         <PictureList>
           {pictures.map((p) => (
             <Link key={p.id} href={`/${p.id}`} passHref>
               <PictureListItem>
                 <PictureThumnail src={`${imageBaseUrl}/${p.id}-w380-h300.png`} />
-                <PictureTitle>{p.title ?? 'Untitled'}</PictureTitle>
+                <PictureTitle>{p.title || t('untitled')}</PictureTitle>
               </PictureListItem>
             </Link>
           ))}
         </PictureList>
-        {loadingState === 'loaded' && anchor != null && <Button onClick={onClick}>More</Button>}
-        {loadingState === 'loading' && <Message>Loading...</Message>}
-        {loadingState === 'loaded' && pictures.length === 0 && (
-          <Message>There is no board.</Message>
+        {loadingState === 'loaded' && anchor != null && (
+          <Button onClick={onClick}>{t('loadMore')}</Button>
         )}
+        {loadingState === 'loading' && <Message>{t('loading')}</Message>}
+        {loadingState === 'loaded' && pictures.length === 0 && <Message>{t('empty')}</Message>}
       </ContentContainer>
     </Container>
   )

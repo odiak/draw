@@ -9,6 +9,7 @@ import { Color } from '../utils/Color'
 import { DrawingService } from '../services/DrawingService'
 import { encode, decode } from '@msgpack/msgpack'
 import styled from 'styled-components'
+import { CanvasBottomMenu } from './CanvasBottomMenu'
 
 type Operation =
   | Readonly<{
@@ -65,7 +66,7 @@ type Props = {
   pictureId: string
 }
 
-type BottomMenuState = {
+export type BottomMenuState = {
   type: 'lasso'
   state: 'idle' | 'drawing' | 'closed'
 }
@@ -83,30 +84,6 @@ const safeAreaInsetBottom = (() => {
   const m = val.match(/^(\d+)px$/)
   return m == null ? 0 : parseInt(m[1], 10)
 })()
-
-const BottomMenu = styled.div`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  margin: 0;
-  padding: 0;
-  padding-bottom: 16px;
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
-  text-align: center;
-`
-
-const BottomMenuItem = styled.button`
-  margin: 0;
-  padding: 5px;
-  display: inline-block;
-  background: #aaab;
-  border: 0;
-  border-radius: 2px;
-  & + & {
-    margin-left: 5px;
-  }
-`
 
 export class Canvas extends React.Component<Props, State> {
   state: State = {
@@ -321,41 +298,14 @@ export class Canvas extends React.Component<Props, State> {
     return (
       <>
         <canvas ref={this.canvasRef}></canvas>
-        {this.bottomMenu()}
+        <CanvasBottomMenu
+          state={this.state.bottomMenuState}
+          onCopy={() => this.handleCopy()}
+          onPaste={() => this.handlePaste()}
+          onDelete={() => this.handleDelete()}
+        />
       </>
     )
-  }
-
-  bottomMenu() {
-    const state = this.state.bottomMenuState
-    if (state == null) return null
-
-    switch (state.type) {
-      case 'lasso': {
-        switch (state.state) {
-          case 'idle':
-            return (
-              <BottomMenu>
-                <BottomMenuItem onClick={() => this.handlePaste()}>Paste</BottomMenuItem>
-              </BottomMenu>
-            )
-          case 'drawing':
-            return null
-          case 'closed':
-            return (
-              <BottomMenu>
-                <BottomMenuItem onClick={() => this.handlePaste()}>Paste</BottomMenuItem>
-                <BottomMenuItem onClick={() => this.handleDelete()}>Delete</BottomMenuItem>
-                <BottomMenuItem onClick={() => this.handleCopy()}>Copy</BottomMenuItem>
-              </BottomMenu>
-            )
-        }
-        break
-      }
-
-      default:
-        return null
-    }
   }
 
   setCanvasElement(elem: HTMLCanvasElement | null) {

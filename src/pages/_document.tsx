@@ -15,7 +15,7 @@ import { initializeAnalytics, isSupported, setUserId, setUserProperties } from '
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
 import { getApp } from 'firebase/app'
 import { acceptLanguage } from 'next/dist/server/accept-header'
-import { defaultLanguage, Language, LanguageContext, languages } from '../LanguageContext'
+import { Language, LanguageContext, languages } from '../LanguageContext'
 
 const app = getApp()
 

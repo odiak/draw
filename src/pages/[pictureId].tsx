@@ -5,6 +5,7 @@ import { Canvas } from '../components/Canvas'
 import { TitleAndOgp } from '../components/TitleAndOgp'
 import { ToolBar } from '../components/ToolBar'
 import { baseUrl, imageBaseUrl } from '../constants'
+import { useTranslate } from '../i18n/translate'
 import { PictureService, PictureWithId } from '../services/PictureService'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
 
@@ -17,6 +18,8 @@ const defaultTitle = 'Untitled'
 const emptyPattern = /^\s*$/
 
 const DrawingPage: FC<Props> = ({ pictureId, picture }) => {
+  const t = useTranslate('global')
+
   useSetCurrentScreen('drawing')
 
   const pictureService = PictureService.instantiate()
@@ -41,7 +44,7 @@ const DrawingPage: FC<Props> = ({ pictureId, picture }) => {
     <>
       <TitleAndOgp
         noOgp={picture === null || picture.accessibilityLevel === 'private'}
-        title={title === null || emptyPattern.test(title) ? defaultTitle : title}
+        title={title === null || emptyPattern.test(title) ? t('defaultTitle') : title}
         image={`${imageBaseUrl}/${pictureId}-w500-h280-x70-opaque.png`}
         url={`${baseUrl}/${pictureId}`}
       />
