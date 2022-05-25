@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import { useVariable } from '../utils/useVariable'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
 import { GetServerSideProps } from 'next'
+import { useTranslate } from '../i18n/translate'
 
 const Container = styled.div`
   padding: 5px 10px;
@@ -15,6 +16,8 @@ const Label = styled.label`
 `
 
 const Flags: FC<{}> = () => {
+  const t = useTranslate('flags')
+
   useSetCurrentScreen('flags')
 
   const settingsService = ExperimentalSettingsService.instantiate()
@@ -30,7 +33,7 @@ const Flags: FC<{}> = () => {
 
   return (
     <Container>
-      <h1>Experimental Flags</h1>
+      <h1>{t('title')}</h1>
       <Label>
         <input
           type="checkbox"
@@ -39,7 +42,7 @@ const Flags: FC<{}> = () => {
             setSettingsWithSave({ hackForSamsungGalaxyNote: e.target.checked })
           }}
         />
-        This is a Samsung Galaxy Note (Use dirty hack for S-Pen detection)
+        {t('hackForSamsungGalaxyNote')}
       </Label>
       <Label>
         <input
@@ -49,7 +52,7 @@ const Flags: FC<{}> = () => {
             setSettingsWithSave({ disableSmoothingPaths: e.target.checked })
           }}
         />
-        Disable smoothing paths
+        {t('disableSmoothingPaths')}
       </Label>
     </Container>
   )

@@ -41,5 +41,11 @@ export const en = {
     migrationFailed: 'Failed to migrate data.',
     migrationSucceeded: 'Data was successfully migrated!',
     defaultTitle: 'Untitled'
+  },
+  flags: {
+    title: 'Experimental Flags',
+    hackForSamsungGalaxyNote:
+      'This is a Samsung Galaxy Note (Use dirty hack for S-Pen detection. This feature may not work depends on browser or OS version.)',
+    disableSmoothingPaths: 'Disable smoothing paths'
   }
 }

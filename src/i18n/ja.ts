@@ -19,7 +19,7 @@ export const ja: typeof en = {
     copyImageLinkForMarkdown: 'Markdown用のリンクをコピーする',
     copyImageLinkForScrapbox: 'Scrapbox用のリンクをコピーする',
     aboutKakeru: 'Kakeruについて',
-    experimentalFlags: '実験的な設定',
+    experimentalFlags: '試験的な設定',
     accessibilities: {
       public: '誰でも閲覧・書き込み可能',
       protected: '誰でも閲覧でき、自分だけが書き込み可能',
@@ -43,5 +43,11 @@ export const ja: typeof en = {
     migrationFailed: 'データの統合に失敗しました',
     migrationSucceeded: 'データの統合が完了しました',
     defaultTitle: '無題'
+  },
+  flags: {
+    title: '試験的な設定',
+    hackForSamsungGalaxyNote:
+      'Galaxy Note用のハックを有効にする (Sペンを認識するための特殊な処理。ブラウザやOSのバージョンによっては動作しない可能性があります。)',
+    disableSmoothingPaths: '線を滑らかにする処理を無効にする'
   }
 }
