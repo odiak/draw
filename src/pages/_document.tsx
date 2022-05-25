@@ -16,6 +16,14 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth'
 import { getApp } from 'firebase/app'
 import { acceptLanguage } from 'next/dist/server/accept-header'
 import { Language, LanguageContext, languages } from '../LanguageContext'
+import {
+  AppContextType,
+  AppInitialProps,
+  AppPropsType,
+  AppType,
+  NextComponentType
+} from 'next/dist/shared/lib/utils'
+import { AppProps } from './_app'
 
 const app = getApp()
 
@@ -51,7 +59,7 @@ class MyDocument extends Document<{ lang: Language | undefined }> {
     try {
       ctx.renderPage = () =>
         originalRenderPage({
-          enhanceApp: (App) => (props) => sheet.collectStyles(<App {...props} />)
+          enhanceApp: (App) => (props) => sheet.collectStyles(<App {...{ ...props, lang }} />)
         })
 
       const initialProps = await Document.getInitialProps(ctx)
@@ -75,9 +83,7 @@ class MyDocument extends Document<{ lang: Language | undefined }> {
       <Html lang={this.props.lang} prefix="og: https://ogp.me/ns#">
         <Head />
         <body>
-          <LanguageContext.Provider value={this.props.lang}>
-            <Main />
-          </LanguageContext.Provider>
+          <Main />
           <NextScript />
         </body>
       </Html>

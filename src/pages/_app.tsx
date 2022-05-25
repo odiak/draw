@@ -1,4 +1,4 @@
-import { AppProps } from 'next/app'
+import { AppProps as OriginalAppProps } from 'next/app'
 import Head from 'next/head'
 import { FC, useEffect } from 'react'
 import { createGlobalStyle } from 'styled-components'
@@ -6,6 +6,7 @@ import { MigrationService } from '../services/MigrationService'
 import { config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
 import { useTranslate } from '../i18n/translate'
+import { Language, LanguageContext } from '../LanguageContext'
 
 config.autoAddCss = false
 
@@ -28,7 +29,9 @@ const GlobalStyle = createGlobalStyle`
   }
 `
 
-const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
+export type AppProps = OriginalAppProps & { lang: Language | undefined }
+
+const MyApp: FC<AppProps> = ({ Component, pageProps, lang }) => {
   const t = useTranslate('global')
 
   useEffect(() => {
@@ -49,7 +52,7 @@ const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
   }, [])
 
   return (
-    <>
+    <LanguageContext.Provider value={lang}>
       <GlobalStyle />
       <Head>
         <link rel="shortcut icon" href="/favicon.png" />
@@ -58,7 +61,7 @@ const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
         <link rel="manifest" href="/manifest.json" />
       </Head>
       <Component {...pageProps} />
-    </>
+    </LanguageContext.Provider>
   )
 }
 export default MyApp
