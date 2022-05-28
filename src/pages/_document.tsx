@@ -15,15 +15,7 @@ import { initializeAnalytics, isSupported, setUserId, setUserProperties } from '
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
 import { getApp } from 'firebase/app'
 import { acceptLanguage } from 'next/dist/server/accept-header'
-import { Language, LanguageContext, languages } from '../LanguageContext'
-import {
-  AppContextType,
-  AppInitialProps,
-  AppPropsType,
-  AppType,
-  NextComponentType
-} from 'next/dist/shared/lib/utils'
-import { AppProps } from './_app'
+import { Language, languages } from '../LanguageContext'
 
 const app = getApp()
 

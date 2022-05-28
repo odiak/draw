@@ -14,7 +14,6 @@ type Props = {
   picture: Pick<PictureWithId, 'title' | 'accessibilityLevel'> | null
 }
 
-const defaultTitle = 'Untitled'
 const emptyPattern = /^\s*$/
 
 const DrawingPage: FC<Props> = ({ pictureId, picture }) => {

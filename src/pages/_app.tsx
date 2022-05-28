@@ -29,7 +29,7 @@ const GlobalStyle = createGlobalStyle`
   }
 `
 
-export type AppProps = OriginalAppProps & { lang: Language | undefined }
+type AppProps = OriginalAppProps & { lang: Language | undefined }
 
 const MyApp: FC<AppProps> = ({ Component, pageProps, lang }) => {
   const t = useTranslate('global')
@@ -49,7 +49,7 @@ const MyApp: FC<AppProps> = ({ Component, pageProps, lang }) => {
       }
       alert(t('migrationSucceeded'))
     })
-  }, [])
+  }, [t])
 
   return (
     <LanguageContext.Provider value={lang}>
