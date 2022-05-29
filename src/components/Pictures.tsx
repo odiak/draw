@@ -1,8 +1,7 @@
 import React, { FC, useState, useEffect, useCallback } from 'react'
 import styled from 'styled-components'
-import { TitleAndOgp } from './TitleAndOgp'
 import { PictureService, PictureWithId, Anchor } from '../services/PictureService'
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 import { UserMenuButton } from './UserMenuButton'
 import { AuthService } from '../services/AuthService'
 import { useVariable } from '../utils/useVariable'
@@ -10,6 +9,7 @@ import { NewButton } from './NewButton'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
 import { imageBaseUrl } from '../constants'
 import { useTranslate } from '../i18n/translate'
+import { Title } from './Title'
 
 type LoadingState = 'initial' | 'loading' | 'loaded'
 
@@ -61,18 +61,16 @@ export const Pictures: FC = () => {
         <StyledNewButton />
         <StyledUserMenuButton />
       </ButtonsContainer>
-      <TitleAndOgp title={t('title')} />
+      <Title>{t('title')}</Title>
 
       <ContentContainer>
         <H>{t('title')}</H>
         <PictureList>
           {pictures.map((p) => (
-            <Link key={p.id} href={`/${p.id}`} passHref>
-              <PictureListItem>
-                <PictureThumnail src={`${imageBaseUrl}/${p.id}-w380-h300.png`} />
-                <PictureTitle>{p.title || t('untitled')}</PictureTitle>
-              </PictureListItem>
-            </Link>
+            <PictureListItem key={p.id} to={`/${p.id}`}>
+              <PictureThumnail src={`${imageBaseUrl}/${p.id}-w380-h300.png`} />
+              <PictureTitle>{p.title || t('untitled')}</PictureTitle>
+            </PictureListItem>
           ))}
         </PictureList>
         {loadingState === 'loaded' && anchor != null && (
@@ -106,7 +104,7 @@ const PictureList = styled.div`
   flex-wrap: wrap;
 `
 
-const PictureListItem = styled.a`
+const PictureListItem = styled(Link)`
   width: 190px;
   height: 150px;
   margin: 5px;

@@ -1,10 +1,10 @@
-import { FC, useCallback } from 'react'
+import React, { FC, useCallback } from 'react'
 import { ExperimentalSettingsService } from '../services/ExperimentalSettingsService'
 import styled from 'styled-components'
 import { useVariable } from '../utils/useVariable'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
-import { GetServerSideProps } from 'next'
 import { useTranslate } from '../i18n/translate'
+import { Title } from '../components/Title'
 
 const Container = styled.div`
   padding: 5px 10px;
@@ -15,7 +15,7 @@ const Label = styled.label`
   margin-bottom: 14px;
 `
 
-const Flags: FC<{}> = () => {
+export const Flags: FC = () => {
   const t = useTranslate('flags')
 
   useSetCurrentScreen('flags')
@@ -33,6 +33,8 @@ const Flags: FC<{}> = () => {
 
   return (
     <Container>
+      <Title>{t('title')}</Title>
+
       <h1>{t('title')}</h1>
       <Label>
         <input
@@ -57,6 +59,3 @@ const Flags: FC<{}> = () => {
     </Container>
   )
 }
-export default Flags
-
-export const getServerSideProps: GetServerSideProps<{}> = async () => ({ props: {} })

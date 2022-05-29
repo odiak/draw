@@ -1,14 +1,13 @@
-import { AppProps as OriginalAppProps } from 'next/app'
-import Head from 'next/head'
-import { FC, useEffect } from 'react'
+import React, { FC, useEffect } from 'react'
 import { createGlobalStyle } from 'styled-components'
 import { MigrationService } from '../services/MigrationService'
-import { config } from '@fortawesome/fontawesome-svg-core'
-import '@fortawesome/fontawesome-svg-core/styles.css'
 import { useTranslate } from '../i18n/translate'
-import { Language, LanguageContext } from '../LanguageContext'
-
-config.autoAddCss = false
+import { BrowserRouter, Route, Switch } from 'react-router-dom'
+import { NotFound } from '../pages/NotFound'
+import { DrawingPage } from '../pages/DrawingPage'
+import { Flags } from '../pages/Flags'
+import { Boards } from '../pages/Boards'
+import { NewBoard } from '../pages/NewBoard'
 
 const GlobalStyle = createGlobalStyle`
   html {
@@ -17,7 +16,7 @@ const GlobalStyle = createGlobalStyle`
 
   html,
   body,
-  #__next {
+  #app {
     width: 100%;
     height: 100%;
     margin: 0;
@@ -29,9 +28,7 @@ const GlobalStyle = createGlobalStyle`
   }
 `
 
-type AppProps = OriginalAppProps & { lang: Language | undefined }
-
-const MyApp: FC<AppProps> = ({ Component, pageProps, lang }) => {
+export const App: FC = () => {
   const t = useTranslate('global')
 
   useEffect(() => {
@@ -52,16 +49,17 @@ const MyApp: FC<AppProps> = ({ Component, pageProps, lang }) => {
   }, [t])
 
   return (
-    <LanguageContext.Provider value={lang}>
+    <>
       <GlobalStyle />
-      <Head>
-        <link rel="shortcut icon" href="/favicon.png" />
-        <title key="title">Kakeru</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="manifest" href="/manifest.json" />
-      </Head>
-      <Component {...pageProps} />
-    </LanguageContext.Provider>
+      <BrowserRouter>
+        <Switch>
+          <Route exact path="/" component={NewBoard} />
+          <Route path="/boards" component={Boards} />
+          <Route path="/flags" component={Flags} />
+          <Route path="/:pictureId([0-9a-f]{32})" component={DrawingPage} />
+          <Route component={NotFound} />
+        </Switch>
+      </BrowserRouter>
+    </>
   )
 }
-export default MyApp

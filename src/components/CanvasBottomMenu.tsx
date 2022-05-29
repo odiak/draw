@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import React, { FC } from 'react'
 import styled from 'styled-components'
 import { useTranslate } from '../i18n/translate'
 import { BottomMenuState } from './Canvas'
