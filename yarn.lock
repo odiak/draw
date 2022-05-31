@@ -3179,7 +3179,7 @@ __metadata:
     styled-components: ^5.3.5
     ts-loader: ^9.3.0
     ts-node: ^10.8.0
-    typescript: ^4.5.5
+    typescript: ^4.7.2
     webpack: ^5.72.1
     webpack-cli: ^4.9.2
     webpack-dev-server: ^4.9.0
@@ -7439,23 +7439,23 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-typescript@^4.5.5:
-  version: 4.5.5
-  resolution: "typescript@npm:4.5.5"
+typescript@^4.7.2:
+  version: 4.7.2
+  resolution: "typescript@npm:4.7.2"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 506f4c919dc8aeaafa92068c997f1d213b9df4d9756d0fae1a1e7ab66b585ab3498050e236113a1c9e57ee08c21ec6814ca7a7f61378c058d79af50a4b1f5a5e
+  checksum: 5163585e6b56410f77d5483b698d9489bbee8902c99029eb70cf6d21525a186530ce19a00951af84eefd4a131cc51d0959f5118e25e70ab61f45ac4057dbd1ef
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^4.5.5#~builtin<compat/typescript>":
-  version: 4.5.5
-  resolution: "typescript@patch:typescript@npm%3A4.5.5#~builtin<compat/typescript>::version=4.5.5&hash=d8b4e7"
+"typescript@patch:typescript@^4.7.2#~builtin<compat/typescript>":
+  version: 4.7.2
+  resolution: "typescript@patch:typescript@npm%3A4.7.2#~builtin<compat/typescript>::version=4.7.2&hash=d8b4e7"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: ed34e0986bc395da29a9a749fc980741fcbf698c205d6dc282310a652ee4ae61b571c26fd62c8a264ec26ff23ef12d888d5db7b41031cfaad1798db0d090f5c3
+  checksum: aadd2fac191480ec2ce6fc9b5a7d27f3595bd4575ab037cfd25d292f75197c7135a4663c266047b2669261436dd7f43455eda5d778218baf9940043e6c02f7d9
   languageName: node
   linkType: hard
 
