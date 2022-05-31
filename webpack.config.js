@@ -2,6 +2,7 @@ const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const { EnvironmentPlugin } = require('webpack')
 const dotenv = require('dotenv')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 dotenv.config({ path: '.env.local' })
 
@@ -25,6 +26,14 @@ module.exports = {
       NEXT_PUBLIC_FIREBASE_CONFIG: '',
       NEXT_PUBLIC_SENTRY_DSN: '',
       NEXT_PUBLIC_RECAPTCHA_KEY: ''
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: '**/*',
+          context: 'public'
+        }
+      ]
     })
   ],
   devServer: {
