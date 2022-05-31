@@ -6,7 +6,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 dotenv.config({ path: '.env.local' })
 
-module.exports = {
+const mainConfig = {
   mode: 'development',
   entry: './src/index.tsx',
   resolve: {
@@ -14,11 +14,16 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.js',
+    filename: '[name].js',
     publicPath: '/'
   },
   module: {
-    rules: [{ test: /\.tsx?/, loader: 'ts-loader' }]
+    rules: [
+      {
+        test: /\.tsx?/,
+        loader: 'ts-loader'
+      }
+    ]
   },
   plugins: [
     new HtmlWebpackPlugin({ template: './src/index.html' }),
@@ -38,5 +43,44 @@ module.exports = {
   ],
   devServer: {
     historyApiFallback: true
+  },
+  optimization: {
+    runtimeChunk: 'single',
+    moduleIds: 'deterministic',
+    splitChunks: {
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all'
+        }
+      }
+    }
   }
 }
+
+const serviceWorkerConfig = {
+  mode: 'development',
+  entry: './src/serviceWorker/index.ts',
+  resolve: {
+    extensions: ['.ts', '.tsx', '.js']
+  },
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'serviceWorker.js',
+    publicPath: '/'
+  },
+  module: {
+    rules: [
+      {
+        test: /\.tsx?/,
+        loader: 'ts-loader',
+        options: {
+          configFile: 'src/serviceWorker/tsconfig.json'
+        }
+      }
+    ]
+  }
+}
+
+module.exports = [mainConfig, serviceWorkerConfig]
