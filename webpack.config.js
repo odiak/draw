@@ -6,7 +6,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 dotenv.config({ path: '.env.local' })
 
-const mainConfig = {
+module.exports = {
   mode: 'development',
   entry: './src/index.tsx',
   resolve: {
@@ -18,12 +18,7 @@ const mainConfig = {
     publicPath: '/'
   },
   module: {
-    rules: [
-      {
-        test: /\.tsx?/,
-        loader: 'ts-loader'
-      }
-    ]
+    rules: [{ test: /\.tsx?/, loader: 'ts-loader' }]
   },
   plugins: [
     new HtmlWebpackPlugin({ template: './src/index.html' }),
@@ -58,29 +53,3 @@ const mainConfig = {
     }
   }
 }
-
-const serviceWorkerConfig = {
-  mode: 'development',
-  entry: './src/serviceWorker/index.ts',
-  resolve: {
-    extensions: ['.ts', '.tsx', '.js']
-  },
-  output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'serviceWorker.js',
-    publicPath: '/'
-  },
-  module: {
-    rules: [
-      {
-        test: /\.tsx?/,
-        loader: 'ts-loader',
-        options: {
-          configFile: 'src/serviceWorker/tsconfig.json'
-        }
-      }
-    ]
-  }
-}
-
-module.exports = [mainConfig, serviceWorkerConfig]

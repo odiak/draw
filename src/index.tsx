@@ -29,15 +29,4 @@ Sentry.init({
   tracesSampleRate: 1.0
 })
 
-async function registerServiceWorker() {
-  if ('serviceWorker' in navigator) {
-    try {
-      await navigator.serviceWorker.register('/serviceWorker.js')
-    } catch (e) {
-      console.log('Failed to register service worker', e)
-    }
-  }
-}
-registerServiceWorker()
-
 ReactDOM.render(<App />, document.getElementById('app'))
