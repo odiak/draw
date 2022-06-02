@@ -45,12 +45,8 @@ export type Args<K> = K extends Keys
 const dataByLanguage: Record<Language, Data> = { en, ja }
 
 function fallbackLanguage(): Language {
-  if (typeof window === 'undefined') {
-    return defaultLanguage
-  } else {
-    const language = navigator.language
-    return languages.find((lg) => language.startsWith(lg)) ?? defaultLanguage
-  }
+  const language = navigator.language
+  return languages.find((lg) => language.startsWith(lg)) ?? defaultLanguage
 }
 
 export function translate<K extends Keys>(

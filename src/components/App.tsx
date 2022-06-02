@@ -32,8 +32,6 @@ export const App: FC = () => {
   const t = useTranslate('global')
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
-
     const migrationService = MigrationService.instantiate()
     return migrationService.addMigrationReadyCallback(async () => {
       if (!confirm(t('migrationConfirmation'))) return
