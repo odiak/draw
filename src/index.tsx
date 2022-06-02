@@ -7,6 +7,7 @@ import { initializeAnalytics, isSupported, setUserId, setUserProperties } from '
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
 import { getApp } from 'firebase/app'
 import { App } from './components/App'
+import { checkCookie } from './checkCookie'
 
 const app = getApp()
 
@@ -28,5 +29,7 @@ Sentry.init({
   integrations: [new Integrations.BrowserTracing()],
   tracesSampleRate: 1.0
 })
+
+checkCookie()
 
 ReactDOM.render(<App />, document.getElementById('app'))
