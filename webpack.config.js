@@ -5,10 +5,10 @@ const dotenv = require('dotenv')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 module.exports = (env, arg) => {
-  dotenv.config({ path: '.env.local' })
   if (arg.mode === 'production') {
     dotenv.config({ path: '.env.production.local' })
   }
+  dotenv.config({ path: '.env.local' })
 
   return {
     mode: 'development',
