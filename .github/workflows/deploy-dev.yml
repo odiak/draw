@@ -15,7 +15,14 @@ jobs:
         with:
           node-version: 16
       - run: ./overwrite-yarn-config-for-deploy.sh
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{FONTAWESOME_NPM_AUTH_TOKEN}}
       - run: yarn install
+      - run: echo "${SECRETS_DECRYPTION_KEY}" | yarn run secrets:decrypt
+        env:
+          SECRETS_DECRYPTION_KEY: ${{SECRETS_DECRYPTION_KEY}}
       - run: yarn build
       - run: echo "$SSH_KEY" > ~/.ssh/key && chmod 600 ~/.ssh/key
+        env:
+          SSH_KEY: ${{SSH_KEY}}
       - run: rsync -rt -e 'ssh -i ~/.ssh/key -o StrictHostKeyChecking=no' ./dist/ kaido@kakeru.app:kakeru-frontend/dev
