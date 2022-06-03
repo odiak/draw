@@ -1,14 +1,13 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const { EnvironmentPlugin } = require('webpack')
-const dotenv = require('dotenv')
+const { DefinePlugin } = require('webpack')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
+const fs = require('fs')
+
+const secrets = fs.readFileSync('./secrets.json', 'utf-8')
 
 module.exports = (env, arg) => {
-  if (arg.mode === 'production') {
-    dotenv.config({ path: '.env.production.local' })
-  }
-  dotenv.config({ path: '.env.local' })
+  const isRecaptchaEnabled = arg.mode === 'production'
 
   return {
     mode: 'development',
@@ -26,10 +25,9 @@ module.exports = (env, arg) => {
     },
     plugins: [
       new HtmlWebpackPlugin({ template: './src/index.html' }),
-      new EnvironmentPlugin({
-        NEXT_PUBLIC_FIREBASE_CONFIG: '',
-        NEXT_PUBLIC_SENTRY_DSN: '',
-        NEXT_PUBLIC_RECAPTCHA_KEY: ''
+      new DefinePlugin({
+        kakeruSecrets: secrets,
+        isRecaptchaEnabled
       }),
       new CopyWebpackPlugin({
         patterns: [

@@ -2840,13 +2840,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dotenv@npm:^16.0.1":
-  version: 16.0.1
-  resolution: "dotenv@npm:16.0.1"
-  checksum: f459ffce07b977b7f15d8cc4ee69cdff77d4dd8c5dc8c85d2d485ee84655352c2415f9dd09d42b5b5985ced3be186130871b34e2f3e2569ebc72fbc2e8096792
-  languageName: node
-  linkType: hard
-
 "draw@workspace:.":
   version: 0.0.0-use.local
   resolution: "draw@workspace:."
@@ -2872,7 +2865,6 @@ __metadata:
     babel-plugin-styled-components: ^2.0.7
     classnames: ^2.2.6
     copy-webpack-plugin: ^11.0.0
-    dotenv: ^16.0.1
     eslint: ^7.5.0
     eslint-plugin-react: ^7.20.3
     eslint-plugin-react-hooks: ^4.0.8

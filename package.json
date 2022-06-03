@@ -6,7 +6,9 @@
   "scripts": {
     "start": "webpack-dev-server",
     "build": "webpack --mode production",
-    "build:dev": "webpack --mode development"
+    "build:dev": "webpack --mode development",
+    "secrets:encrypt": "gpg --symmetric --cipher-algo AES256 secrets.json",
+    "secrets:decrypt": "gpg --quiet --yes --batch --decrypt --passphrase=\"$(cat)\" --out secrets.json secrets.json.gpg"
   },
   "devDependencies": {
     "@types/node": "^17.0.36",
@@ -15,7 +17,6 @@
     "@typescript-eslint/parser": "^4.26.0",
     "babel-plugin-styled-components": "^2.0.7",
     "copy-webpack-plugin": "^11.0.0",
-    "dotenv": "^16.0.1",
     "eslint": "^7.5.0",
     "eslint-plugin-react": "^7.20.3",
     "eslint-plugin-react-hooks": "^4.0.8",

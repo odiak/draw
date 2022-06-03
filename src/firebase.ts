@@ -1,11 +1,11 @@
 import { initializeApp } from 'firebase/app'
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check'
 
-const app = initializeApp(JSON.parse(process.env.NEXT_PUBLIC_FIREBASE_CONFIG!))
+const app = initializeApp(kakeruSecrets.firebaseConfig)
 
-if (process.env.NEXT_PUBLIC_RECAPTCHA_KEY) {
+if (isRecaptchaEnabled) {
   initializeAppCheck(app, {
-    provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_KEY),
+    provider: new ReCaptchaV3Provider(kakeruSecrets.recaptchaKey),
     isTokenAutoRefreshEnabled: true
   })
 }
