@@ -1,4 +1,4 @@
-name: Build and Deploy
+name: Build and Deploy for dev
 on:
   # push:
   #   branches: [ master ]
@@ -14,6 +14,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
+      - run: ./overwrite-yarn-config-for-deploy.sh
       - run: yarn install
       - run: yarn build
       - run: echo "$SSH_KEY" > ~/.ssh/key && chmod 600 ~/.ssh/key
