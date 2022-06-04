@@ -1,13 +1,15 @@
 import React, { FC, useEffect } from 'react'
 import { createGlobalStyle } from 'styled-components'
 import { MigrationService } from '../services/MigrationService'
-import { useTranslate } from '../i18n/translate'
+import { withPrefix } from '../i18n/translate'
 import { BrowserRouter, Route, Switch } from 'react-router-dom'
 import { NotFound } from '../pages/NotFound'
 import { DrawingPage } from '../pages/DrawingPage'
 import { Flags } from '../pages/Flags'
 import { Boards } from '../pages/Boards'
 import { NewBoard } from '../pages/NewBoard'
+
+const t = withPrefix('global')
 
 const GlobalStyle = createGlobalStyle`
   html {
@@ -36,8 +38,6 @@ const GlobalStyle = createGlobalStyle`
 `
 
 export const App: FC = () => {
-  const t = useTranslate('global')
-
   useEffect(() => {
     const migrationService = MigrationService.instantiate()
     return migrationService.addMigrationReadyCallback(async () => {

@@ -5,7 +5,9 @@ import { faLock, faLockOpen, faCheck } from '@fortawesome/free-solid-svg-icons'
 import { Permission, AccessibilityLevel } from '../services/PictureService'
 import { Menu, MenuItem } from './Menu'
 import { useMenu } from '../utils/useMenu'
-import { useTranslate } from '../i18n/translate'
+import { withPrefix } from '../i18n/translate'
+
+const t = withPrefix('menu.accessibilities')
 
 const StyledFontAwesomeIcon = styled(FontAwesomeIcon)``
 const RedStyledFontAwesomeIcon = styled(StyledFontAwesomeIcon)`
@@ -57,8 +59,6 @@ export const AccessibilityMenuButton: FC<{
   permission: Permission
   onAccessibilityLevelChange?: (_accLevel: AccessibilityLevel) => void
 }> = ({ className, permission, onAccessibilityLevelChange }) => {
-  const t = useTranslate('menu.accessibilities')
-
   const { menuRef, buttonRef } = useMenu()
 
   const [isPublic, isProtected, isPrivate] = ['public', 'protected', 'private'].map(

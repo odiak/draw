@@ -8,15 +8,15 @@ import { useVariable } from '../utils/useVariable'
 import { NewButton } from './NewButton'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
 import { imageBaseUrl } from '../constants'
-import { useTranslate } from '../i18n/translate'
+import { withPrefix } from '../i18n/translate'
 import { Title } from './Title'
+
+const t = withPrefix('boards')
 
 type LoadingState = 'initial' | 'loading' | 'loaded'
 
 export const Pictures: FC = () => {
   useSetCurrentScreen('list')
-
-  const t = useTranslate('boards')
 
   const pictureService = PictureService.instantiate()
   const authService = AuthService.instantiate()

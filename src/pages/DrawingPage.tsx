@@ -5,9 +5,11 @@ import { Canvas } from '../components/Canvas'
 import { Title } from '../components/Title'
 
 import { ToolBar } from '../components/ToolBar'
-import { useTranslate } from '../i18n/translate'
+import { withPrefix } from '../i18n/translate'
 import { PictureService } from '../services/PictureService'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
+
+const t = withPrefix('global')
 
 function normalizeTitle(title: string | undefined): string | undefined {
   const stripped = title?.replace(/^\s+|\s+$/g, '')
@@ -15,8 +17,6 @@ function normalizeTitle(title: string | undefined): string | undefined {
 }
 
 export const DrawingPage: FC = () => {
-  const t = useTranslate('global')
-
   useSetCurrentScreen('drawing')
 
   const { pictureId } = useRouteMatch<{ pictureId: string }>().params

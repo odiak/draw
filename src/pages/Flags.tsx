@@ -3,8 +3,10 @@ import { ExperimentalSettingsService } from '../services/ExperimentalSettingsSer
 import styled from 'styled-components'
 import { useVariable } from '../utils/useVariable'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
-import { useTranslate } from '../i18n/translate'
 import { Title } from '../components/Title'
+import { withPrefix } from '../i18n/translate'
+
+const t = withPrefix('flags')
 
 const Container = styled.div`
   padding: 5px 10px;
@@ -16,8 +18,6 @@ const Label = styled.label`
 `
 
 export const Flags: FC = () => {
-  const t = useTranslate('flags')
-
   useSetCurrentScreen('flags')
 
   const settingsService = ExperimentalSettingsService.instantiate()

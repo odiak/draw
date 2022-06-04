@@ -23,7 +23,10 @@ import { UserMenuButton } from './UserMenuButton'
 import { NewButton } from './NewButton'
 import { DrawingService, colors, widths } from '../services/DrawingService'
 import { baseUrl, imageBaseUrl } from '../constants'
-import { useTranslate } from '../i18n/translate'
+import { withPrefix } from '../i18n/translate'
+
+const t = withPrefix('menu')
+const tToolBar = withPrefix('toolBar')
 
 type Props = {
   pictureId: string
@@ -68,9 +71,6 @@ const MenuItemWithLink: FC<{ link: string }> = ({ link, children }) => {
 const defaultTitle = 'Untitled'
 
 export function ToolBar({ pictureId }: Props) {
-  const t = useTranslate('menu')
-  const tToolBar = useTranslate('toolBar')
-
   const pictureService = PictureService.instantiate()
   const drawingService = DrawingService.instantiate()
 

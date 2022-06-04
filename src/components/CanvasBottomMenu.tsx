@@ -1,7 +1,9 @@
 import React, { FC } from 'react'
 import styled from 'styled-components'
-import { useTranslate } from '../i18n/translate'
+import { withPrefix } from '../i18n/translate'
 import { BottomMenuState } from './Canvas'
+
+const t = withPrefix('canvas')
 
 type Props = {
   state: BottomMenuState | undefined
@@ -11,8 +13,6 @@ type Props = {
 }
 
 export const CanvasBottomMenu: FC<Props> = ({ state, onCopy, onPaste, onDelete }) => {
-  const t = useTranslate('canvas')
-
   if (state === undefined) return null
 
   switch (state.type) {

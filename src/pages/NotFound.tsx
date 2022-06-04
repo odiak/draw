@@ -1,11 +1,11 @@
 import React, { FC } from 'react'
 import { Link } from 'react-router-dom'
 import { Title } from '../components/Title'
-import { useTranslate } from '../i18n/translate'
+import { withPrefix } from '../i18n/translate'
+
+const t = withPrefix('notFound')
 
 export const NotFound: FC = () => {
-  const t = useTranslate('notFound')
-
   return (
     <>
       <Title>{t('shortMessage')}</Title>

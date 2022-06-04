@@ -8,11 +8,11 @@ import styled from 'styled-components'
 import { useMenu } from '../utils/useMenu'
 import { useVariable } from '../utils/useVariable'
 import { MigrationService } from '../services/MigrationService'
-import { useTranslate } from '../i18n/translate'
+import { withPrefix } from '../i18n/translate'
+
+const t = withPrefix('menu')
 
 export const UserMenuButton: FC<{ className?: string }> = ({ className }) => {
-  const t = useTranslate('menu')
-
   const authService = AuthService.instantiate()
   const [currentUser] = useVariable(authService.currentUser)
   const migrationService = MigrationService.instantiate()
