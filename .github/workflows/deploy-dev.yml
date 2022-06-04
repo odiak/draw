@@ -1,9 +1,7 @@
 name: Build and Deploy for dev
 on:
-  # push:
-  #   branches: [ master ]
-  # pull_request:
-  #   branches: [ master ]
+  push:
+    branches: [ development ]
   workflow_dispatch:
 
 jobs:
