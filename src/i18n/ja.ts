@@ -28,7 +28,9 @@ export const ja: typeof en = {
     failedToSignIn: 'ログインに失敗しました',
     myBoards: '自分のボード一覧',
     signInWithGoogle: 'Googleアカウントでログインする',
-    signOut: 'ログアウト'
+    signOut: 'ログアウト',
+    turnOnInsidersVersion: 'インサイダー版を使用する',
+    turnOffInsidersVersion: 'インサイダー版の使用を停止する'
   },
   toolBar: {
     title: 'タイトル'
@@ -49,5 +51,12 @@ export const ja: typeof en = {
     hackForSamsungGalaxyNote:
       'Galaxy Note用のハックを有効にする (Sペンを認識するための特殊な処理。ブラウザやOSのバージョンによっては動作しない可能性があります。)',
     disableSmoothingPaths: '線を滑らかにする処理を無効にする'
+  },
+  insiders: {
+    turnOnConfirmation: `インサイダー版には開発中の機能が含まれますが、バグを含む可能性があります。
+OKを選択後、ページがリロードされます。
+よろしいですか？`,
+    turnOffConfirmation: `インサイダー版の使用を中止してよろしいですか？
+OKを選択後、ページがリロードされます。`
   }
 }

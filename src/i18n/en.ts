@@ -26,7 +26,9 @@ export const en = {
     failedToSignIn: 'Failed to sign in',
     myBoards: 'My boards',
     signInWithGoogle: 'Sign in with Google',
-    signOut: 'Sign out'
+    signOut: 'Sign out',
+    turnOnInsidersVersion: 'Use "Insiders Version"',
+    turnOffInsidersVersion: 'Stop using "Insiders Version"'
   },
   toolBar: {
     title: 'Title'
@@ -47,5 +49,13 @@ export const en = {
     hackForSamsungGalaxyNote:
       'This is a Samsung Galaxy Note (Use dirty hack for S-Pen detection. This feature may not work depends on browser or OS version.)',
     disableSmoothingPaths: 'Disable smoothing paths'
+  },
+  insiders: {
+    turnOnConfirmation: `"Insiders version" contains some features under development,
+but it may have some bugs.
+After you chose OK, the page will be reloaded.
+Are you sure?`,
+    turnOffConfirmation: `Are you sure to stop using "Insiders Version"?
+After you chose OK, the page will be reloaded.`
   }
 }

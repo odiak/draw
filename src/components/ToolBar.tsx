@@ -24,6 +24,7 @@ import { NewButton } from './NewButton'
 import { DrawingService, colors, widths } from '../services/DrawingService'
 import { baseUrl, imageBaseUrl } from '../constants'
 import { withPrefix } from '../i18n/translate'
+import { isInsidersVersion, toggleIsInsiderVersion } from '../utils/insiders'
 
 const t = withPrefix('menu')
 const tToolBar = withPrefix('toolBar')
@@ -168,7 +169,10 @@ export function ToolBar({ pictureId }: Props) {
             )}
             <MenuDivider />
             <MenuItemWithLink link="https://about.kakeru.app/">{t('aboutKakeru')}</MenuItemWithLink>
-            <MenuItemWithLink link="/flags">{t('experimentalFlags')} </MenuItemWithLink>
+            <MenuItemWithLink link="/flags">{t('experimentalFlags')}</MenuItemWithLink>
+            <MenuItem onClick={() => toggleIsInsiderVersion()}>
+              {isInsidersVersion ? t('turnOffInsidersVersion') : t('turnOnInsidersVersion')}
+            </MenuItem>
           </Menu>
         </MenuButton>
       </RightButtonsContainer>
@@ -361,15 +365,18 @@ const MenuButton = styled.button`
   width: 36px;
   height: 30px;
   border: 0;
-  background: #ddd;
+  background: ${isInsidersVersion ? 'green' : '#ddd'};
   position: relative;
   color: inherit;
 
-  @media (prefers-color-scheme: dark) {
-    & {
-      background: #444;
+  ${!isInsidersVersion &&
+  css`
+    @media (prefers-color-scheme: dark) {
+      & {
+        background: #444;
+      }
     }
-  }
+  `}
 `
 
 const StyledAccessibilityMenuButton = styled(AccessibilityMenuButton)`
