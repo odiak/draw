@@ -26,6 +26,13 @@ const GlobalStyle = createGlobalStyle`
   body {
     overscroll-behavior: none;
   }
+
+  @media (prefers-color-scheme: dark) {
+    html {
+      background: #000;
+      color: #eee;
+    }
+  }
 `
 
 export const App: FC = () => {

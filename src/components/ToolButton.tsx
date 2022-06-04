@@ -41,12 +41,26 @@ const Button = styled.button`
   height: 30px;
   border: 0;
   background: #e8e8e8;
+  color: inherit;
 
   &.selected {
     background: #000;
 
     > .icon {
       color: #fff;
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    & {
+      background: #444;
+    }
+
+    &.selected {
+      background: #aaa;
+      > .icon {
+        color: #000;
+      }
     }
   }
 `

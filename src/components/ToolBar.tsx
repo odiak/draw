@@ -258,6 +258,12 @@ const Container = styled.div`
   border-bottom: 1px solid #000;
   touch-action: manipulation;
 
+  @media (prefers-color-scheme: dark) {
+    & {
+      border-bottom-color: #888;
+    }
+  }
+
   input {
     display: block;
     border: 1px solid transparent;
@@ -273,6 +279,19 @@ const Container = styled.div`
       color: inherit;
       &:hover {
         border-color: transparent;
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      & {
+        background: #555;
+        color: #fff;
+      }
+      &::placeholder {
+        color: #bbb;
+      }
+      &:hover {
+        border-color: #999;
       }
     }
   }
@@ -295,6 +314,7 @@ const Container = styled.div`
     border: 0;
     background: #e8e8e8;
     position: relative;
+    color: inherit;
 
     .fa-slash {
       color: red !important;
@@ -302,9 +322,19 @@ const Container = styled.div`
 
     &.selected {
       background: #444;
+      color: #fff;
+    }
 
-      .icon {
-        color: #fff;
+    @media (prefers-color-scheme: dark) {
+      & {
+        background: #444;
+      }
+      &:disabled {
+        color: #777;
+      }
+      &.selected {
+        background: #aaa;
+        color: #000;
       }
     }
   }
@@ -333,6 +363,13 @@ const MenuButton = styled.button`
   border: 0;
   background: #ddd;
   position: relative;
+  color: inherit;
+
+  @media (prefers-color-scheme: dark) {
+    & {
+      background: #444;
+    }
+  }
 `
 
 const StyledAccessibilityMenuButton = styled(AccessibilityMenuButton)`
@@ -353,6 +390,10 @@ const ColorIcon = styled.div<{ color: string; width: number }>`
       border-radius: ${size / 2}px;
     `
   }}
+
+  @media (prefers-color-scheme: dark) {
+    border: 1px solid #999;
+  }
 `
 
 const ColorWidthMenu = styled.div`
@@ -370,6 +411,11 @@ const ColorWidthMenu = styled.div`
   width: 120px;
   display: none;
   line-height: 0;
+
+  @media (prefers-color-scheme: dark) {
+    background: #444;
+    border-color: #777;
+  }
 `
 
 const ColorWidthMenuItem = styled.div<{ selected?: boolean }>`
@@ -381,6 +427,10 @@ const ColorWidthMenuItem = styled.div<{ selected?: boolean }>`
     css`
       border-radius: 4px;
       background: #ccc;
+
+      @media (prefers-color-scheme: dark) {
+        background: #999;
+      }
     `}
 `
 
@@ -392,6 +442,10 @@ const ColorIndicator = styled.div<{ color: string }>`
   border: 1px solid #000;
   box-sizing: border-box;
   margin: 4px;
+
+  @media (prefers-color-scheme: dark) {
+    border-color: #999;
+  }
 `
 
 const WidthIndicator = styled.div<{ width: number }>`
@@ -406,4 +460,8 @@ const WidthIndicator = styled.div<{ width: number }>`
       margin: ${(30 - size) / 2}px;
     `
   }}
+
+  @media (prefers-color-scheme: dark) {
+    background: #fff;
+  }
 `

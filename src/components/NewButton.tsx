@@ -31,4 +31,10 @@ const Button = styled(Link)`
   > .icon {
     display: block;
   }
+
+  @media (prefers-color-scheme: dark) {
+    & {
+      background: #444;
+    }
+  }
 `

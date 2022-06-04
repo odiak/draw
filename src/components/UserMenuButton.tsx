@@ -64,9 +64,16 @@ const AccountButton = styled.button`
   align-items: center;
   position: relative;
   padding: 1px;
+  color: inherit;
 
   > .icon {
     display: block;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    & {
+      background: #444;
+    }
   }
 `
 

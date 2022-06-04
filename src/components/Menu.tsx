@@ -16,6 +16,11 @@ export const Menu = styled.ul`
   text-align: left;
   min-width: 160px;
   display: none;
+
+  @media (prefers-color-scheme: dark) {
+    background: #444;
+    border-color: #777;
+  }
 `
 
 export const MenuItem = styled.li`
@@ -24,6 +29,12 @@ export const MenuItem = styled.li`
 
   &:hover {
     background: #eee;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    &:hover {
+      background: #666;
+    }
   }
 `
 
@@ -45,6 +56,12 @@ export const MenuItemWithAnchor = styled.li`
     color: inherit;
     text-decoration: none;
     display: block;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    &:hover {
+      background: #666;
+    }
   }
 `
 

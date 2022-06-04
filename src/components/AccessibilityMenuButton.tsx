@@ -29,9 +29,16 @@ const Button = styled.button`
   justify-content: center;
   align-items: center;
   position: relative;
+  color: inherit;
 
   > ${StyledFontAwesomeIcon} {
     display: block;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    & {
+      background: #444;
+    }
   }
 `
 

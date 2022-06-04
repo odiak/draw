@@ -8,8 +8,8 @@ import { ExperimentalSettingsService } from '../services/ExperimentalSettingsSer
 import { Color } from '../utils/Color'
 import { DrawingService } from '../services/DrawingService'
 import { encode, decode } from '@msgpack/msgpack'
-import styled from 'styled-components'
 import { CanvasBottomMenu } from './CanvasBottomMenu'
+import NewColor from 'color'
 
 type Operation =
   | Readonly<{
@@ -59,8 +59,11 @@ const zoomScaleFactorForWheel = 1.05
 
 const isLikeMacOs = typeof navigator !== 'undefined' && /\bMac OS X\b/i.test(navigator.userAgent)
 
-const scrollBarColorV = Color.fromString('#0007')
-const scrollBarColorD = Color.fromString('#111a')
+const scrollBarColorV = new NewColor('#0007')
+const scrollBarColorD = new NewColor('#111a')
+
+const scrollBarColorVDark = new NewColor('#fff7')
+const scrollBarColorDDark = new NewColor('#eeea')
 
 type Props = {
   pictureId: string
@@ -160,6 +163,8 @@ export class Canvas extends React.Component<Props, State> {
 
   private gestureInfo: GestureInfo | undefined = undefined
 
+  private isDarkMode = false
+
   constructor(props: Props, context: unknown) {
     super(props, context)
 
@@ -212,6 +217,15 @@ export class Canvas extends React.Component<Props, State> {
         }
 
         this.refreshBottomMenuState(tool, prev)
+      })
+    )
+
+    const mql = matchMedia('(prefers-color-scheme: dark)')
+    this.isDarkMode = mql.matches
+    fs.push(
+      addEventListener(mql, 'change', (event: MediaQueryListEvent) => {
+        this.isDarkMode = event.matches
+        this.tickDraw()
       })
     )
 
@@ -1099,7 +1113,8 @@ export class Canvas extends React.Component<Props, State> {
     const ctx = this.renderingContext
     if (ctx == null) return
 
-    const { erasingPathIds, dpr, scrollLeft, scrollTop, drawingPath, currentLasso } = this
+    const { erasingPathIds, dpr, scrollLeft, scrollTop, drawingPath, currentLasso, isDarkMode } =
+      this
     const scale = this.drawingService.scale.value
 
     ctx.clearRect(0, 0, this.widthPP, this.heightPP)
@@ -1134,15 +1149,15 @@ export class Canvas extends React.Component<Props, State> {
         dy = currentLasso.accumulatedOffsetY
       }
 
-      drawPath(ctx, path, scrollLeft, scrollTop, dpr, scale, dx, dy)
+      drawPath(ctx, path, scrollLeft, scrollTop, dpr, scale, dx, dy, isDarkMode)
     }
 
     if (drawingPath != null) {
-      drawPath(ctx, drawingPath, scrollLeft, scrollTop, dpr, scale, 0, 0)
+      drawPath(ctx, drawingPath, scrollLeft, scrollTop, dpr, scale, 0, 0, isDarkMode)
     }
 
     if (currentLasso != null) {
-      drawLassoPath(ctx, currentLasso, scrollLeft, scrollTop, dpr, scale)
+      drawLassoPath(ctx, currentLasso, scrollLeft, scrollTop, dpr, scale, isDarkMode)
     }
 
     if (this.isScrollBarVisible) {
@@ -1160,7 +1175,7 @@ export class Canvas extends React.Component<Props, State> {
       maxY: maxDrawedY_
     } = calculatePathsBoundary(this.paths.values())
 
-    const { scrollLeft, scrollTop, width, height, dpr } = this
+    const { scrollLeft, scrollTop, width, height, dpr, isDarkMode } = this
     const scale = this.drawingService.scale.value
     const minDrawedX = minDrawedX_ * scale - scrollLeft
     const minDrawedY = minDrawedY_ * scale - scrollTop
@@ -1188,10 +1203,12 @@ export class Canvas extends React.Component<Props, State> {
     const scaleX = horizontalBarLength / (maxX - minX)
     const scaleY = verticalBarLength / (maxY - minY)
 
-    const colorV = scrollBarColorV.copy()
-    const colorD = scrollBarColorD.copy()
-    colorV.a *= this.scrollBarOpacity
-    colorD.a *= this.scrollBarOpacity
+    const colorV = (isDarkMode ? scrollBarColorVDark : scrollBarColorV).fade(
+      1 - this.scrollBarOpacity
+    )
+    const colorD = (isDarkMode ? scrollBarColorDDark : scrollBarColorD).fade(
+      1 - this.scrollBarOpacity
+    )
 
     ctx.fillStyle = colorV.toString()
     ctx.fillRect(
@@ -1337,17 +1354,20 @@ export class Canvas extends React.Component<Props, State> {
 
 function drawPath(
   ctx: CanvasRenderingContext2D,
-  { width, color, points, isBezier, offsetX, offsetY }: Path,
+  { width, color: originalColor, points, isBezier, offsetX, offsetY }: Path,
   scrollLeft: number,
   scrollTop: number,
   dpr: number,
   scale: number,
   dx: number,
-  dy: number
+  dy: number,
+  isDarkMode: boolean
 ) {
   if (points.length === 0) {
     return
   }
+
+  const color = isDarkMode ? transformColorForDarkMode(originalColor) : originalColor
 
   ctx.lineWidth = width * scale * dpr
   ctx.strokeStyle = color
@@ -1401,12 +1421,13 @@ function drawLassoPath(
   scrollLeft: number,
   scrollTop: number,
   dpr: number,
-  scale: number
+  scale: number,
+  isDarkMode: boolean
 ) {
   if (points.length <= 1) return
 
   ctx.setLineDash([4 * dpr, 4 * dpr])
-  ctx.strokeStyle = '#000000'
+  ctx.strokeStyle = isDarkMode ? '#ffffff' : '#000000'
   ctx.lineWidth = 1
 
   ctx.beginPath()
@@ -1942,4 +1963,12 @@ function createLassoFromOperation(operation: Extract<Operation, { type: 'paste' 
   lasso.isClosed = true
   lasso.overlappingPathIds = new Set(operation.paths.map(({ id }) => id))
   return lasso
+}
+
+function transformColorForDarkMode(colorString: string): string {
+  const color = new NewColor(colorString)
+  if (color.red() === 0 && color.green() === 0 && color.blue() === 0) {
+    return '#fff'
+  }
+  return color.hex()
 }

@@ -126,6 +126,12 @@ const PictureListItem = styled(Link)`
   @media screen and (max-width: 400px) {
     width: calc(50% - 10px);
   }
+
+  @media (prefers-color-scheme: dark) {
+    & {
+      background: #ddd;
+    }
+  }
 `
 
 const PictureTitle = styled.div`
@@ -136,6 +142,12 @@ const PictureTitle = styled.div`
   display: block;
   width: 100%;
   box-sizing: border-box;
+
+  @media (prefers-color-scheme: dark) {
+    & {
+      background: #333e;
+    }
+  }
 `
 
 const PictureThumnail = styled.img`
@@ -158,6 +170,7 @@ const ButtonsContainer = styled.div`
   right: 0;
   width: fit-content;
   display: flex;
+  z-index: 1;
 `
 
 const StyledNewButton = styled(NewButton)`

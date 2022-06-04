@@ -62,7 +62,12 @@ const BottomMenuItem = styled.button`
   background: #aaab;
   border: 0;
   border-radius: 2px;
+  color: inherit;
   & + & {
     margin-left: 5px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    background: #666b;
   }
 `
