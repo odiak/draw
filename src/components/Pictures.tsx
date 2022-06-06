@@ -1,15 +1,15 @@
 import React, { FC, useState, useEffect, useCallback } from 'react'
 import styled from 'styled-components'
 import { PictureService, PictureWithId, Anchor } from '../services/PictureService'
-import { Link } from 'react-router-dom'
 import { UserMenuButton } from './UserMenuButton'
 import { AuthService } from '../services/AuthService'
 import { useVariable } from '../utils/useVariable'
 import { NewButton } from './NewButton'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
-import { imageBaseUrl } from '../constants'
 import { withPrefix } from '../i18n/translate'
 import { Title } from './Title'
+import { PictureListItem } from './PictureListItem'
+import { removeArrayElementAt } from '../utils/removeArrayElementAt'
 
 const t = withPrefix('boards')
 
@@ -66,11 +66,14 @@ export const Pictures: FC = () => {
       <ContentContainer>
         <H>{t('title')}</H>
         <PictureList>
-          {pictures.map((p) => (
-            <PictureListItem key={p.id} to={`/${p.id}`}>
-              <PictureThumnail src={`${imageBaseUrl}/${p.id}-w380-h300.png`} />
-              <PictureTitle>{p.title || t('untitled')}</PictureTitle>
-            </PictureListItem>
+          {pictures.map((p, i) => (
+            <PictureListItem
+              key={p.id}
+              picture={p}
+              onDelete={() => {
+                setPictures(removeArrayElementAt(pictures, i))
+              }}
+            />
           ))}
         </PictureList>
         {loadingState === 'loaded' && anchor != null && (
@@ -104,56 +107,6 @@ const PictureList = styled.div`
   flex-wrap: wrap;
 `
 
-const PictureListItem = styled(Link)`
-  width: 190px;
-  height: 150px;
-  margin: 5px;
-  color: inherit;
-  text-decoration: none;
-  position: relative;
-  box-shadow: 1px 1px 4px #6669;
-  overflow: hidden;
-  border-radius: 2px;
-
-  @media screen and (max-width: 830px) {
-    width: calc(25% - 10px);
-  }
-
-  @media screen and (max-width: 600px) {
-    width: calc(33% - 10px);
-  }
-
-  @media screen and (max-width: 400px) {
-    width: calc(50% - 10px);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    & {
-      background: #ddd;
-    }
-  }
-`
-
-const PictureTitle = styled.div`
-  position: absolute;
-  bottom: 0;
-  padding: 4px;
-  background: #fffe;
-  display: block;
-  width: 100%;
-  box-sizing: border-box;
-
-  @media (prefers-color-scheme: dark) {
-    & {
-      background: #333e;
-    }
-  }
-`
-
-const PictureThumnail = styled.img`
-  transform: scale(0.5) translate(-50%, -50%);
-`
-
 const Button = styled.button`
   display: block;
   margin: 10px auto;
@@ -170,7 +123,7 @@ const ButtonsContainer = styled.div`
   right: 0;
   width: fit-content;
   display: flex;
-  z-index: 1;
+  z-index: 10;
 `
 
 const StyledNewButton = styled(NewButton)`

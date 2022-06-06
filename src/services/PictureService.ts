@@ -25,6 +25,8 @@ import {
   getDoc
 } from 'firebase/firestore'
 import { imageBaseUrl } from '../constants'
+import { getAuth } from 'firebase/auth'
+import axios from 'axios'
 
 export type Point = { x: number; y: number }
 export type Path = {
@@ -282,11 +284,29 @@ export class PictureService {
     const touching = { pictureId }
     this.touching = touching
     setTimeout(async () => {
-      await fetch(`${imageBaseUrl}/update/${pictureId}`, { method: 'POST' }).catch(() => undefined)
+      await axios.post(`${imageBaseUrl}/update/${pictureId}`).catch(() => undefined)
       if (this.touching === touching) {
         this.touching = undefined
       }
     }, 1000)
+  }
+
+  async deletePicture(pictureId: string): Promise<boolean> {
+    const { currentUser } = getAuth()
+    if (currentUser === null) return false
+
+    axios
+    const succeeded = await axios
+      .post(`${imageBaseUrl}/pictures/${pictureId}/delete`, {
+        idToken: await currentUser.getIdToken()
+      })
+      .then(async ({ data }) => {
+        if (data == null) return false
+        return Boolean((data as Record<string, unknown>).succeeded)
+      })
+      .catch(() => false)
+
+    return succeeded
   }
 }
 

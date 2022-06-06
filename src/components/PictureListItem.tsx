@@ -1,0 +1,124 @@
+import { faEllipsisH } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import React, { FC, useCallback } from 'react'
+import { Link } from 'react-router-dom'
+import styled from 'styled-components'
+import { imageBaseUrl } from '../constants'
+import { withPrefix } from '../i18n/translate'
+import { PictureService, PictureWithId } from '../services/PictureService'
+import { useMenu } from '../utils/useMenu'
+import { Menu as OriginalMenu, MenuItem } from './Menu'
+
+const t = withPrefix('boards')
+
+type Props = {
+  picture: PictureWithId
+  onDelete?: () => void
+}
+
+export const PictureListItem: FC<Props> = ({ picture: { id: pictureId, title }, onDelete }) => {
+  const { buttonRef, menuRef } = useMenu()
+
+  const deletePicture = useCallback(async () => {
+    if (!confirm(t('deleteConfirmation'))) return
+
+    const service = PictureService.instantiate()
+    const succeeded = await service.deletePicture(pictureId)
+    if (!succeeded) {
+      alert(t('failedToDelete'))
+      return
+    }
+    onDelete?.()
+  }, [onDelete, pictureId])
+
+  return (
+    <Container>
+      <MenuButton ref={buttonRef}>
+        <FontAwesomeIcon icon={faEllipsisH} className="icon" />
+        <Menu ref={menuRef}>
+          <MenuItem
+            onClick={() => {
+              deletePicture()
+            }}
+          >
+            {t('deleteBoard')}
+          </MenuItem>
+        </Menu>
+      </MenuButton>
+      <AnchorBox to={`/${pictureId}`}>
+        <PictureThumnail src={`${imageBaseUrl}/${pictureId}-w380-h300.png`} />
+        <PictureTitle>{title || t('untitled')}</PictureTitle>
+      </AnchorBox>
+    </Container>
+  )
+}
+
+const Container = styled.div`
+  width: 190px;
+  height: 150px;
+  margin: 5px;
+  position: relative;
+  box-shadow: 1px 1px 4px #6669;
+  overflow: hidden;
+  border-radius: 2px;
+
+  @media screen and (max-width: 830px) {
+    width: calc(25% - 10px);
+  }
+
+  @media screen and (max-width: 600px) {
+    width: calc(33% - 10px);
+  }
+
+  @media screen and (max-width: 400px) {
+    width: calc(50% - 10px);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    & {
+      background: #ddd;
+    }
+  }
+`
+
+const AnchorBox = styled(Link)`
+  color: inherit;
+  text-decoration: none;
+`
+
+const PictureTitle = styled.div`
+  position: absolute;
+  bottom: 0;
+  padding: 4px;
+  background: #fffe;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (prefers-color-scheme: dark) {
+    & {
+      background: #333e;
+    }
+  }
+`
+
+const PictureThumnail = styled.img`
+  transform: scale(0.5) translate(-50%, -50%);
+`
+
+const MenuButton = styled.button`
+  position: absolute;
+  background: #ddd8;
+  border: 0;
+  right: 0;
+  top: 0;
+  z-index: 1;
+  padding: 4px 6px;
+  & > .icon {
+    color: #555c;
+  }
+`
+
+const Menu = styled(OriginalMenu)`
+  min-width: unset;
+`
