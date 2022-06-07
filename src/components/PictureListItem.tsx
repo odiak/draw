@@ -114,6 +114,8 @@ const MenuButton = styled.button`
   top: 0;
   z-index: 1;
   padding: 4px 6px;
+  color: inherit;
+
   & > .icon {
     color: #555c;
   }
