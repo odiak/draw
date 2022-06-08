@@ -5,11 +5,11 @@ import { generateId } from '../utils/generateId'
 import { addEventListener } from '../utils/addEventListener'
 import { fitCurve } from '@odiak/fit-curve'
 import { ExperimentalSettingsService } from '../services/ExperimentalSettingsService'
-import { Color } from '../utils/Color'
 import { DrawingService } from '../services/DrawingService'
 import { encode, decode } from '@msgpack/msgpack'
 import { CanvasBottomMenu } from './CanvasBottomMenu'
 import NewColor from 'color'
+import { addMediaQueryChangeListener } from '../utils/addMediaQueryChangeListener'
 
 type Operation =
   | Readonly<{
@@ -223,8 +223,8 @@ export class Canvas extends React.Component<Props, State> {
     const mql = matchMedia('(prefers-color-scheme: dark)')
     this.isDarkMode = mql.matches
     fs.push(
-      addEventListener(mql, 'change', (event: MediaQueryListEvent) => {
-        this.isDarkMode = event.matches
+      addMediaQueryChangeListener(mql, ({ matches }: MediaQueryListEvent) => {
+        this.isDarkMode = matches
         this.tickDraw()
       })
     )
