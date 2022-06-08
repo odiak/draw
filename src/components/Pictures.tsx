@@ -10,6 +10,7 @@ import { withPrefix } from '../i18n/translate'
 import { Title } from './Title'
 import { PictureListItem } from './PictureListItem'
 import { removeArrayElementAt } from '../utils/removeArrayElementAt'
+import { EllipsisMenuButton } from './EllipsisMenuButton'
 
 const t = withPrefix('boards')
 
@@ -59,7 +60,8 @@ export const Pictures: FC = () => {
     <Container>
       <ButtonsContainer>
         <StyledNewButton />
-        <StyledUserMenuButton />
+        <StyledUserMenuButton hideLinkToBoards />
+        <StyledEllipsisMenuButton />
       </ButtonsContainer>
       <Title>{t('title')}</Title>
 
@@ -130,5 +132,6 @@ const StyledNewButton = styled(NewButton)`
   margin-right: 12px;
 `
 const StyledUserMenuButton = styled(UserMenuButton)`
-  margin-right: 22px;
+  margin-right: 12px;
 `
+const StyledEllipsisMenuButton = styled(EllipsisMenuButton)``
