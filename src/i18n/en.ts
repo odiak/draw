@@ -48,7 +48,8 @@ export const en = {
     title: 'Experimental Flags',
     hackForSamsungGalaxyNote:
       'This is a Samsung Galaxy Note (Use dirty hack for S-Pen detection. This feature may not work depends on browser or OS version.)',
-    disableSmoothingPaths: 'Disable smoothing paths'
+    disableSmoothingPaths: 'Disable smoothing paths',
+    disableScaleLimit: 'Do not limit scale'
   },
   insiders: {
     turnOnConfirmation: `"Insiders version" contains some features under development,

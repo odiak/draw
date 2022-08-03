@@ -56,6 +56,16 @@ export const Flags: FC = () => {
         />
         {t('disableSmoothingPaths')}
       </Label>
+      <Label>
+        <input
+          type="checkbox"
+          checked={!!settings.disableScaleLimit}
+          onChange={(e) => {
+            setSettingsWithSave({ disableScaleLimit: e.target.checked })
+          }}
+        />
+        {t('disableScaleLimit')}
+      </Label>
     </Container>
   )
 }

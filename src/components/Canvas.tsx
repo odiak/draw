@@ -55,7 +55,10 @@ type GestureInfo = {
 }
 
 const zoomScaleFactor = 1.1
-const zoomScaleFactorForWheel = 1.05
+const zoomScaleFactorForWheel = 1.005
+
+const minScale = 0.01
+const maxScale = 10
 
 const isLikeMacOs = typeof navigator !== 'undefined' && /\bMac OS X\b/i.test(navigator.userAgent)
 
@@ -541,13 +544,13 @@ export class Canvas extends React.Component<Props, State> {
   }
 
   private zoomIn() {
-    this.drawingService.scale.update((s) => s * zoomScaleFactor)
+    this.drawingService.scale.update((s) => this.clipScale(s * zoomScaleFactor))
     this.showScrollBar()
     this.hideScrollBarAfterDelay()
   }
 
   private zoomOut() {
-    this.drawingService.scale.update((s) => s / zoomScaleFactor)
+    this.drawingService.scale.update((s) => this.clipScale(s / zoomScaleFactor))
     this.showScrollBar()
     this.hideScrollBarAfterDelay()
   }
@@ -556,7 +559,7 @@ export class Canvas extends React.Component<Props, State> {
     this.isWheelZooming = true
     this.wheelZoomX = x
     this.wheelZoomY = y
-    this.drawingService.scale.update((s) => s * zoomScaleFactorForWheel ** -delta)
+    this.drawingService.scale.update((s) => this.clipScale(s * zoomScaleFactorForWheel ** -delta))
     this.isWheelZooming = false
 
     this.showScrollBar()
@@ -567,7 +570,7 @@ export class Canvas extends React.Component<Props, State> {
     this.isGestureZooming = true
     this.wheelZoomX = x
     this.wheelZoomY = y
-    this.drawingService.scale.update((s) => s * factor)
+    this.drawingService.scale.update((s) => this.clipScale(s * factor))
     this.isGestureZooming = false
   }
 
@@ -1349,6 +1352,14 @@ export class Canvas extends React.Component<Props, State> {
       this.setState({ bottomMenuState: { type: 'lasso', state: 'closed' } })
     }
     this.tickDraw()
+  }
+
+  clipScale(scale: number): number {
+    if (this.experimentalSettings.value.disableScaleLimit) return scale
+
+    if (scale < minScale) return minScale
+    if (scale > maxScale) return maxScale
+    return scale
   }
 }
 
