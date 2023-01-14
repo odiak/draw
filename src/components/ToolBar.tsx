@@ -5,7 +5,6 @@ import {
   faSlash,
   faSearchPlus,
   faSearchMinus,
-  faEllipsisH,
   faUndo,
   faRedo
 } from '@fortawesome/free-solid-svg-icons'
@@ -13,20 +12,16 @@ import { ToolButton } from './ToolButton'
 import { Tool } from '../types/Tool'
 import classNames from 'classnames'
 import styled, { css } from 'styled-components'
-import { copyToClipboard } from '../utils/copyToClipboard'
 import { useMenu } from '../utils/useMenu'
 import { useVariable } from '../utils/useVariable'
 import { PictureService, Permission, AccessibilityLevel } from '../services/PictureService'
 import { AccessibilityMenuButton } from './AccessibilityMenuButton'
-import { MenuDivider, MenuItem, MenuItemWithAnchor, Menu, MenuItemText } from './Menu'
 import { UserMenuButton } from './UserMenuButton'
 import { NewButton } from './NewButton'
 import { DrawingService, colors, widths } from '../services/DrawingService'
-import { baseUrl, imageBaseUrl } from '../constants'
 import { withPrefix } from '../i18n/translate'
-import { isInsidersVersion, toggleIsInsiderVersion } from '../utils/insiders'
+import { EllipsisMenuButton } from './EllipsisMenuButton'
 
-const t = withPrefix('menu')
 const tToolBar = withPrefix('toolBar')
 
 type Props = {
@@ -47,35 +42,11 @@ const WrappedToolButton: FC<{
   )
 }
 
-const MenuItemToCopy: FC<{ text: string }> = ({ children, text }) => {
-  return (
-    <MenuItem
-      onClick={() => {
-        copyToClipboard(text)
-      }}
-    >
-      {children}
-    </MenuItem>
-  )
-}
-
-const MenuItemWithLink: FC<{ link: string }> = ({ link, children }) => {
-  return (
-    <MenuItemWithAnchor>
-      <a href={link} target="_blank" rel="noopener noreferrer">
-        {children}
-      </a>
-    </MenuItemWithAnchor>
-  )
-}
-
 const defaultTitle = 'Untitled'
 
 export function ToolBar({ pictureId }: Props) {
   const pictureService = PictureService.instantiate()
   const drawingService = DrawingService.instantiate()
-
-  const { menuRef, buttonRef: menuButtonRef } = useMenu()
 
   const [title, setTitle] = useState<string | null>(null)
   const setTitleWithUpdate = useCallback(
@@ -91,13 +62,10 @@ export function ToolBar({ pictureId }: Props) {
     })
   }, [pictureId, pictureService])
 
-  const [permission, setPermission] = useState<Permission | null>(null)
+  const [permission, setPermission] = useState<Permission>()
   useEffect(() => {
     return pictureService.watchPermission(pictureId, setPermission)
   }, [pictureService, pictureId])
-
-  const imageLink = `${imageBaseUrl}/${pictureId}.svg`
-  const pageLink = `${baseUrl}/${pictureId}`
 
   const [tool, setTool] = useVariable(drawingService.tool)
   const [palmRejection, setPalmRejection] = useVariable(drawingService.palmRejectionEnabled)
@@ -151,30 +119,7 @@ export function ToolBar({ pictureId }: Props) {
         )}
         <StyledNewButton />
         <StyledUserMenuButton />
-        <MenuButton ref={menuButtonRef}>
-          <FontAwesomeIcon icon={faEllipsisH} className="icon" />
-          <Menu ref={menuRef}>
-            {permission?.accessibilityLevel === 'private' ? (
-              <MenuItemText>{t('noImageLink')}</MenuItemText>
-            ) : (
-              <>
-                <MenuItemToCopy text={imageLink}>{t('copyImageLink')}</MenuItemToCopy>
-                <MenuItemToCopy text={`[![](${imageLink})](${pageLink})`}>
-                  {t('copyImageLinkForMarkdown')}
-                </MenuItemToCopy>
-                <MenuItemToCopy text={`[${pageLink} ${imageLink}]`}>
-                  {t('copyImageLinkForScrapbox')}
-                </MenuItemToCopy>
-              </>
-            )}
-            <MenuDivider />
-            <MenuItemWithLink link="https://about.kakeru.app/">{t('aboutKakeru')}</MenuItemWithLink>
-            <MenuItemWithLink link="/flags">{t('experimentalFlags')}</MenuItemWithLink>
-            <MenuItem onClick={() => toggleIsInsiderVersion()}>
-              {isInsidersVersion ? t('turnOffInsidersVersion') : t('turnOnInsidersVersion')}
-            </MenuItem>
-          </Menu>
-        </MenuButton>
+        <EllipsisMenuButton pictureId={pictureId} permission={permission} />
       </RightButtonsContainer>
       <div className="tools">
         {permission?.writable && (
@@ -359,24 +304,6 @@ const StyledNewButton = styled(NewButton)`
 
 const StyledUserMenuButton = styled(UserMenuButton)`
   margin-right: 12px;
-`
-
-const MenuButton = styled.button`
-  width: 36px;
-  height: 30px;
-  border: 0;
-  background: ${isInsidersVersion ? 'green' : '#ddd'};
-  position: relative;
-  color: inherit;
-
-  ${!isInsidersVersion &&
-  css`
-    @media (prefers-color-scheme: dark) {
-      & {
-        background: #444;
-      }
-    }
-  `}
 `
 
 const StyledAccessibilityMenuButton = styled(AccessibilityMenuButton)`

@@ -12,7 +12,10 @@ import { withPrefix } from '../i18n/translate'
 
 const t = withPrefix('menu')
 
-export const UserMenuButton: FC<{ className?: string }> = ({ className }) => {
+export const UserMenuButton: FC<{ className?: string; hideLinkToBoards?: boolean }> = ({
+  className,
+  hideLinkToBoards
+}) => {
   const authService = AuthService.instantiate()
   const [currentUser] = useVariable(authService.currentUser)
   const migrationService = MigrationService.instantiate()
@@ -39,9 +42,11 @@ export const UserMenuButton: FC<{ className?: string }> = ({ className }) => {
         <AccountImage src={currentUser.photoURL} />
       )}
       <Menu ref={accountMenuRef}>
-        <MenuItemWithAnchor>
-          <Link to="/boards">{t('myBoards')}</Link>
-        </MenuItemWithAnchor>
+        {!hideLinkToBoards && (
+          <MenuItemWithAnchor>
+            <Link to="/boards">{t('myBoards')}</Link>
+          </MenuItemWithAnchor>
+        )}
         {currentUser != null &&
           (currentUser.isAnonymous ? (
             <MenuItem onClick={signIn}>{t('signInWithGoogle')}</MenuItem>

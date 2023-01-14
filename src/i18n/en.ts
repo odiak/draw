@@ -9,7 +9,10 @@ export const en = {
     loadMore: 'Load more',
     loading: 'Loading',
     empty: 'There is no board',
-    untitled: 'Untitled'
+    untitled: 'Untitled',
+    deleteBoard: 'Delete',
+    deleteConfirmation: 'Are you sure to delete the board?',
+    failedToDelete: 'Failed to delete the board.'
   },
   menu: {
     noImageLink: 'No image link for this access level',
