@@ -7,6 +7,7 @@
   "scripts": {
     "start": "vite",
     "build": "vite build",
+    "preinstall": "./overwrite-yarn-config-for-deploy.sh",
     "build-for-deploy": "echo \"$SECRETS_DECRYPTION_KEY\" | yarn run secrets:decrypt && yarn run build",
     "secrets:encrypt": "gpg --symmetric --cipher-algo AES256 secrets.json",
     "secrets:decrypt": "gpg --quiet --yes --batch --decrypt --passphrase=\"$(cat)\" --out secrets.json secrets.json.gpg"
