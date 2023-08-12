@@ -53,13 +53,5 @@ export const en = {
       'This is a Samsung Galaxy Note (Use dirty hack for S-Pen detection. This feature may not work depends on browser or OS version.)',
     disableSmoothingPaths: 'Disable smoothing paths',
     disableScaleLimit: 'Do not limit scale'
-  },
-  insiders: {
-    turnOnConfirmation: `"Insiders version" contains some features under development,
-but it may have some bugs.
-After you chose OK, the page will be reloaded.
-Are you sure?`,
-    turnOffConfirmation: `Are you sure to stop using "Insiders Version"?
-After you chose OK, the page will be reloaded.`
   }
 }

@@ -55,12 +55,5 @@ export const ja: typeof en = {
       'Galaxy Note用のハックを有効にする (Sペンを認識するための特殊な処理。ブラウザやOSのバージョンによっては動作しない可能性があります。)',
     disableSmoothingPaths: '線を滑らかにする処理を無効にする',
     disableScaleLimit: '倍率の制限を無効にする'
-  },
-  insiders: {
-    turnOnConfirmation: `インサイダー版には開発中の機能が含まれますが、バグを含む可能性があります。
-OKを選択後、ページがリロードされます。
-よろしいですか？`,
-    turnOffConfirmation: `インサイダー版の使用を中止してよろしいですか？
-OKを選択後、ページがリロードされます。`
   }
 }

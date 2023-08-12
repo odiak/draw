@@ -1,12 +1,12 @@
 import { faEllipsisH } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { FC } from 'react'
-import styled, { css } from 'styled-components'
+import styled from 'styled-components'
 import { baseUrl, imageBaseUrl } from '../constants'
 import { withPrefix } from '../i18n/translate'
 import { Permission } from '../services/PictureService'
 import { copyToClipboard } from '../utils/copyToClipboard'
-import { isInsidersVersion, toggleIsInsiderVersion } from '../utils/insiders'
+
 import { useMenu } from '../utils/useMenu'
 import { Menu, MenuDivider, MenuItem, MenuItemText, MenuItemWithAnchor } from './Menu'
 
@@ -52,9 +52,6 @@ export const EllipsisMenuButton: FC<Props> = ({ pictureId, permission, className
         )}
         <MenuItemWithLink link={aboutPageLink}>{t('aboutKakeru')}</MenuItemWithLink>
         <MenuItemWithLink link="/flags">{t('experimentalFlags')}</MenuItemWithLink>
-        <MenuItem onClick={() => toggleIsInsiderVersion()}>
-          {isInsidersVersion ? t('turnOffInsidersVersion') : t('turnOnInsidersVersion')}
-        </MenuItem>
       </Menu>
     </MenuButton>
   )
@@ -86,16 +83,13 @@ const MenuButton = styled.button`
   width: 36px;
   height: 30px;
   border: 0;
-  background: ${isInsidersVersion ? 'green' : '#ddd'};
+  background: #ddd;
   position: relative;
   color: inherit;
 
-  ${!isInsidersVersion &&
-  css`
-    @media (prefers-color-scheme: dark) {
-      & {
-        background: #444;
-      }
+  @media (prefers-color-scheme: dark) {
+    & {
+      background: #444;
     }
-  `}
+  }
 `
