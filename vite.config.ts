@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react()],
   define: {
     kakeruSecrets: fs.readFileSync('./secrets.json', 'utf-8'),
-    isRecaptchaEnabled: false
+    isRecaptchaEnabled: true
   },
   build: {
     rollupOptions: {
