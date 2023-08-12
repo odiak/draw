@@ -1,0 +1,21 @@
+# define GitHub actions to run every day
+
+name: Health Check
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: App server
+        run: |
+          curl -f -i https://kakeru.app | grep '<div id="app"'
+      - name: Website
+        run: |
+          curl -f -i https://about.kakeru.app | grep '<h1'
+      - name: Image server
+        run: |
+          curl -f -i https://i.kakeru.app/613c2c1e1ceb425c31ed057c04b99bae.svg
