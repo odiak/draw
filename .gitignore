@@ -59,3 +59,4 @@ Thumbs.db
 .env*.local
 secrets.json
 .env.dev
+.dev.vars

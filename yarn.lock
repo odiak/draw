@@ -435,6 +435,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@cloudflare/workers-types@npm:^4.20230807.0":
+  version: 4.20230807.0
+  resolution: "@cloudflare/workers-types@npm:4.20230807.0"
+  checksum: 944a1c6a37462c100b5e615c89131ff54bf1095fcd811f43a9d2cc5fa285c9722eef5fba1805fab080d550fff1dcff24197365b92c7d2116df76b7d894a4a372
+  languageName: node
+  linkType: hard
+
 "@emotion/is-prop-valid@npm:^1.1.0":
   version: 1.1.2
   resolution: "@emotion/is-prop-valid@npm:1.1.2"
@@ -1384,6 +1391,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@qnighy/dedent@npm:^0.1.1":
+  version: 0.1.1
+  resolution: "@qnighy/dedent@npm:0.1.1"
+  checksum: 42a8aa62b48134b23a94a7d255dd9fc760a4ee7f40bf8f97564eb3f577e52a9b0a7746856dec8e68bad69a6bc521ac8da89a71031b0ca8ba2e5a68b75540e18f
+  languageName: node
+  linkType: hard
+
 "@sentry/browser@npm:6.19.7":
   version: 6.19.7
   resolution: "@sentry/browser@npm:6.19.7"
@@ -1515,6 +1529,13 @@ __metadata:
   dependencies:
     "@types/color-convert": "*"
   checksum: 4a54a6eca687b1f19d393c6c44e292009e913fa2377b5b815d1cd04470131087d7a799718d9e66a970f43e6ba16e7056a5b40b49d2d0d1d0f1530aff23864528
+  languageName: node
+  linkType: hard
+
+"@types/cookie@npm:^0.5.1":
+  version: 0.5.1
+  resolution: "@types/cookie@npm:0.5.1"
+  checksum: 9a8d60fc84797122bc399d6bd330fe5780dc7aab032321de705049ea925339f74658bfa418de483a625d51858770efef58df633ff2e20f1bdf7fbd74a52847e2
   languageName: node
   linkType: hard
 
@@ -2216,6 +2237,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cookie@npm:^0.5.0":
+  version: 0.5.0
+  resolution: "cookie@npm:0.5.0"
+  checksum: 1f4bd2ca5765f8c9689a7e8954183f5332139eb72b6ff783d8947032ec1fdf43109852c178e21a953a30c0dd42257828185be01b49d1eb1a67fd054ca588a180
+  languageName: node
+  linkType: hard
+
 "core-js@npm:3.6.5":
   version: 3.6.5
   resolution: "core-js@npm:3.6.5"
@@ -2358,6 +2386,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "draw@workspace:."
   dependencies:
+    "@cloudflare/workers-types": ^4.20230807.0
     "@fortawesome/fontawesome-svg-core": ^6.1.1
     "@fortawesome/free-solid-svg-icons": ^6.1.1
     "@fortawesome/pro-solid-svg-icons": ^6.1.1
@@ -2365,10 +2394,12 @@ __metadata:
     "@msgpack/msgpack": ^2.7.0
     "@odiak/fit-curve": ^0.3.2
     "@odiak/iterate": ^0.0.4
+    "@qnighy/dedent": ^0.1.1
     "@sentry/react": ^6.19.7
     "@sentry/tracing": ^6.19.7
     "@types/classnames": ^2.2.10
     "@types/color": ^3.0.3
+    "@types/cookie": ^0.5.1
     "@types/react": ^17.0.9
     "@types/react-dom": ^17.0.6
     "@types/react-router-dom": ^5.1.5
@@ -2380,6 +2411,7 @@ __metadata:
     axios: ^0.27.2
     classnames: ^2.2.6
     color: ^4.2.3
+    cookie: ^0.5.0
     eslint: ^7.5.0
     eslint-plugin-react: ^7.20.3
     eslint-plugin-react-hooks: ^4.0.8
