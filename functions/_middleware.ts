@@ -37,7 +37,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       context.env.PROJECT_ID,
       context.env.GOOGLE_TOKEN
     )
-    console.log(data)
     if (data && data.fields.accessibility?.stringValue !== 'private') {
       return putOgp(res, {
         title: data.fields.title?.stringValue ?? 'Untitled',
