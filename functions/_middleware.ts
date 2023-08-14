@@ -13,13 +13,14 @@ type Env = {
 }
 
 export const onRequest: PagesFunction<Env> = async (context) => {
+  const res = await context.next()
+
   const noOgp = parse(context.request.headers.get('cookie') ?? '')['kakeru_no_ogp']
-  if (noOgp) {
-    return await context.next()
+  if (noOgp || context.request.method !== 'GET') {
+    return res
   }
 
   const url = new URL(context.request.url)
-  const res = await context.next()
 
   if (url.pathname === '/') {
     return putOgp(res, {
@@ -72,14 +73,19 @@ async function fetchDataFromFirestore(
   projectId: string,
   token: string
 ): Promise<any> {
-  const res = await fetch(
-    `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/pictures/${pictureId}`,
-    {
-      headers: { Authorization: `Bearer ${token}` }
-    }
-  )
-  if (!res.ok) return undefined
-  return res.json()
+  try {
+    const res = await fetch(
+      `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/pictures/${pictureId}`,
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    )
+    if (!res.ok) return undefined
+    return res.json()
+  } catch (e) {
+    console.error(e)
+    return undefined
+  }
 }
 
 function putOgp(res: Response, ogp: OgpInfo): Response {
