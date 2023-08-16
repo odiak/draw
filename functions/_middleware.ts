@@ -1,5 +1,6 @@
 import { parse } from 'cookie'
 import { dedent } from '@qnighy/dedent'
+import { getAccessToken } from 'web-auth-library/google'
 
 type OgpInfo = {
   title: string
@@ -8,8 +9,7 @@ type OgpInfo = {
 }
 
 type Env = {
-  PROJECT_ID: string
-  GOOGLE_TOKEN: string
+  GOOGLE_APPLICATION_CREDENTIALS: string
 }
 
 export const onRequest: PagesFunction<Env> = async (context) => {
@@ -32,11 +32,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   const pictureId = url.pathname.match(/^\/([0-9a-f]{8,})$/)?.[1]
   if (pictureId) {
-    console.log(context.env)
     const data = await fetchDataFromFirestore(
       pictureId,
-      context.env.PROJECT_ID,
-      context.env.GOOGLE_TOKEN
+      context.env.GOOGLE_APPLICATION_CREDENTIALS,
+      context.waitUntil
     )
     if (data && data.fields.accessibility?.stringValue !== 'private') {
       return putOgp(res, {
@@ -70,10 +69,17 @@ function escape(text: string): string {
 
 async function fetchDataFromFirestore(
   pictureId: string,
-  projectId: string,
-  token: string
+  credentialsJson: string,
+  waitUntil: (p: Promise<unknown>) => void
 ): Promise<any> {
+  const credentials = JSON.parse(credentialsJson)
+  const { project_id: projectId } = credentials
   try {
+    const token = await getAccessToken({
+      credentials,
+      scope: ['https://www.googleapis.com/auth/datastore'],
+      waitUntil
+    })
     const res = await fetch(
       `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/pictures/${pictureId}`,
       {

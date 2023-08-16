@@ -60,3 +60,4 @@ Thumbs.db
 secrets.json
 .env.dev
 .dev.vars
+.wrangler

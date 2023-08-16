@@ -1,12 +1,16 @@
 {
-  "extends": "../tsconfig.json",
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "Node16",
     "lib": ["esnext"],
     "types": ["@cloudflare/workers-types"],
-    "noUncheckedIndexedAccess": true
+    "strict": true,
+    "alwaysStrict": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "incremental": true,
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["./**/*.ts"],
   "exclude": []
