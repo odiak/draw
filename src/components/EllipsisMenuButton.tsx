@@ -18,6 +18,8 @@ type Props = {
   className?: string
 }
 
+const buyMeACoffeeLink = 'https://buymeacoffee.com/odiak'
+
 export const EllipsisMenuButton: FC<Props> = ({ pictureId, permission, className }) => {
   const { menuRef, buttonRef: menuButtonRef } = useMenu()
 
@@ -51,6 +53,7 @@ export const EllipsisMenuButton: FC<Props> = ({ pictureId, permission, className
           </>
         )}
         <MenuItemWithLink link={aboutPageLink}>{t('aboutKakeru')}</MenuItemWithLink>
+        <MenuItemWithLink link={buyMeACoffeeLink}>{t('supportOnBMC')}</MenuItemWithLink>
         <MenuItemWithLink link="/flags">{t('experimentalFlags')}</MenuItemWithLink>
       </Menu>
     </MenuButton>

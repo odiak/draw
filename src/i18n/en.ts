@@ -31,7 +31,8 @@ export const en = {
     signInWithGoogle: 'Sign in with Google',
     signOut: 'Sign out',
     turnOnInsidersVersion: 'Use "Insiders Version"',
-    turnOffInsidersVersion: 'Stop using "Insiders Version"'
+    turnOffInsidersVersion: 'Stop using "Insiders Version"',
+    supportOnBMC: 'Support on Buy Me a Coffee'
   },
   toolBar: {
     title: 'Title'
@@ -45,7 +46,8 @@ export const en = {
     migrationConfirmation: 'Do you migrate data created before signing in?',
     migrationFailed: 'Failed to migrate data.',
     migrationSucceeded: 'Data was successfully migrated!',
-    defaultTitle: 'Untitled'
+    defaultTitle: 'Untitled',
+    supportMessage: 'If you like Kakeru, please support us!'
   },
   flags: {
     title: 'Experimental Flags',

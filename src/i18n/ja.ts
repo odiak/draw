@@ -33,7 +33,8 @@ export const ja: typeof en = {
     signInWithGoogle: 'Googleアカウントでログインする',
     signOut: 'ログアウト',
     turnOnInsidersVersion: 'インサイダー版を使用する',
-    turnOffInsidersVersion: 'インサイダー版の使用を停止する'
+    turnOffInsidersVersion: 'インサイダー版の使用を停止する',
+    supportOnBMC: 'Buy Me a Coffeeでサポートする'
   },
   toolBar: {
     title: 'タイトル'
@@ -47,7 +48,8 @@ export const ja: typeof en = {
     migrationConfirmation: 'ログインする前のデータを統合しますか？',
     migrationFailed: 'データの統合に失敗しました',
     migrationSucceeded: 'データの統合が完了しました',
-    defaultTitle: '無題'
+    defaultTitle: '無題',
+    supportMessage: 'Kakeruが気に入っていただけたら、ぜひサポートをお願いします！'
   },
   flags: {
     title: '試験的な設定',

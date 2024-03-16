@@ -8,6 +8,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth'
 import { getApp } from 'firebase/app'
 import { App } from './components/App'
 import { checkCookie } from './checkCookie'
+import { showBMCWidget } from './bmc'
 
 const app = getApp()
 
@@ -33,3 +34,5 @@ Sentry.init({
 checkCookie()
 
 ReactDOM.render(<App />, document.getElementById('app'))
+
+showBMCWidget()
