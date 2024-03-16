@@ -1364,15 +1364,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fortawesome/pro-solid-svg-icons@npm:^6.1.1":
-  version: 6.1.1
-  resolution: "@fortawesome/pro-solid-svg-icons@npm:6.1.1::__archiveUrl=https%3A%2F%2Fnpm.fontawesome.com%2F%40fortawesome%2Fpro-solid-svg-icons%2F-%2F6.1.1%2Fpro-solid-svg-icons-6.1.1.tgz"
-  dependencies:
-    "@fortawesome/fontawesome-common-types": 6.1.1
-  checksum: 78d03ba47693e4083aee3386e84ab60ee9001ad7694efd951d1cdcd90c611e302d2a690caa1885d5b5cc3ae6ac5e1a2d75b2078d767fe28f0318fc20e1f8630c
-  languageName: node
-  linkType: hard
-
 "@fortawesome/react-fontawesome@npm:^0.1.18":
   version: 0.1.18
   resolution: "@fortawesome/react-fontawesome@npm:0.1.18::__archiveUrl=https%3A%2F%2Fnpm.fontawesome.com%2F%40fortawesome%2Freact-fontawesome%2F-%2F0.1.18%2Freact-fontawesome-0.1.18.tgz"
@@ -2806,7 +2797,6 @@ __metadata:
     "@cloudflare/workers-types": ^4.20230807.0
     "@fortawesome/fontawesome-svg-core": ^6.1.1
     "@fortawesome/free-solid-svg-icons": ^6.1.1
-    "@fortawesome/pro-solid-svg-icons": ^6.1.1
     "@fortawesome/react-fontawesome": ^0.1.18
     "@msgpack/msgpack": ^2.7.0
     "@odiak/fit-curve": ^0.3.2
