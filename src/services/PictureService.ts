@@ -329,7 +329,7 @@ const pictureConverter: FirestoreDataConverter<PictureWithId> = {
   }
 }
 
-const useBinaryDataForPoints = false // TODO: enable later
+const useBinaryDataForPoints = true // TODO: remove later
 const pointsDataVersion = 1
 
 const pathConverter: FirestoreDataConverter<Path | null> = {
