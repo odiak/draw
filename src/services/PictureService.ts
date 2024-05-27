@@ -22,7 +22,8 @@ import {
   startAfter,
   onSnapshot,
   setDoc,
-  getDoc
+  getDoc,
+  Bytes
 } from 'firebase/firestore'
 import { imageBaseUrl } from '../constants'
 import { getAuth } from 'firebase/auth'
@@ -328,29 +329,52 @@ const pictureConverter: FirestoreDataConverter<PictureWithId> = {
   }
 }
 
+const useBinaryDataForPoints = false // TODO: enable later
+const pointsDataVersion = 1
+
 const pathConverter: FirestoreDataConverter<Path | null> = {
   fromFirestore(doc: QueryDocumentSnapshot): Path | null {
     const rawPath = doc.data()
-    const rawPoints = rawPath.points as number[]
+    const rawPoints = rawPath.points as number[] | Bytes
     if (
-      !Array.isArray(rawPoints) ||
+      (!Array.isArray(rawPoints) && !(rawPoints instanceof Bytes)) ||
       typeof rawPath.width !== 'number' ||
       typeof rawPath.color !== 'string'
     ) {
       return null
     }
 
-    const length = rawPoints.length
     const points: Point[] = []
-    for (let i = 0; i + 1 < length; i += 2) {
-      points.push({ x: rawPoints[i], y: rawPoints[i + 1] })
+    if (rawPoints instanceof Bytes) {
+      const bytes = rawPoints.toUint8Array()
+      const dataView = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+      const version = dataView.getUint32(0)
+      switch (version) {
+        case 1: {
+          const length = (dataView.byteLength - 4) >> 3
+          for (let i = 0; i < length; i++) {
+            points.push({
+              x: dataView.getFloat32(4 + i * 8),
+              y: dataView.getFloat32(4 + i * 8 + 4)
+            })
+          }
+          break
+        }
+        default:
+          return null
+      }
+    } else {
+      const length = rawPoints.length
+      for (let i = 0; i + 1 < length; i += 2) {
+        points.push({ x: rawPoints[i], y: rawPoints[i + 1] })
+      }
     }
     return {
       points,
       width: rawPath.width,
       color: rawPath.color,
       id: doc.id,
-      isBezier: !!rawPath.isBezier,
+      isBezier: !!rawPath.isBezier || rawPoints instanceof Bytes,
       timestamp: (rawPath.timestamp as Timestamp | null)?.toDate(),
       offsetX: rawPath.offsetX ?? 0,
       offsetY: rawPath.offsetY ?? 0
@@ -362,12 +386,24 @@ const pathConverter: FirestoreDataConverter<Path | null> = {
 
     const { points, color, width, isBezier, timestamp, offsetX, offsetY } = path
     const data: DocumentData = {}
-    if (points != null) {
-      const newPoints: number[] = []
-      for (const { x, y } of points as Point[]) {
-        newPoints.push(x, y)
+    if (points != null && Array.isArray(points)) {
+      if (useBinaryDataForPoints && isBezier) {
+        const buffer = new ArrayBuffer(4 + points.length * 8)
+        const dataView = new DataView(buffer)
+        dataView.setUint32(0, pointsDataVersion)
+        for (let i = 0; i < points.length; i++) {
+          const { x, y } = points[i] as Point
+          dataView.setFloat32(4 + i * 8, x)
+          dataView.setFloat32(4 + i * 8 + 4, y)
+        }
+        data.points = Bytes.fromUint8Array(new Uint8Array(buffer))
+      } else {
+        const newPoints: number[] = []
+        for (const { x, y } of points as Point[]) {
+          newPoints.push(x, y)
+        }
+        data.points = newPoints
       }
-      data.points = newPoints
     }
     if (color != null) {
       data.color = color
@@ -375,7 +411,7 @@ const pathConverter: FirestoreDataConverter<Path | null> = {
     if (width != null) {
       data.width = width
     }
-    if (isBezier != null) {
+    if (isBezier != null && !(useBinaryDataForPoints && isBezier)) {
       data.isBezier = isBezier
     }
     if (offsetX != null && offsetX !== 0) {
