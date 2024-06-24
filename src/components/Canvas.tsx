@@ -1848,13 +1848,24 @@ async function writePathsToClipboard(paths: Path[]): Promise<void> {
       timestamp: path.timestamp?.getTime()
     })
   )
-  const msgpackBase64 = btoa(String.fromCharCode(...encode(encodedPaths)))
+  const msgpackBase64 = encodeBase64FromUint8Array(encode(encodedPaths))
   const html = `<meta charset="utf-8"/><div data-kakeru-paths-msgpack="${msgpackBase64}"> </div>`
   const item = new ClipboardItem({
     'text/html': new Blob([html], { type: 'text/html' }),
     'text/plain': new Blob([' '], { type: 'text/plain' })
   })
   await navigator.clipboard.write([item])
+}
+
+function encodeBase64FromUint8Array(data: Uint8Array): string {
+  // encode each N bytes
+  // to avoid "Maximum call stack size exceeded" error
+  const N = 5000
+  const chunks: string[] = []
+  for (let i = 0; i < data.length; i += N) {
+    chunks.push(String.fromCharCode(...data.slice(i, i + N)))
+  }
+  return btoa(chunks.join(''))
 }
 
 async function readPathsFromClipboard(event?: ClipboardEvent): Promise<Path[] | undefined> {
