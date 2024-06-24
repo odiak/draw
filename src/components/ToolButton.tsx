@@ -31,7 +31,11 @@ export function ToolButton({ tool, isSelected, onSelect }: Props) {
       }
     >
       {/* <FontAwesomeIcon icon={icons[tool]} className="icon" /> */}
-      {tool !== 'lasso' ? <FontAwesomeIcon icon={icons[tool]} className="icon" /> : <StyledLasso />}
+      {tool !== 'lasso' ? (
+        <FontAwesomeIcon icon={icons[tool]} className="icon" />
+      ) : (
+        <StyledLasso className="icon" />
+      )}
     </Button>
   )
 }
