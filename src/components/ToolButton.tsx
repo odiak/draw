@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactNode } from 'react'
 import { faPen, faHandPaper, faEraser } from '@fortawesome/free-solid-svg-icons'
 import { Tool } from '../types/Tool'
 import classNames from 'classnames'
@@ -6,10 +6,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import styled from 'styled-components'
 import Lasso from '../assets/lasso.svg?react'
 
-const icons = {
+const faIcons = {
   pen: faPen,
   hand: faHandPaper,
   eraser: faEraser
+}
+const svgIcons = {
+  lasso: Lasso
 }
 
 type Props = {
@@ -19,6 +22,22 @@ type Props = {
 }
 
 export function ToolButton({ tool, isSelected, onSelect }: Props) {
+  let iconNode: ReactNode
+  switch (tool) {
+    case 'pen':
+    case 'hand':
+    case 'eraser': {
+      iconNode = <FontAwesomeIcon icon={faIcons[tool]} className="icon" />
+      break
+    }
+
+    case 'lasso': {
+      const Icon = svgIcons[tool]
+      iconNode = <Icon className="icon svg-icon" />
+      break
+    }
+  }
+
   return (
     <Button
       className={classNames({ selected: isSelected })}
@@ -30,12 +49,7 @@ export function ToolButton({ tool, isSelected, onSelect }: Props) {
           : undefined
       }
     >
-      {/* <FontAwesomeIcon icon={icons[tool]} className="icon" /> */}
-      {tool !== 'lasso' ? (
-        <FontAwesomeIcon icon={icons[tool]} className="icon" />
-      ) : (
-        <StyledLasso className="icon" />
-      )}
+      {iconNode}
     </Button>
   )
 }
@@ -56,6 +70,12 @@ const Button = styled.button`
     }
   }
 
+  > .svg-icon {
+    height: 1em;
+    display: inline-block;
+    vertical-align: -0.125em;
+  }
+
   @media (prefers-color-scheme: dark) {
     & {
       background: #444;
@@ -68,10 +88,4 @@ const Button = styled.button`
       }
     }
   }
-`
-
-const StyledLasso = styled(Lasso)`
-  height: 1em;
-  display: inline-block;
-  vertical-align: -0.125em;
 `
