@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect, useCallback } from 'react'
+import React, { FC, useState, useEffect, useCallback, useRef } from 'react'
 import styled from 'styled-components'
 import { PictureService, PictureWithId, Anchor } from '../services/PictureService'
 import { UserMenuButton } from './UserMenuButton'
@@ -28,6 +28,8 @@ export const Pictures: FC = () => {
 
   const [currentUser] = useVariable(authService.currentUser)
 
+  const buttonRef = useRef<HTMLButtonElement>(null)
+
   const fetchPictures = useCallback(
     (anchor_: Anchor = anchor) => {
       if (currentUser == null) return
@@ -46,11 +48,25 @@ export const Pictures: FC = () => {
   )
 
   useEffect(() => {
-    if (currentUser != null) {
+    if (currentUser != null && loadingState === 'initial') {
       fetchPictures(undefined)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser])
+  }, [currentUser, fetchPictures, loadingState])
+
+  useEffect(() => {
+    if (buttonRef.current == null) return
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        fetchPictures(anchor)
+      }
+    })
+    observer.observe(buttonRef.current)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [anchor, fetchPictures])
 
   const onClick = useCallback(() => {
     fetchPictures()
@@ -79,7 +95,9 @@ export const Pictures: FC = () => {
           ))}
         </PictureList>
         {loadingState === 'loaded' && anchor != null && (
-          <Button onClick={onClick}>{t('loadMore')}</Button>
+          <Button ref={buttonRef} onClick={onClick}>
+            {t('loadMore')}
+          </Button>
         )}
         {loadingState === 'loading' && <Message>{t('loading')}</Message>}
         {loadingState === 'loaded' && pictures.length === 0 && <Message>{t('empty')}</Message>}
