@@ -13,14 +13,19 @@ type Env = {
 }
 
 export const onRequest: PagesFunction<Env> = async (context) => {
+  const url = new URL(context.request.url)
+
+  if (url.hostname === 'dev.kakeru.app') {
+    url.hostname = 'kakeru.app'
+    return Response.redirect(url.toString(), 302)
+  }
+
   const res = await context.next()
 
   const noOgp = parse(context.request.headers.get('cookie') ?? '')['kakeru_no_ogp']
   if (noOgp || context.request.method !== 'GET') {
     return res
   }
-
-  const url = new URL(context.request.url)
 
   if (url.pathname === '/') {
     return putOgp(res, {
