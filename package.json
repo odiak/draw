@@ -41,7 +41,6 @@
     "@types/cookie": "^0.5.1",
     "@types/react": "^17.0.9",
     "@types/react-dom": "^17.0.6",
-    "@types/react-router-dom": "^5.1.5",
     "@types/styled-components": "^5.1.25",
     "axios": "^0.27.2",
     "classnames": "^2.2.6",
@@ -53,7 +52,7 @@
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-is": "^17.0.2",
-    "react-router-dom": "^5.1.2",
+    "react-router-dom": "^6.24.1",
     "styled-components": "^5.3.5",
     "web-auth-library": "^1.0.3"
   }

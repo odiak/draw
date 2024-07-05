@@ -2,12 +2,22 @@ import React, { FC, useEffect } from 'react'
 import { createGlobalStyle } from 'styled-components'
 import { MigrationService } from '../services/MigrationService'
 import { withPrefix } from '../i18n/translate'
-import { BrowserRouter, Route, Switch } from 'react-router-dom'
+import {
+  Outlet,
+  Route,
+  RouterProvider,
+  ScrollRestoration,
+  createBrowserRouter,
+  createRoutesFromElements,
+  isRouteErrorResponse,
+  useRouteError
+} from 'react-router-dom'
 import { NotFound } from '../pages/NotFound'
 import { DrawingPage } from '../pages/DrawingPage'
 import { Flags } from '../pages/Flags'
 import { Boards } from '../pages/Boards'
 import { NewBoard } from '../pages/NewBoard'
+import { InvalidRouteError } from '../utils/InvalidRouteError'
 
 const t = withPrefix('global')
 
@@ -37,6 +47,33 @@ const GlobalStyle = createGlobalStyle`
   }
 `
 
+const ErrorElement: FC = () => {
+  const error = useRouteError()
+  if ((isRouteErrorResponse(error) && error.status === 404) || error instanceof InvalidRouteError) {
+    return <NotFound />
+  }
+
+  return <p>Error</p>
+}
+
+const Root: FC = () => (
+  <>
+    <Outlet />
+    <ScrollRestoration />
+  </>
+)
+
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route path="/" errorElement={<ErrorElement />} element={<Root />}>
+      <Route index element={<NewBoard />} />
+      <Route path="boards" element={<Boards />} />
+      <Route path="flags" element={<Flags />} />
+      <Route path=":pictureId" element={<DrawingPage />} />
+    </Route>
+  )
+)
+
 export const App: FC = () => {
   useEffect(() => {
     const migrationService = MigrationService.instantiate()
@@ -51,20 +88,12 @@ export const App: FC = () => {
       }
       alert(t('migrationSucceeded'))
     })
-  }, [t])
+  }, [])
 
   return (
     <>
       <GlobalStyle />
-      <BrowserRouter>
-        <Switch>
-          <Route exact path="/" component={NewBoard} />
-          <Route path="/boards" component={Boards} />
-          <Route path="/flags" component={Flags} />
-          <Route path="/:pictureId([0-9a-f]{32})" component={DrawingPage} />
-          <Route component={NotFound} />
-        </Switch>
-      </BrowserRouter>
+      <RouterProvider router={router} />
     </>
   )
 }

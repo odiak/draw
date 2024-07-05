@@ -1,5 +1,5 @@
-import React, { FC, useEffect, useState } from 'react'
-import { useRouteMatch } from 'react-router-dom'
+import React, { FC, useEffect, useRef, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { Canvas } from '../components/Canvas'
 import { Title } from '../components/Title'
@@ -8,6 +8,7 @@ import { ToolBar } from '../components/ToolBar'
 import { withPrefix } from '../i18n/translate'
 import { PictureService } from '../services/PictureService'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
+import { InvalidRouteError } from '../utils/InvalidRouteError'
 
 const t = withPrefix('global')
 
@@ -16,10 +17,27 @@ function normalizeTitle(title: string | undefined): string | undefined {
   return stripped === '' ? undefined : stripped
 }
 
+const pictureIdPattern = /^[0-9a-f]{32}$/
+
+function useValidatedParams(): { pictureId: string } {
+  const { pictureId = '' } = useParams()
+  const prev = useRef<string>()
+
+  if (prev.current !== pictureId) {
+    prev.current = pictureId
+
+    if (pictureId === '' || !pictureIdPattern.test(pictureId)) {
+      throw new InvalidRouteError()
+    }
+  }
+
+  return { pictureId }
+}
+
 export const DrawingPage: FC = () => {
   useSetCurrentScreen('drawing')
 
-  const { pictureId } = useRouteMatch<{ pictureId: string }>().params
+  const { pictureId } = useValidatedParams()
 
   const pictureService = PictureService.instantiate()
 
