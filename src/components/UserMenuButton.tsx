@@ -5,7 +5,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser } from '@fortawesome/free-solid-svg-icons'
 import styled from 'styled-components'
 import { useMenu } from '../utils/useMenu'
-import { MigrationService } from '../services/MigrationService'
 import { withPrefix } from '../i18n/translate'
 import { isSignedIn, useAuth } from '../hooks/useAuth'
 
@@ -16,17 +15,15 @@ export const UserMenuButton: FC<{ className?: string; hideLinkToBoards?: boolean
   hideLinkToBoards
 }) => {
   const { currentUser, signInWithGoogle, signOut } = useAuth()
-  const migrationService = MigrationService.instantiate()
 
   const { menuRef: accountMenuRef, buttonRef: accountMenuButtonRef } = useMenu()
 
   const signIn = useCallback(async () => {
-    await migrationService.registerMigrationToken()
     const c = await signInWithGoogle()
     if (c === undefined) {
       alert(t('failedToSignIn'))
     }
-  }, [migrationService, signInWithGoogle])
+  }, [signInWithGoogle])
 
   return (
     <AccountButton ref={accountMenuButtonRef} className={className}>
