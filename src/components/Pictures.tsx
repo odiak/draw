@@ -2,8 +2,6 @@ import React, { FC, useState, useEffect, useCallback, useRef } from 'react'
 import styled from 'styled-components'
 import { PictureService, PictureWithId, Anchor } from '../services/PictureService'
 import { UserMenuButton } from './UserMenuButton'
-import { AuthService } from '../services/AuthService'
-import { useVariable } from '../utils/useVariable'
 import { NewButton } from './NewButton'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
 import { withPrefix } from '../i18n/translate'
@@ -11,6 +9,8 @@ import { Title } from './Title'
 import { PictureListItem } from './PictureListItem'
 import { removeArrayElementAt } from '../utils/removeArrayElementAt'
 import { EllipsisMenuButton } from './EllipsisMenuButton'
+import { isNotSignedIn, isSignedIn, useAuth } from '../hooks/useAuth'
+import { useNavigate } from 'react-router-dom'
 
 const t = withPrefix('boards')
 
@@ -20,38 +20,37 @@ export const Pictures: FC = () => {
   useSetCurrentScreen('list')
 
   const pictureService = PictureService.instantiate()
-  const authService = AuthService.instantiate()
+  const { currentUser } = useAuth()
+  const navigate = useNavigate()
 
   const [pictures, setPictures] = useState<Array<PictureWithId>>([])
   const [loadingState, setLoadingState] = useState<LoadingState>('initial')
-  const [anchor, setAnchor] = useState(undefined as Anchor)
-
-  const [currentUser] = useVariable(authService.currentUser)
+  const [anchor, setAnchor] = useState<Anchor>()
 
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   const fetchPictures = useCallback(
-    (anchor_: Anchor = anchor) => {
-      if (currentUser == null) return
-      ;(async () => {
-        setLoadingState('loading')
-        const [fetchedPictures, newAnchor] = await pictureService.fetchPictures(
-          currentUser,
-          anchor_
-        )
-        setPictures((ps) => (anchor_ == null ? fetchedPictures : ps.concat(fetchedPictures)))
-        setLoadingState('loaded')
-        setAnchor(newAnchor)
-      })()
+    async (anchor_: Anchor = anchor) => {
+      if (currentUser === undefined || !isSignedIn(currentUser)) return
+
+      setLoadingState('loading')
+      const [fetchedPictures, newAnchor] = await pictureService.fetchPictures(currentUser, anchor_)
+      setPictures((ps) => (anchor_ == null ? fetchedPictures : ps.concat(fetchedPictures)))
+      setLoadingState('loaded')
+      setAnchor(newAnchor)
     },
     [pictureService, anchor, currentUser]
   )
 
   useEffect(() => {
-    if (currentUser != null && loadingState === 'initial') {
+    if (currentUser === undefined || loadingState !== 'initial') return
+
+    if (isNotSignedIn(currentUser)) {
+      navigate('/')
+    } else {
       fetchPictures(undefined)
     }
-  }, [currentUser, fetchPictures, loadingState])
+  }, [currentUser, fetchPictures, loadingState, navigate])
 
   useEffect(() => {
     if (buttonRef.current == null) return

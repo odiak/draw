@@ -1,14 +1,13 @@
 import React, { FC, useCallback } from 'react'
-import { AuthService } from '../services/AuthService'
 import { Link } from 'react-router-dom'
 import { Menu, MenuItem, MenuItemWithAnchor } from './Menu'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser } from '@fortawesome/free-solid-svg-icons'
 import styled from 'styled-components'
 import { useMenu } from '../utils/useMenu'
-import { useVariable } from '../utils/useVariable'
 import { MigrationService } from '../services/MigrationService'
 import { withPrefix } from '../i18n/translate'
+import { isSignedIn, useAuth } from '../hooks/useAuth'
 
 const t = withPrefix('menu')
 
@@ -16,30 +15,28 @@ export const UserMenuButton: FC<{ className?: string; hideLinkToBoards?: boolean
   className,
   hideLinkToBoards
 }) => {
-  const authService = AuthService.instantiate()
-  const [currentUser] = useVariable(authService.currentUser)
+  const { currentUser, signInWithGoogle, signOut } = useAuth()
   const migrationService = MigrationService.instantiate()
 
   const { menuRef: accountMenuRef, buttonRef: accountMenuButtonRef } = useMenu()
 
   const signIn = useCallback(async () => {
     await migrationService.registerMigrationToken()
-    const c = await authService.signInWithGoogle()
-    if (c == null) {
+    const c = await signInWithGoogle()
+    if (c === undefined) {
       alert(t('failedToSignIn'))
     }
-  }, [authService, migrationService])
-
-  const signOut = useCallback(() => {
-    authService.signOut()
-  }, [authService])
+  }, [migrationService, signInWithGoogle])
 
   return (
     <AccountButton ref={accountMenuButtonRef} className={className}>
-      {currentUser == null || currentUser.isAnonymous || currentUser.photoURL == null ? (
-        <FontAwesomeIcon icon={faUser} className="icon" />
-      ) : (
+      {currentUser !== undefined &&
+      isSignedIn(currentUser) &&
+      !currentUser.isAnonymous &&
+      currentUser.photoURL ? (
         <AccountImage src={currentUser.photoURL} />
+      ) : (
+        <FontAwesomeIcon icon={faUser} className="icon" />
       )}
       <Menu ref={accountMenuRef}>
         {!hideLinkToBoards && (
@@ -47,8 +44,8 @@ export const UserMenuButton: FC<{ className?: string; hideLinkToBoards?: boolean
             <Link to="/boards">{t('myBoards')}</Link>
           </MenuItemWithAnchor>
         )}
-        {currentUser != null &&
-          (currentUser.isAnonymous ? (
+        {currentUser !== undefined &&
+          (isSignedIn(currentUser) && currentUser.isAnonymous ? (
             <MenuItem onClick={signIn}>{t('signInWithGoogle')}</MenuItem>
           ) : (
             <MenuItem onClick={signOut}>{t('signOut')}</MenuItem>
