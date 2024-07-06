@@ -65,5 +65,12 @@ export const en = {
     signInWithGoogle: 'Sign in with Google',
     note1: 'By signing in with Google, you can access saved data from other devices.',
     note2: 'Even if you sign in later, you can inherit the data you saved before.'
+  },
+  signInBanner: {
+    text1: 'To draw, ',
+    link1: 'start as a guest',
+    text2: ' or ',
+    link2: 'sign in with Google',
+    text3: '.'
   }
 }

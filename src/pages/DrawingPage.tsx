@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useRef, useState } from 'react'
-import { useLocation, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { Canvas } from '../components/Canvas'
 import { Title } from '../components/Title'
@@ -11,6 +11,7 @@ import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
 import { InvalidRouteError } from '../utils/InvalidRouteError'
 import { useAuth } from '../hooks/useAuth'
 import { Welcome } from '../components/Welcome'
+import { SignInBanner } from '../components/SignInBanner'
 
 const t = withPrefix('global')
 
@@ -47,6 +48,7 @@ export const DrawingPage: FC = () => {
   const [title, setTitle] = useState<string | undefined>()
   const [isWritable, setIsWritable] = useState(false)
 
+  const navigate = useNavigate()
   const location = useLocation()
   const [showWelcome, setShowWelcome] = useState(() =>
     Boolean(new URLSearchParams(location.search).get('welcome'))
@@ -81,12 +83,14 @@ export const DrawingPage: FC = () => {
         <div className="canvas-wrapper" suppressHydrationWarning>
           <Canvas pictureId={pictureId} currentUser={currentUser} isWritable={isWritable} />
         </div>
+        <SignInBanner />
       </Container>
 
       {showWelcome && (
         <Welcome
           onClose={() => {
             setShowWelcome(false)
+            navigate(`/${pictureId}`, { replace: true })
           }}
         />
       )}

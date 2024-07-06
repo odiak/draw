@@ -24,7 +24,7 @@ export const Welcome: FC<Props> = ({ onClose }) => {
   }, [])
 
   const signInAnonymously = useCallback(async () => {
-    await signInAnonymouslyOriginal()
+    signInAnonymouslyOriginal() // don't await
     onClose?.()
   }, [onClose, signInAnonymouslyOriginal])
 
