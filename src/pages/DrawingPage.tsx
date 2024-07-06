@@ -9,6 +9,7 @@ import { withPrefix } from '../i18n/translate'
 import { PictureService } from '../services/PictureService'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
 import { InvalidRouteError } from '../utils/InvalidRouteError'
+import { useAuth } from '../hooks/useAuth'
 
 const t = withPrefix('global')
 
@@ -40,8 +41,10 @@ export const DrawingPage: FC = () => {
   const { pictureId } = useValidatedParams()
 
   const pictureService = PictureService.instantiate()
+  const { currentUser } = useAuth()
 
   const [title, setTitle] = useState<string | undefined>()
+  const [isWritable, setIsWritable] = useState(false)
 
   useEffect(() => {
     const unsubscribe = pictureService.watchPicture(
@@ -57,6 +60,12 @@ export const DrawingPage: FC = () => {
     }
   }, [pictureService, pictureId])
 
+  useEffect(() => {
+    return pictureService.watchPermission(pictureId, currentUser, (permission) => {
+      setIsWritable(permission.writable)
+    })
+  }, [currentUser, pictureId, pictureService])
+
   return (
     <>
       <Title>{normalizeTitle(title) ?? t('defaultTitle')}</Title>
@@ -64,7 +73,7 @@ export const DrawingPage: FC = () => {
       <Container>
         <ToolBar pictureId={pictureId} />
         <div className="canvas-wrapper" suppressHydrationWarning>
-          <Canvas pictureId={pictureId} />
+          <Canvas pictureId={pictureId} currentUser={currentUser} isWritable={isWritable} />
         </div>
       </Container>
     </>

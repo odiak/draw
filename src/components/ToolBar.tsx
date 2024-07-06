@@ -21,6 +21,7 @@ import { NewButton } from './NewButton'
 import { DrawingService, colors, widths } from '../services/DrawingService'
 import { withPrefix } from '../i18n/translate'
 import { EllipsisMenuButton } from './EllipsisMenuButton'
+import { useAuth } from '../hooks/useAuth'
 
 const tToolBar = withPrefix('toolBar')
 
@@ -48,13 +49,15 @@ export function ToolBar({ pictureId }: Props) {
   const pictureService = PictureService.instantiate()
   const drawingService = DrawingService.instantiate()
 
+  const { currentUser } = useAuth()
+
   const [title, setTitle] = useState<string | null>(null)
   const setTitleWithUpdate = useCallback(
     (title: string) => {
       setTitle(title)
-      pictureService.updateTitle(pictureId, title)
+      pictureService.updateTitle(pictureId, title, currentUser)
     },
-    [setTitle, pictureId, pictureService]
+    [pictureService, pictureId, currentUser]
   )
   useEffect(() => {
     return pictureService.watchPicture(pictureId, (picture) => {
@@ -64,8 +67,8 @@ export function ToolBar({ pictureId }: Props) {
 
   const [permission, setPermission] = useState<Permission>()
   useEffect(() => {
-    return pictureService.watchPermission(pictureId, setPermission)
-  }, [pictureService, pictureId])
+    return pictureService.watchPermission(pictureId, currentUser, setPermission)
+  }, [pictureService, pictureId, currentUser])
 
   const [tool, setTool] = useVariable(drawingService.tool)
   const [palmRejection, setPalmRejection] = useVariable(drawingService.palmRejectionEnabled)
@@ -91,9 +94,9 @@ export function ToolBar({ pictureId }: Props) {
 
   const updateAccessibilityLevel = useCallback(
     (accLevel: AccessibilityLevel) => {
-      pictureService.updatePicture(pictureId, { accessibilityLevel: accLevel })
+      pictureService.updatePicture(pictureId, currentUser, { accessibilityLevel: accLevel })
     },
-    [pictureId, pictureService]
+    [currentUser, pictureId, pictureService]
   )
 
   const { buttonRef: colorWidthButtonRef, menuRef: colorWidthMenuRef } = useMenu()

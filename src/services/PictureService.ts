@@ -28,6 +28,7 @@ import {
 import { imageBaseUrl } from '../constants'
 import { getAuth } from 'firebase/auth'
 import axios from 'axios'
+import { UserState, isNotSignedIn, isSignedIn } from '../hooks/useAuth'
 
 export type Point = { x: number; y: number }
 export type Path = {
@@ -70,6 +71,8 @@ export type WatchPictureOptions = {
 
 export type Anchor = Timestamp | undefined
 
+type Unsubscribe = () => void
+
 export class PictureService {
   static readonly instantiate = memo(() => new PictureService())
 
@@ -79,8 +82,6 @@ export class PictureService {
   private titleUpdateTick = new Map<string, { timerId: number }>()
 
   private existFlags = new Map<string, boolean>()
-
-  private authService = AuthService.instantiate()
 
   private touching: { pictureId: string } | undefined
 
@@ -92,7 +93,7 @@ export class PictureService {
     return doc(this.picturesCollection, pictureId)
   }
 
-  updateTitle(pictureId: string, title: string) {
+  updateTitle(pictureId: string, title: string, currentUser: UserState | undefined) {
     const tick = this.titleUpdateTick.get(pictureId)
     if (tick != null) {
       clearTimeout(tick.timerId)
@@ -100,18 +101,19 @@ export class PictureService {
     }
 
     const timerId = window.setTimeout(() => {
-      this.updatePicture(pictureId, { title })
+      this.updatePicture(pictureId, currentUser, { title })
     }, 1500)
     this.titleUpdateTick.set(pictureId, { timerId })
   }
 
   async updatePicture(
     pictureId: string,
+    currentUser: UserState | undefined,
     update: Partial<Pick<PictureWithId, 'ownerId' | 'title' | 'accessibilityLevel' | 'createdAt'>>
   ) {
+    // TODO: check permission before updating
     if (this.existFlags.get(pictureId) === false) {
-      const { value: currentUser } = this.authService.currentUser
-      if (currentUser != null) {
+      if (currentUser !== undefined && isSignedIn(currentUser)) {
         update = {
           ...update,
           ownerId: currentUser.uid,
@@ -122,7 +124,7 @@ export class PictureService {
     await setDoc(this.pictureRefById(pictureId), update, { merge: true })
   }
 
-  addPaths(pictureId: string, pathsToAdd: Path[]) {
+  addPaths(pictureId: string, pathsToAdd: Path[], currentUser: UserState | undefined) {
     const pathsCollection = this.pathsById(pictureId)
 
     batchHelper(this.db, (doOp) => {
@@ -131,11 +133,11 @@ export class PictureService {
       }
     })
 
-    this.setPictureOwnerIfNotExist(pictureId)
+    this.setPictureOwnerIfNotExist(pictureId, currentUser)
     this.touchPicture(pictureId)
   }
 
-  removePaths(pictureId: string, pathIdsToRemove: string[]) {
+  removePaths(pictureId: string, pathIdsToRemove: string[], currentUser: UserState | undefined) {
     const pathsCollection = collection(this.pictureRefById(pictureId), 'paths')
 
     batchHelper(this.db, (doOp) => {
@@ -144,11 +146,15 @@ export class PictureService {
       }
     })
 
-    this.setPictureOwnerIfNotExist(pictureId)
+    this.setPictureOwnerIfNotExist(pictureId, currentUser)
     this.touchPicture(pictureId)
   }
 
-  updatePaths(pictureId: string, updates: Array<Partial<Path> & Pick<Path, 'id'>>) {
+  updatePaths(
+    pictureId: string,
+    updates: Array<Partial<Path> & Pick<Path, 'id'>>,
+    currentUser: UserState | undefined
+  ) {
     const pathsCollection = collection(this.pictureRefById(pictureId), 'paths')
 
     batchHelper(this.db, (doOp) => {
@@ -157,7 +163,7 @@ export class PictureService {
       }
     })
 
-    this.setPictureOwnerIfNotExist(pictureId)
+    this.setPictureOwnerIfNotExist(pictureId, currentUser)
     this.touchPicture(pictureId)
   }
 
@@ -224,31 +230,29 @@ export class PictureService {
     return unwatch
   }
 
-  watchPermission(pictureId: string, callback: (p: Permission) => void): () => void {
-    const [pictureCallback, userCallback] = combine<PictureWithId | null, User | null>(
-      (picture, user) => {
-        if (user == null) return
+  watchPermission(
+    pictureId: string,
+    currentUser: UserState | undefined,
+    callback: (p: Permission) => void
+  ): Unsubscribe {
+    if (currentUser === undefined || isNotSignedIn(currentUser)) return () => {}
 
-        callback(getPermission(picture, user))
-      }
+    return this.watchPicture(
+      pictureId,
+      (picture) => {
+        callback(getPermission(picture, currentUser))
+      },
+      { includesLocalChanges: true }
     )
-    const unsubscribeP = this.watchPicture(pictureId, pictureCallback, {
-      includesLocalChanges: true
-    })
-    const unsubscribeU = this.authService.currentUser.subscribe(userCallback)
-    userCallback(this.authService.currentUser.value)
-
-    return () => {
-      unsubscribeP()
-      unsubscribeU()
-    }
   }
 
-  private async setPictureOwnerIfNotExist(pictureId: string): Promise<void> {
+  private async setPictureOwnerIfNotExist(
+    pictureId: string,
+    currentUser: UserState | undefined
+  ): Promise<void> {
     if (this.existFlags.get(pictureId)) return
 
-    const { value: currentUser } = this.authService.currentUser
-    if (currentUser == null) return
+    if (currentUser === undefined || isNotSignedIn(currentUser)) return
 
     const doc = this.pictureRefById(pictureId)
     await setDoc(
