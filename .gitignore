@@ -61,3 +61,5 @@ secrets.json
 .env.dev
 .dev.vars
 .wrangler
+
+*.tsbuildinfo
