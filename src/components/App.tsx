@@ -18,6 +18,7 @@ import { Boards } from '../pages/Boards'
 import { NewBoard } from '../pages/NewBoard'
 import { InvalidRouteError } from '../utils/InvalidRouteError'
 import { useAuth } from '../hooks/useAuth'
+import { SplashScreen } from './SplashScreen'
 
 const t = withPrefix('global')
 
@@ -94,6 +95,7 @@ export const App: FC = () => {
   return (
     <>
       <GlobalStyle />
+      <SplashScreen />
       <RouterProvider router={router} />
     </>
   )
