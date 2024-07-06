@@ -57,5 +57,13 @@ export const en = {
       'This is a Samsung Galaxy Note (Use dirty hack for S-Pen detection. This feature may not work depends on browser or OS version.)',
     disableSmoothingPaths: 'Disable smoothing paths',
     disableScaleLimit: 'Do not limit scale'
+  },
+  welcome: {
+    title: 'Welcome to Kakeru!',
+    description: 'Kakeru is a handwriting whiteboard app on the Web.',
+    startUsingNow: 'Start using now',
+    signInWithGoogle: 'Sign in with Google',
+    note1: 'By signing in with Google, you can access saved data from other devices.',
+    note2: 'Even if you sign in later, you can inherit the data you saved before.'
   }
 }

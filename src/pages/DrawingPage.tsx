@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useLocation, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { Canvas } from '../components/Canvas'
 import { Title } from '../components/Title'
@@ -10,6 +10,7 @@ import { PictureService } from '../services/PictureService'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
 import { InvalidRouteError } from '../utils/InvalidRouteError'
 import { useAuth } from '../hooks/useAuth'
+import { Welcome } from '../components/Welcome'
 
 const t = withPrefix('global')
 
@@ -46,6 +47,11 @@ export const DrawingPage: FC = () => {
   const [title, setTitle] = useState<string | undefined>()
   const [isWritable, setIsWritable] = useState(false)
 
+  const location = useLocation()
+  const [showWelcome, setShowWelcome] = useState(() =>
+    Boolean(new URLSearchParams(location.search).get('welcome'))
+  )
+
   useEffect(() => {
     const unsubscribe = pictureService.watchPicture(
       pictureId,
@@ -76,6 +82,14 @@ export const DrawingPage: FC = () => {
           <Canvas pictureId={pictureId} currentUser={currentUser} isWritable={isWritable} />
         </div>
       </Container>
+
+      {showWelcome && (
+        <Welcome
+          onClose={() => {
+            setShowWelcome(false)
+          }}
+        />
+      )}
     </>
   )
 }
