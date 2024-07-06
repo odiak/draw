@@ -1,5 +1,4 @@
 import '../firebase'
-import { AuthService, User } from './AuthService'
 import { memo } from '../utils/memo'
 import {
   collection,
@@ -26,7 +25,7 @@ import {
   Bytes
 } from 'firebase/firestore'
 import { imageBaseUrl } from '../constants'
-import { getAuth } from 'firebase/auth'
+import { getAuth, User } from 'firebase/auth'
 import axios from 'axios'
 import { UserState, isNotSignedIn, isSignedIn } from '../hooks/useAuth'
 
