@@ -12,15 +12,21 @@ import {
 } from 'firebase/auth'
 import { useEffect, useMemo, useState } from 'react'
 
-class NotSignedIn {
+export class NotSignedIn {
   static instance = new NotSignedIn()
   private constructor() {}
+
+  // only for type inference
+  readonly notSignedIn = true
 }
-export type { User, NotSignedIn }
+
+type UserState = User | NotSignedIn
+
+export type { User, UserState }
 
 type UseAuthResult = {
   auth: Auth
-  currentUser: User | NotSignedIn | undefined
+  currentUser: UserState | undefined
   signInAnonymously(): Promise<User | undefined>
   signInWithGoogle(): Promise<User | undefined>
   signOut(): Promise<void>
