@@ -75,7 +75,7 @@ export const Pictures: FC = () => {
     <Container>
       <ButtonsContainer>
         <StyledNewButton />
-        <StyledUserMenuButton hideLinkToBoards />
+        <StyledUserMenuButton isInBoardList />
         <StyledEllipsisMenuButton />
       </ButtonsContainer>
       <Title>{t('title')}</Title>

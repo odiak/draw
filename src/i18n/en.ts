@@ -28,6 +28,8 @@ export const en = {
     },
     failedToSignIn: 'Failed to sign in',
     myBoards: 'My boards',
+    signInAnonymously: 'Start using as a guest',
+    usingAnonymously: 'You are using as a guest',
     signInWithGoogle: 'Sign in with Google',
     signOut: 'Sign out',
     turnOnInsidersVersion: 'Use "Insiders Version"',

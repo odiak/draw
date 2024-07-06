@@ -41,6 +41,7 @@ export const MenuItem = styled.li`
 export const MenuItemText = styled.li`
   padding: 6px 8px;
   color: #777;
+  font-style: italic;
 `
 
 export const MenuItemWithAnchor = styled.li`

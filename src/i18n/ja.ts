@@ -30,6 +30,8 @@ export const ja: typeof en = {
     },
     failedToSignIn: 'ログインに失敗しました',
     myBoards: '自分のボード一覧',
+    signInAnonymously: 'ゲストとして利用する',
+    usingAnonymously: 'ゲストとして利用中です',
     signInWithGoogle: 'Googleアカウントでログインする',
     signOut: 'ログアウト',
     turnOnInsidersVersion: 'インサイダー版を使用する',
