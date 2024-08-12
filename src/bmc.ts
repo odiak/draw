@@ -3,8 +3,6 @@ import { localStorage } from './utils/localStorage'
 
 const lastShownKey = 'bmc_last_shown'
 
-localStorage
-
 export function showBMCWidget(force = false) {
   if (!force) {
     const now = Date.now()
