@@ -6,7 +6,7 @@
   "packageManager": "yarn@3.6.1",
   "type": "module",
   "scripts": {
-    "start": "wrangler pages dev --local --compatibility-date=2023-08-12 -- vite",
+    "start": "wrangler pages dev --compatibility-date=2024-08-12 -- vite",
     "build": "vite build",
     "build-for-deploy": "echo \"$SECRETS_DECRYPTION_KEY\" | yarn run secrets:decrypt && yarn run build",
     "secrets:encrypt": "gpg --symmetric --cipher-algo AES256 secrets.json",

@@ -28,11 +28,14 @@ export const en = {
     },
     failedToSignIn: 'Failed to sign in',
     myBoards: 'My boards',
+    signInAnonymously: 'Start using as a guest',
+    usingAnonymously: 'You are using as a guest',
     signInWithGoogle: 'Sign in with Google',
     signOut: 'Sign out',
     turnOnInsidersVersion: 'Use "Insiders Version"',
     turnOffInsidersVersion: 'Stop using "Insiders Version"',
-    supportOnBMC: 'Support on Buy Me a Coffee'
+    supportOnBMC: 'Support on Buy Me a Coffee',
+    signOutConfirmation: 'Are you sure to sign out?'
   },
   toolBar: {
     title: 'Title'
@@ -55,5 +58,20 @@ export const en = {
       'This is a Samsung Galaxy Note (Use dirty hack for S-Pen detection. This feature may not work depends on browser or OS version.)',
     disableSmoothingPaths: 'Disable smoothing paths',
     disableScaleLimit: 'Do not limit scale'
+  },
+  welcome: {
+    title: 'Welcome to Kakeru!',
+    description: 'Kakeru is a handwriting whiteboard app on the Web.',
+    startUsingNow: 'Start using now',
+    signInWithGoogle: 'Sign in with Google',
+    note1: 'By signing in with Google, you can access saved data from other devices.',
+    note2: 'Even if you sign in later, you can inherit the data you saved before.'
+  },
+  signInBanner: {
+    text1: 'To draw, ',
+    link1: 'start as a guest',
+    text2: ' or ',
+    link2: 'sign in with Google',
+    text3: '.'
   }
 }

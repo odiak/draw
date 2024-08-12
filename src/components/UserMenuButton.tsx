@@ -1,60 +1,107 @@
 import React, { FC, useCallback } from 'react'
-import { AuthService } from '../services/AuthService'
 import { Link } from 'react-router-dom'
-import { Menu, MenuItem, MenuItemWithAnchor } from './Menu'
+import { Menu, MenuItem, MenuItemText, MenuItemWithAnchor } from './Menu'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser } from '@fortawesome/free-solid-svg-icons'
 import styled from 'styled-components'
 import { useMenu } from '../utils/useMenu'
-import { useVariable } from '../utils/useVariable'
-import { MigrationService } from '../services/MigrationService'
 import { withPrefix } from '../i18n/translate'
+import { NotSignedIn, User, isSignedIn, useAuth } from '../hooks/useAuth'
 
 const t = withPrefix('menu')
 
-export const UserMenuButton: FC<{ className?: string; hideLinkToBoards?: boolean }> = ({
+export const UserMenuButton: FC<{ className?: string; isInBoardList?: boolean }> = ({
   className,
-  hideLinkToBoards
+  isInBoardList
 }) => {
-  const authService = AuthService.instantiate()
-  const [currentUser] = useVariable(authService.currentUser)
-  const migrationService = MigrationService.instantiate()
+  const {
+    currentUser,
+    signInWithGoogle: signInWithGoogleOriginal,
+    signInAnonymously,
+    signOut: signOutOriginal
+  } = useAuth()
 
   const { menuRef: accountMenuRef, buttonRef: accountMenuButtonRef } = useMenu()
 
-  const signIn = useCallback(async () => {
-    await migrationService.registerMigrationToken()
-    const c = await authService.signInWithGoogle()
-    if (c == null) {
+  const signInWithGoogle = useCallback(async () => {
+    const c = await signInWithGoogleOriginal()
+    if (c === undefined) {
       alert(t('failedToSignIn'))
+      return
     }
-  }, [authService, migrationService])
 
-  const signOut = useCallback(() => {
-    authService.signOut()
-  }, [authService])
+    setTimeout(() => {
+      location.reload()
+    }, 500)
+  }, [signInWithGoogleOriginal])
+
+  const signOut = useCallback(async () => {
+    if (!confirm(t('signOutConfirmation'))) return
+    signOutOriginal()
+
+    setTimeout(() => {
+      location.reload()
+    }, 500)
+  }, [signOutOriginal])
+
+  if (currentUser === undefined) {
+    return null
+  }
 
   return (
     <AccountButton ref={accountMenuButtonRef} className={className}>
-      {currentUser == null || currentUser.isAnonymous || currentUser.photoURL == null ? (
-        <FontAwesomeIcon icon={faUser} className="icon" />
-      ) : (
+      {currentUser !== undefined &&
+      isSignedIn(currentUser) &&
+      !currentUser.isAnonymous &&
+      currentUser.photoURL ? (
         <AccountImage src={currentUser.photoURL} />
+      ) : (
+        <FontAwesomeIcon icon={faUser} className="icon" />
       )}
+
       <Menu ref={accountMenuRef}>
-        {!hideLinkToBoards && (
-          <MenuItemWithAnchor>
-            <Link to="/boards">{t('myBoards')}</Link>
-          </MenuItemWithAnchor>
-        )}
-        {currentUser != null &&
-          (currentUser.isAnonymous ? (
-            <MenuItem onClick={signIn}>{t('signInWithGoogle')}</MenuItem>
-          ) : (
-            <MenuItem onClick={signOut}>{t('signOut')}</MenuItem>
-          ))}
+        <Items
+          user={currentUser}
+          isInBoardList={isInBoardList ?? false}
+          {...{ signInAnonymously, signInWithGoogle, signOut }}
+        />
       </Menu>
     </AccountButton>
+  )
+}
+
+type ItemsProps = {
+  user: User | NotSignedIn
+  isInBoardList: boolean
+  signInWithGoogle(): void
+  signInAnonymously(): void
+  signOut(): void
+}
+
+const Items: FC<ItemsProps> = ({
+  user,
+  signInAnonymously,
+  signInWithGoogle,
+  signOut,
+  isInBoardList
+}) => {
+  const isSignedIn_ = isSignedIn(user)
+  const isAnonymous = isSignedIn(user) && user.isAnonymous
+  const isAnonymousLike = isAnonymous || !isSignedIn_
+  const isNotSignedIn = !isSignedIn_
+
+  return (
+    <>
+      {isAnonymous && <MenuItemText>{t('usingAnonymously')}</MenuItemText>}
+      {!isInBoardList && isSignedIn_ && (
+        <MenuItemWithAnchor>
+          <Link to="/boards">{t('myBoards')}</Link>
+        </MenuItemWithAnchor>
+      )}
+      {isNotSignedIn && <MenuItem onClick={signInAnonymously}>{t('signInAnonymously')}</MenuItem>}
+      {isAnonymousLike && <MenuItem onClick={signInWithGoogle}>{t('signInWithGoogle')}</MenuItem>}
+      {isSignedIn_ && <MenuItem onClick={signOut}>{t('signOut')}</MenuItem>}
+    </>
   )
 }
 

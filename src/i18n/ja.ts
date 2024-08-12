@@ -30,11 +30,14 @@ export const ja: typeof en = {
     },
     failedToSignIn: 'ログインに失敗しました',
     myBoards: '自分のボード一覧',
+    signInAnonymously: 'ゲストとして利用する',
+    usingAnonymously: 'ゲストとして利用中です',
     signInWithGoogle: 'Googleアカウントでログインする',
     signOut: 'ログアウト',
     turnOnInsidersVersion: 'インサイダー版を使用する',
     turnOffInsidersVersion: 'インサイダー版の使用を停止する',
-    supportOnBMC: 'Buy Me a Coffeeでサポートする'
+    supportOnBMC: 'Buy Me a Coffeeでサポートする',
+    signOutConfirmation: 'ログアウトしてよろしいですか？'
   },
   toolBar: {
     title: 'タイトル'
@@ -57,5 +60,21 @@ export const ja: typeof en = {
       'Galaxy Note用のハックを有効にする (Sペンを認識するための特殊な処理。ブラウザやOSのバージョンによっては動作しない可能性があります。)',
     disableSmoothingPaths: '線を滑らかにする処理を無効にする',
     disableScaleLimit: '倍率の制限を無効にする'
+  },
+  welcome: {
+    title: 'Kakeruへようこそ!',
+    description: 'Kakeruはブラウザで使える手書きのホワイトボードアプリです',
+    startUsingNow: '今すぐ使い始める',
+    signInWithGoogle: 'Googleアカウントでログインする',
+    note1: 'Googleアカウントでログインすると、保存されたデータを他のデバイスでも利用できます。',
+    note2:
+      'ログインしなくてもデータは保存され、後でGoogleアカウントでログインした際にデータを引き継ぐこともできます。'
+  },
+  signInBanner: {
+    text1: '書き込むには、',
+    link1: 'ゲストとして始める',
+    text2: 'か、',
+    link2: 'Googleアカウントでログイン',
+    text3: 'してください'
   }
 }

@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { Canvas } from '../components/Canvas'
 import { Title } from '../components/Title'
@@ -9,6 +9,9 @@ import { withPrefix } from '../i18n/translate'
 import { PictureService } from '../services/PictureService'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
 import { InvalidRouteError } from '../utils/InvalidRouteError'
+import { useAuth } from '../hooks/useAuth'
+import { Welcome } from '../components/Welcome'
+import { SignInBanner } from '../components/SignInBanner'
 
 const t = withPrefix('global')
 
@@ -40,8 +43,16 @@ export const DrawingPage: FC = () => {
   const { pictureId } = useValidatedParams()
 
   const pictureService = PictureService.instantiate()
+  const { currentUser } = useAuth()
 
   const [title, setTitle] = useState<string | undefined>()
+  const [isWritable, setIsWritable] = useState(false)
+
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [showWelcome, setShowWelcome] = useState(() =>
+    Boolean(new URLSearchParams(location.search).get('welcome'))
+  )
 
   useEffect(() => {
     const unsubscribe = pictureService.watchPicture(
@@ -57,6 +68,12 @@ export const DrawingPage: FC = () => {
     }
   }, [pictureService, pictureId])
 
+  useEffect(() => {
+    return pictureService.watchPermission(pictureId, currentUser, (permission) => {
+      setIsWritable(permission.writable)
+    })
+  }, [currentUser, pictureId, pictureService])
+
   return (
     <>
       <Title>{normalizeTitle(title) ?? t('defaultTitle')}</Title>
@@ -64,9 +81,19 @@ export const DrawingPage: FC = () => {
       <Container>
         <ToolBar pictureId={pictureId} />
         <div className="canvas-wrapper" suppressHydrationWarning>
-          <Canvas pictureId={pictureId} />
+          <Canvas pictureId={pictureId} currentUser={currentUser} isWritable={isWritable} />
         </div>
+        <SignInBanner />
       </Container>
+
+      {showWelcome && (
+        <Welcome
+          onClose={() => {
+            setShowWelcome(false)
+            navigate(`/${pictureId}`, { replace: true })
+          }}
+        />
+      )}
     </>
   )
 }

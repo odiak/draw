@@ -1,6 +1,5 @@
 import React, { FC, useEffect } from 'react'
 import { createGlobalStyle } from 'styled-components'
-import { MigrationService } from '../services/MigrationService'
 import { withPrefix } from '../i18n/translate'
 import {
   Outlet,
@@ -18,6 +17,8 @@ import { Flags } from '../pages/Flags'
 import { Boards } from '../pages/Boards'
 import { NewBoard } from '../pages/NewBoard'
 import { InvalidRouteError } from '../utils/InvalidRouteError'
+import { useAuth } from '../hooks/useAuth'
+import { SplashScreen } from './SplashScreen'
 
 const t = withPrefix('global')
 
@@ -75,12 +76,13 @@ const router = createBrowserRouter(
 )
 
 export const App: FC = () => {
+  const { onMigrationReady } = useAuth()
+
   useEffect(() => {
-    const migrationService = MigrationService.instantiate()
-    return migrationService.addMigrationReadyCallback(async () => {
+    return onMigrationReady(async (migrate) => {
       if (!confirm(t('migrationConfirmation'))) return
       try {
-        await migrationService.migrateData()
+        await migrate()
       } catch (e) {
         console.log(e)
         alert(t('migrationFailed'))
@@ -88,11 +90,12 @@ export const App: FC = () => {
       }
       alert(t('migrationSucceeded'))
     })
-  }, [])
+  }, [onMigrationReady])
 
   return (
     <>
       <GlobalStyle />
+      <SplashScreen />
       <RouterProvider router={router} />
     </>
   )

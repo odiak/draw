@@ -10,6 +10,7 @@ import { encode, decode } from '@msgpack/msgpack'
 import { CanvasBottomMenu } from './CanvasBottomMenu'
 import NewColor from 'color'
 import { addMediaQueryChangeListener } from '../utils/addMediaQueryChangeListener'
+import { UserState } from '../hooks/useAuth'
 
 type Operation =
   | Readonly<{
@@ -70,6 +71,8 @@ const scrollBarColorDDark = new NewColor('#eeea')
 
 type Props = {
   pictureId: string
+  currentUser: UserState | undefined
+  isWritable?: boolean
 }
 
 export type BottomMenuState = {
@@ -138,11 +141,8 @@ export class Canvas extends React.Component<Props, State> {
   private undoneOperationStack: Operation[] = []
 
   private unwatchPaths: (() => void) | null = null
-  private unwatchPermission: (() => void) | null = null
 
   private canvasRef = this.setCanvasElement.bind(this)
-
-  private writable = false
 
   private readonly experimentalSettings =
     ExperimentalSettingsService.instantiate().experimentalSettings
@@ -168,8 +168,8 @@ export class Canvas extends React.Component<Props, State> {
 
   private isDarkMode = false
 
-  constructor(props: Props, context: unknown) {
-    super(props, context)
+  constructor(props: Props) {
+    super(props)
 
     const fs: Array<() => void> = []
 
@@ -287,14 +287,6 @@ export class Canvas extends React.Component<Props, State> {
       }
     )
 
-    this.unwatchPermission?.()
-    this.unwatchPermission = this.pictureService.watchPermission(
-      this.props.pictureId,
-      (permission) => {
-        this.writable = permission.writable
-      }
-    )
-
     this.tickDraw()
   }
 
@@ -306,7 +298,6 @@ export class Canvas extends React.Component<Props, State> {
 
   componentWillUnmount() {
     this.unwatchPaths?.()
-    this.unwatchPermission?.()
     for (const f of this.cleanUpFunctions) f()
     this.cleanUpCanvas()
   }
@@ -385,10 +376,6 @@ export class Canvas extends React.Component<Props, State> {
     this.renderingContext = null
   }
 
-  setWritable(writable: boolean = true) {
-    this.writable = writable
-  }
-
   private addPathsAndAdjustPosition(pathsToAdd: Path[]) {
     const wasEmpty = this.paths.size === 0
     const n = addPaths(this.paths, pathsToAdd)
@@ -413,6 +400,10 @@ export class Canvas extends React.Component<Props, State> {
     }
   }
 
+  private get writable(): boolean {
+    return this.props.isWritable ?? false
+  }
+
   private removePathsById(pathIdsToRemove: string[]) {
     const n = removePaths(this.paths, pathIdsToRemove)
 
@@ -430,13 +421,13 @@ export class Canvas extends React.Component<Props, State> {
 
   private addPathsInternal(paths: Path[]) {
     addPaths(this.paths, paths)
-    this.pictureService.addPaths(this.props.pictureId, paths)
+    this.pictureService.addPaths(this.props.pictureId, paths, this.props.currentUser)
   }
 
   private removePathsInternal(paths: Path[]) {
     const pathIds = paths.map((p) => p.id)
     removePaths(this.paths, pathIds)
-    this.pictureService.removePaths(this.props.pictureId, pathIds)
+    this.pictureService.removePaths(this.props.pictureId, pathIds, this.props.currentUser)
   }
 
   private movePathsInternal(paths: Path[], dx: number, dy: number) {
@@ -449,22 +440,9 @@ export class Canvas extends React.Component<Props, State> {
     updatePaths(this.paths, newPaths)
     this.pictureService.updatePaths(
       this.props.pictureId,
-      newPaths.map(({ id, offsetX, offsetY }) => ({ id, offsetX, offsetY }))
+      newPaths.map(({ id, offsetX, offsetY }) => ({ id, offsetX, offsetY })),
+      this.props.currentUser
     )
-  }
-
-  private moveLassoById(id: string, dx: number, dy: number) {
-    const { currentLasso } = this
-    if (currentLasso == null || currentLasso.id !== id) return
-
-    currentLasso.offsetX += dx
-    currentLasso.offsetY += dy
-  }
-
-  private removeLassoWithWrongId(id: string) {
-    if (this.currentLasso?.id !== id) {
-      this.currentLasso = null
-    }
   }
 
   private checkOperationStack() {
