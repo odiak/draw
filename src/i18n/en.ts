@@ -34,7 +34,8 @@ export const en = {
     signOut: 'Sign out',
     turnOnInsidersVersion: 'Use "Insiders Version"',
     turnOffInsidersVersion: 'Stop using "Insiders Version"',
-    supportOnBMC: 'Support on Buy Me a Coffee'
+    supportOnBMC: 'Support on Buy Me a Coffee',
+    signOutConfirmation: 'Are you sure to sign out?'
   },
   toolBar: {
     title: 'Title'

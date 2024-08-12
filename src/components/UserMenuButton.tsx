@@ -18,7 +18,7 @@ export const UserMenuButton: FC<{ className?: string; isInBoardList?: boolean }>
     currentUser,
     signInWithGoogle: signInWithGoogleOriginal,
     signInAnonymously,
-    signOut
+    signOut: signOutOriginal
   } = useAuth()
 
   const { menuRef: accountMenuRef, buttonRef: accountMenuButtonRef } = useMenu()
@@ -29,6 +29,15 @@ export const UserMenuButton: FC<{ className?: string; isInBoardList?: boolean }>
       alert(t('failedToSignIn'))
     }
   }, [signInWithGoogleOriginal])
+
+  const signOut = useCallback(async () => {
+    if (!confirm(t('signOutConfirmation'))) return
+    signOutOriginal()
+
+    setTimeout(() => {
+      location.reload()
+    }, 500)
+  }, [signOutOriginal])
 
   if (currentUser === undefined) {
     return null
