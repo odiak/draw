@@ -27,7 +27,12 @@ export const UserMenuButton: FC<{ className?: string; isInBoardList?: boolean }>
     const c = await signInWithGoogleOriginal()
     if (c === undefined) {
       alert(t('failedToSignIn'))
+      return
     }
+
+    setTimeout(() => {
+      location.reload()
+    }, 500)
   }, [signInWithGoogleOriginal])
 
   const signOut = useCallback(async () => {
