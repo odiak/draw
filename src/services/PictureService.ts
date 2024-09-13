@@ -28,6 +28,7 @@ import { imageBaseUrl } from '../constants'
 import { getAuth, User } from 'firebase/auth'
 import axios from 'axios'
 import { UserState, isNotSignedIn, isSignedIn } from '../hooks/useAuth'
+import { getFunctions, httpsCallable } from 'firebase/functions'
 
 export type Point = { x: number; y: number }
 export type Path = {
@@ -299,18 +300,18 @@ export class PictureService {
     const { currentUser } = getAuth()
     if (currentUser === null) return false
 
-    axios
-    const succeeded = await axios
-      .post(`${imageBaseUrl}/pictures/${pictureId}/delete`, {
-        idToken: await currentUser.getIdToken()
-      })
-      .then(async ({ data }) => {
-        if (data == null) return false
-        return Boolean((data as Record<string, unknown>).succeeded)
-      })
-      .catch(() => false)
+    const func = httpsCallable<{ pictureId: string }, boolean>(
+      getFunctions(undefined, 'asia-northeast1'),
+      'deletePicture'
+    )
 
-    return succeeded
+    try {
+      const res = await func({ pictureId })
+      return res.data
+    } catch (e: unknown) {
+      console.error(e)
+      return false
+    }
   }
 }
 
