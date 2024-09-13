@@ -43,11 +43,18 @@ const Container = styled.div`
   display: grid;
   place-items: center;
   z-index: 9999;
+  --text-stroke-color: #000;
 
   h1 {
     font-size: 60px;
     font-style: italic;
     color: transparent;
-    -webkit-text-stroke: 1.5px #000;
+    -webkit-text-stroke: 1.5px var(--text-stroke-color);
+  }
+
+  /* dark mode */
+  @media (prefers-color-scheme: dark) {
+    background: #000;
+    --text-stroke-color: #fff;
   }
 `
