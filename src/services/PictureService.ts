@@ -49,6 +49,7 @@ export type PictureWithId = {
   ownerId: string | null
   accessibilityLevel: AccessibilityLevel
   createdAt?: Timestamp
+  updatedAt?: Timestamp
 }
 
 export type PathsUpdate = Partial<{
@@ -82,7 +83,7 @@ export class PictureService {
 
   private existFlags = new Map<string, boolean>()
 
-  private touching: { pictureId: string } | undefined
+  private touchingPictureIds = new Set<string>()
 
   private pathsById(pictureId: string) {
     return collection(doc(this.picturesCollection, pictureId), 'paths').withConverter(pathConverter)
@@ -108,19 +109,19 @@ export class PictureService {
   async updatePicture(
     pictureId: string,
     currentUser: UserState | undefined,
-    update: Partial<Pick<PictureWithId, 'ownerId' | 'title' | 'accessibilityLevel' | 'createdAt'>>
+    update: Partial<Omit<PictureWithId, 'id'>>
   ) {
+    const now = Timestamp.now()
+    const data = { ...update, updatedAt: now }
+
     // TODO: check permission before updating
     if (this.existFlags.get(pictureId) === false) {
       if (currentUser !== undefined && isSignedIn(currentUser)) {
-        update = {
-          ...update,
-          ownerId: currentUser.uid,
-          createdAt: Timestamp.now()
-        }
+        data.ownerId = currentUser.uid
+        data.createdAt = now
       }
     }
-    await setDoc(this.pictureRefById(pictureId), update, { merge: true })
+    await setDoc(this.pictureRefById(pictureId), data, { merge: true })
   }
 
   addPaths(pictureId: string, pathsToAdd: Path[], currentUser: UserState | undefined) {
@@ -254,11 +255,13 @@ export class PictureService {
     if (currentUser === undefined || isNotSignedIn(currentUser)) return
 
     const doc = this.pictureRefById(pictureId)
+    const now = Timestamp.now()
     await setDoc(
       doc,
       {
         ownerId: currentUser.uid,
-        createdAt: Timestamp.now()
+        createdAt: now,
+        updatedAt: now
       },
       { merge: true }
     )
@@ -283,15 +286,12 @@ export class PictureService {
   }
 
   private async touchPicture(pictureId: string) {
-    if (this.touching?.pictureId === pictureId) return
+    if (this.touchingPictureIds.has(pictureId)) return
 
-    const touching = { pictureId }
-    this.touching = touching
+    this.touchingPictureIds.add(pictureId)
     setTimeout(async () => {
       await fetch(`${imageBaseUrl2}/update/${pictureId}`, { method: 'POST' }).catch(() => undefined)
-      if (this.touching === touching) {
-        this.touching = undefined
-      }
+      this.touchingPictureIds.delete(pictureId)
     }, 1000)
   }
 
@@ -317,13 +317,14 @@ export class PictureService {
 const pictureConverter: FirestoreDataConverter<PictureWithId> = {
   fromFirestore(doc: QueryDocumentSnapshot): PictureWithId {
     const { id } = doc
-    const { title, ownerId, accessibilityLevel, createdAt } = doc.data()
+    const { title, ownerId, accessibilityLevel, createdAt, updatedAt } = doc.data()
     return {
       id,
       title: title ?? '',
       ownerId,
       accessibilityLevel: validateAccessibilityLevel(accessibilityLevel),
-      createdAt
+      createdAt,
+      updatedAt
     }
   },
 
@@ -469,29 +470,6 @@ function getPermission(picture: PictureWithId | null, user: User): Permission {
 function validateAccessibilityLevel(accLevel: string | null | undefined): AccessibilityLevel {
   if (accLevel === 'protected' || accLevel === 'private') return accLevel
   return 'public'
-}
-
-function combine<T1, T2>(callback: (v1: T1, v2: T2) => void): [(v1: T1) => void, (v2: T2) => void] {
-  let value1: T1
-  let value2: T2
-  let value1Initialized = false
-  let value2Initialized = false
-
-  const callback1 = (v1: T1) => {
-    value1 = v1
-    value1Initialized = true
-    if (value2Initialized) {
-      callback(value1, value2)
-    }
-  }
-  const callback2 = (v2: T2) => {
-    value2 = v2
-    value2Initialized = true
-    if (value1Initialized) {
-      callback(value1, value2)
-    }
-  }
-  return [callback1, callback2]
 }
 
 const maxOperationsInBatch = 500
