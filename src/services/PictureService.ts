@@ -24,9 +24,8 @@ import {
   getDoc,
   Bytes
 } from 'firebase/firestore'
-import { imageBaseUrl } from '../constants'
+import { imageBaseUrl2 } from '../constants'
 import { getAuth, User } from 'firebase/auth'
-import axios from 'axios'
 import { UserState, isNotSignedIn, isSignedIn } from '../hooks/useAuth'
 import { getFunctions, httpsCallable } from 'firebase/functions'
 
@@ -289,7 +288,7 @@ export class PictureService {
     const touching = { pictureId }
     this.touching = touching
     setTimeout(async () => {
-      await axios.post(`${imageBaseUrl}/update/${pictureId}`).catch(() => undefined)
+      await fetch(`${imageBaseUrl2}/update/${pictureId}`, { method: 'POST' }).catch(() => undefined)
       if (this.touching === touching) {
         this.touching = undefined
       }
