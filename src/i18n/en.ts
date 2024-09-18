@@ -66,7 +66,8 @@ export const en = {
     startUsingNow: 'Start using now',
     signInWithGoogle: 'Sign in with Google',
     note1: 'By signing in with Google, you can access saved data from other devices.',
-    note2: 'Even if you sign in later, you can inherit the data you saved before.'
+    note2: 'Even if you sign in later, you can inherit the data you saved before.',
+    learnMore: 'Learn more'
   },
   signInBanner: {
     text1: 'To draw, ',

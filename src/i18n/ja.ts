@@ -69,7 +69,8 @@ export const ja: typeof en = {
     signInWithGoogle: 'Googleアカウントでログインする',
     note1: 'Googleアカウントでログインすると、保存されたデータを他のデバイスでも利用できます。',
     note2:
-      'ログインしなくてもデータは保存され、後でGoogleアカウントでログインした際にデータを引き継ぐこともできます。'
+      'ログインしなくてもデータは保存され、後でGoogleアカウントでログインした際にデータを引き継ぐこともできます。',
+    learnMore: '詳しくはこちら'
   },
   signInBanner: {
     text1: '書き込むには、',

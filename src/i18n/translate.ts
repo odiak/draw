@@ -43,7 +43,7 @@ export type Args<K> = K extends Keys
 
 const dataByLanguage: Record<Language, Data> = { en, ja }
 
-const language = languages.find((lg) => navigator.language.startsWith(lg)) ?? defaultLanguage
+export const language = languages.find((lg) => navigator.language.startsWith(lg)) ?? defaultLanguage
 
 export function translate<K extends Keys>(key: K, ...args: Args<K>): string {
   const value = key

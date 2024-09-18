@@ -1,7 +1,7 @@
 import React, { FC, useCallback, useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { isSignedIn, useAuth } from '../hooks/useAuth'
-import { withPrefix, translate } from '../i18n/translate'
+import { withPrefix, translate, language } from '../i18n/translate'
 
 const t = withPrefix('welcome')
 
@@ -51,6 +51,14 @@ export const Welcome: FC<Props> = ({ onClose }) => {
           {t('note1')}
           <br />
           {t('note2')}
+          <br />
+          <a
+            href={language === 'ja' ? 'https://about.kakeru.app/ja' : 'https://about.kakeru.app'}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {t('learnMore')}
+          </a>
         </p>
       </Container>
     </Backdrop>
