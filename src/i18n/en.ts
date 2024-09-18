@@ -12,7 +12,8 @@ export const en = {
     untitled: 'Untitled',
     deleteBoard: 'Delete',
     deleteConfirmation: 'Are you sure to delete the board?',
-    failedToDelete: 'Failed to delete the board.'
+    failedToDelete: 'Failed to delete the board.',
+    new: 'New'
   },
   menu: {
     noImageLink: 'No image link for this access level',

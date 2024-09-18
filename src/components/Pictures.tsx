@@ -2,7 +2,6 @@ import React, { FC, useState, useEffect, useCallback, useRef } from 'react'
 import styled from 'styled-components'
 import { PictureService, PictureWithId, Anchor } from '../services/PictureService'
 import { UserMenuButton } from './UserMenuButton'
-import { NewButton } from './NewButton'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
 import { withPrefix } from '../i18n/translate'
 import { Title } from './Title'
@@ -10,7 +9,9 @@ import { PictureListItem } from './PictureListItem'
 import { removeArrayElementAt } from '../utils/removeArrayElementAt'
 import { EllipsisMenuButton } from './EllipsisMenuButton'
 import { isNotSignedIn, isSignedIn, useAuth } from '../hooks/useAuth'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPlus } from '@fortawesome/free-solid-svg-icons'
 
 const t = withPrefix('boards')
 
@@ -74,7 +75,6 @@ export const Pictures: FC = () => {
   return (
     <Container>
       <ButtonsContainer>
-        <StyledNewButton />
         <StyledUserMenuButton isInBoardList />
         <StyledEllipsisMenuButton />
       </ButtonsContainer>
@@ -83,6 +83,12 @@ export const Pictures: FC = () => {
       <ContentContainer>
         <H>{t('title')}</H>
         <PictureList>
+          <NewButton to="/new">
+            <div className="icon-wrapper">
+              <FontAwesomeIcon icon={faPlus} className="icon" />
+            </div>
+            <div className="text">{t('new')}</div>
+          </NewButton>
           {pictures.map((p, i) => (
             <PictureListItem
               key={p.id}
@@ -124,6 +130,36 @@ const H = styled.h1``
 const PictureList = styled.div`
   display: flex;
   flex-wrap: wrap;
+
+  & > div,
+  & > a {
+    border: 0;
+    width: 190px;
+    height: 150px;
+    margin: 5px;
+    position: relative;
+    box-shadow: 1px 1px 4px #6669;
+    overflow: hidden;
+    border-radius: 2px;
+
+    @media screen and (max-width: 830px) {
+      width: calc(25% - 10px);
+    }
+
+    @media screen and (max-width: 600px) {
+      width: calc(33% - 10px);
+    }
+
+    @media screen and (max-width: 400px) {
+      width: calc(50% - 10px);
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    & > div {
+      background: #ddd;
+    }
+  }
 `
 
 const Button = styled.button`
@@ -145,10 +181,44 @@ const ButtonsContainer = styled.div`
   z-index: 10;
 `
 
-const StyledNewButton = styled(NewButton)`
-  margin-right: 12px;
-`
 const StyledUserMenuButton = styled(UserMenuButton)`
   margin-right: 12px;
 `
 const StyledEllipsisMenuButton = styled(EllipsisMenuButton)``
+
+const NewButton = styled(Link)`
+  display: block;
+  background: #888;
+  color: #fff;
+  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+
+  &:link,
+  &:visited {
+    text-decoration: none;
+  }
+
+  > .icon-wrapper {
+    flex: 1;
+    display: grid;
+    place-items: center;
+
+    > .icon {
+      display: block;
+      font-size: 80px;
+      flex: 1;
+    }
+  }
+
+  > .text {
+    padding: 4px;
+    background: #fff2;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    & {
+      background: #555;
+    }
+  }
+`

@@ -14,7 +14,8 @@ export const ja: typeof en = {
     untitled: '無題',
     deleteBoard: '削除する',
     deleteConfirmation: 'ボードを削除してよろしいですか？',
-    failedToDelete: 'ボードの削除に失敗しました'
+    failedToDelete: 'ボードの削除に失敗しました',
+    new: '新しく作る'
   },
   menu: {
     noImageLink: 'このアクセス制限レベルのボードは画像のリンクを発行できません',

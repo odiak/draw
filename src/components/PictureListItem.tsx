@@ -46,40 +46,14 @@ export const PictureListItem: FC<Props> = ({ picture: { id: pictureId, title }, 
         </Menu>
       </MenuButton>
       <AnchorBox to={`/${pictureId}`}>
-        <PictureThumnail src={`${imageBaseUrl2}/${pictureId}-w380-h300.png`} />
+        <PictureThumbnail src={`${imageBaseUrl2}/${pictureId}-w380-h300.png`} />
         <PictureTitle>{title || t('untitled')}</PictureTitle>
       </AnchorBox>
     </Container>
   )
 }
 
-const Container = styled.div`
-  width: 190px;
-  height: 150px;
-  margin: 5px;
-  position: relative;
-  box-shadow: 1px 1px 4px #6669;
-  overflow: hidden;
-  border-radius: 2px;
-
-  @media screen and (max-width: 830px) {
-    width: calc(25% - 10px);
-  }
-
-  @media screen and (max-width: 600px) {
-    width: calc(33% - 10px);
-  }
-
-  @media screen and (max-width: 400px) {
-    width: calc(50% - 10px);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    & {
-      background: #ddd;
-    }
-  }
-`
+const Container = styled.div``
 
 const AnchorBox = styled(Link)`
   color: inherit;
@@ -102,7 +76,7 @@ const PictureTitle = styled.div`
   }
 `
 
-const PictureThumnail = styled.img`
+const PictureThumbnail = styled.img`
   transform: scale(0.5) translate(-50%, -50%);
 `
 
