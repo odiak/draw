@@ -15,10 +15,11 @@ import { NotFound } from '../pages/NotFound'
 import { DrawingPage } from '../pages/DrawingPage'
 import { Flags } from '../pages/Flags'
 import { Boards } from '../pages/Boards'
-import { NewBoard } from '../pages/NewBoard'
+import { Home } from '../pages/Home'
 import { InvalidRouteError } from '../utils/InvalidRouteError'
 import { useAuth } from '../hooks/useAuth'
 import { SplashScreen } from './SplashScreen'
+import { New } from '../pages/New'
 
 const t = withPrefix('global')
 
@@ -67,8 +68,9 @@ const Root: FC = () => (
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" errorElement={<ErrorElement />} element={<Root />}>
-      <Route index element={<NewBoard />} />
+      <Route index element={<Home />} />
       <Route path="boards" element={<Boards />} />
+      <Route path="new" element={<New />} />
       <Route path="flags" element={<Flags />} />
       <Route path=":pictureId" element={<DrawingPage />} />
     </Route>
