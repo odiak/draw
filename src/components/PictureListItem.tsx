@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { FC, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
-import { imageBaseUrl2 } from '../constants'
+import { imageBaseUrl } from '../constants'
 import { withPrefix } from '../i18n/translate'
 import { PictureService, PictureWithId } from '../services/PictureService'
 import { useMenu } from '../utils/useMenu'
@@ -46,7 +46,7 @@ export const PictureListItem: FC<Props> = ({ picture: { id: pictureId, title }, 
         </Menu>
       </MenuButton>
       <AnchorBox to={`/${pictureId}`}>
-        <PictureThumbnail src={`${imageBaseUrl2}/${pictureId}-w380-h300.png`} />
+        <PictureThumbnail src={`${imageBaseUrl}/${pictureId}-w380-h300.png`} />
         <PictureTitle>{title || t('untitled')}</PictureTitle>
       </AnchorBox>
     </Container>

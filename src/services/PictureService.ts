@@ -24,7 +24,7 @@ import {
   getDoc,
   Bytes
 } from 'firebase/firestore'
-import { imageBaseUrl2 } from '../constants'
+import { imageBaseUrl } from '../constants'
 import { getAuth, User } from 'firebase/auth'
 import { UserState, isNotSignedIn, isSignedIn } from '../hooks/useAuth'
 import { getFunctions, httpsCallable } from 'firebase/functions'
@@ -290,7 +290,7 @@ export class PictureService {
 
     this.touchingPictureIds.add(pictureId)
     setTimeout(async () => {
-      await fetch(`${imageBaseUrl2}/update/${pictureId}`, { method: 'POST' }).catch(() => undefined)
+      await fetch(`${imageBaseUrl}/update/${pictureId}`, { method: 'POST' }).catch(() => undefined)
       this.touchingPictureIds.delete(pictureId)
     }, 1000)
   }
