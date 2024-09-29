@@ -21,5 +21,9 @@ export function showBMCWidget(force = false) {
   const style = document.querySelector('style#bmc-style')
   if (style) {
     style.remove()
+
+    setTimeout(() => {
+      document.body.appendChild(style)
+    }, 1000 * 30)
   }
 }
