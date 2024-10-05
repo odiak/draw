@@ -10,7 +10,11 @@ type OgpInfo = {
 
 type Env = {
   GOOGLE_APPLICATION_CREDENTIALS: string
+  imageServer: Fetcher
 }
+
+const reservedImages = ['/favicon.png']
+const imageUrlPattern = /^\/[-\w]+\.(?:png|svg)$/
 
 export const onRequest: PagesFunction<Env> = async (context) => {
   const url = new URL(context.request.url)
@@ -18,6 +22,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   if (url.hostname === 'dev.kakeru.app') {
     url.hostname = 'kakeru.app'
     return Response.redirect(url.toString(), 302)
+  }
+
+  const { pathname } = url
+  if (!reservedImages.includes(pathname) && imageUrlPattern.test(pathname)) {
+    const newUrl = new URL(url)
+    newUrl.hostname = 'i.kakeru.app'
+    return context.env.imageServer.fetch(newUrl)
   }
 
   const res = await context.next()
