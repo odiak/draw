@@ -6,7 +6,7 @@ import { faPlus } from '@fortawesome/free-solid-svg-icons'
 
 export const NewButton: FC<{ className?: string }> = ({ className }) => {
   return (
-    <Button to="/" className={className}>
+    <Button to="/new" className={className}>
       <FontAwesomeIcon icon={faPlus} className="icon" />
     </Button>
   )
