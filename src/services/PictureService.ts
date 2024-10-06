@@ -238,13 +238,38 @@ export class PictureService {
   ): Unsubscribe {
     if (currentUser === undefined || isNotSignedIn(currentUser)) return () => {}
 
-    return this.watchPicture(
+    let picture: PictureWithId | null = null
+    let defaultAccLevel: AccessibilityLevel | undefined
+
+    const onChange = () => {
+      if (picture !== null && defaultAccLevel !== undefined && unsubscribe1 !== undefined) {
+        unsubscribe1()
+        unsubscribe1 = undefined
+      }
+      callback(getPermission(picture, currentUser, defaultAccLevel))
+    }
+
+    let unsubscribe1: Unsubscribe | undefined = onSnapshot(
+      doc(collection(this.db, 'users'), currentUser.uid),
+      (snapshot) => {
+        defaultAccLevel = validateAccessibilityLevel(snapshot.data()?.defaultAccessibilityLevel)
+        onChange()
+      }
+    )
+
+    const unsubscribe2 = this.watchPicture(
       pictureId,
-      (picture) => {
-        callback(getPermission(picture, currentUser))
+      (picture_) => {
+        picture = picture_
+        onChange()
       },
       { includesLocalChanges: true }
     )
+
+    return () => {
+      unsubscribe1?.()
+      unsubscribe2()
+    }
   }
 
   private async setPictureOwnerIfNotExist(
@@ -422,8 +447,15 @@ const pathConverter: FirestoreDataConverter<Path | null> = {
   }
 }
 
-function getPermission(picture: PictureWithId | null, user: User): Permission {
-  const accessibilityLevel = validateAccessibilityLevel(picture?.accessibilityLevel)
+function getPermission(
+  picture: PictureWithId | null,
+  user: User,
+  defaultAccessibilityLevel?: AccessibilityLevel
+): Permission {
+  const accessibilityLevel = validateAccessibilityLevel(
+    picture?.accessibilityLevel,
+    defaultAccessibilityLevel
+  )
 
   if (picture == null || picture.ownerId === user.uid) {
     return {
@@ -432,33 +464,41 @@ function getPermission(picture: PictureWithId | null, user: User): Permission {
       writable: true,
       accessibilityLevel
     }
-  } else if (accessibilityLevel === 'public') {
-    return {
-      isOwner: false,
-      readable: true,
-      writable: true,
-      accessibilityLevel
-    }
-  } else if (accessibilityLevel === 'protected') {
-    return {
-      isOwner: false,
-      readable: true,
-      writable: false,
-      accessibilityLevel
-    }
-  } else {
-    return {
-      isOwner: false,
-      readable: false,
-      writable: false,
-      accessibilityLevel
-    }
+  }
+
+  switch (accessibilityLevel) {
+    case 'public':
+      return {
+        isOwner: false,
+        readable: true,
+        writable: true,
+        accessibilityLevel
+      }
+
+    case 'protected':
+      return {
+        isOwner: false,
+        readable: true,
+        writable: false,
+        accessibilityLevel
+      }
+
+    case 'private':
+      return {
+        isOwner: false,
+        readable: false,
+        writable: false,
+        accessibilityLevel
+      }
   }
 }
 
-function validateAccessibilityLevel(accLevel: string | null | undefined): AccessibilityLevel {
-  if (accLevel === 'protected' || accLevel === 'private') return accLevel
-  return 'public'
+function validateAccessibilityLevel(
+  accLevel: string | null | undefined,
+  defaultValue?: AccessibilityLevel
+): AccessibilityLevel {
+  if (accLevel === 'protected' || accLevel === 'private' || accLevel === 'public') return accLevel
+  return defaultValue ?? 'public'
 }
 
 const maxOperationsInBatch = 500

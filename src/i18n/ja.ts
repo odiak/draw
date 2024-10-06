@@ -82,6 +82,10 @@ export const ja: typeof en = {
   },
   settings: {
     title: 'アカウント設定',
+    defaultAccessibilityLevel: 'デフォルトのアクセス制限',
+    public: '誰でも閲覧・書き込み可能',
+    protected: '誰でも閲覧でき、自分だけが書き込み可能',
+    private: '自分だけが閲覧・書き込み可能',
     apiToken: 'APIトークン',
     yourApiToken: 'あなたのAPIトークン',
     refreshApiToken: 'APIトークンを再設定する',

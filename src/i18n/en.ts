@@ -79,6 +79,10 @@ export const en = {
   },
   settings: {
     title: 'Account Settings',
+    defaultAccessibilityLevel: 'Default access restriction',
+    public: 'Anyone can see and draw',
+    protected: 'Anyone can see, only you can draw',
+    private: 'Only you can see and draw',
     apiToken: 'API Token',
     yourApiToken: 'Your API token',
     refreshApiToken: 'Refresh API token',

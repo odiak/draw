@@ -3,6 +3,8 @@ import styled from 'styled-components'
 import { isSignedIn, useAuth } from '../hooks/useAuth'
 import { useUserSettings } from '../hooks/useUserSettings'
 import { withPrefix } from '../i18n/translate'
+import { AccessibilityLevel } from '../services/PictureService'
+import { Title } from '../components/Title'
 
 const t = withPrefix('settings')
 
@@ -12,11 +14,31 @@ const Container = styled.div`
 
 export const UserSettings: FC = () => {
   const auth = useAuth()
-  const { settings, isUpdatingApiToken, createOrRefreshApiToken } = useUserSettings()
+  const { settings, updateSettings, isUpdatingApiToken, createOrRefreshApiToken } =
+    useUserSettings()
 
   return (
     <Container>
+      <Title>{t('title')}</Title>
+
       <h1>{t('title')}</h1>
+
+      <h2>{t('defaultAccessibilityLevel')}</h2>
+
+      <select
+        value={settings.defaultAccessibilityLevel ?? 'public'}
+        onChange={(e) => {
+          updateSettings({
+            defaultAccessibilityLevel: e.target.value as AccessibilityLevel
+          })
+        }}
+      >
+        {(['public', 'protected', 'private'] as const).map((level) => (
+          <option key={level} value={level}>
+            {t(level)}
+          </option>
+        ))}
+      </select>
 
       {auth.currentUser !== undefined && isSignedIn(auth.currentUser) && (
         <>

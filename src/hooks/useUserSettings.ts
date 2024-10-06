@@ -12,6 +12,7 @@ import { httpsCallable } from 'firebase/functions'
 import { getFunctions } from '../utils/firebase-functions'
 
 export type UserSettings = {
+  defaultAccessibilityLevel?: 'public' | 'protected' | 'private'
   apiToken?: string
 }
 
@@ -35,7 +36,9 @@ export function useUserSettings() {
         return
       }
 
-      setSettings(snapshot.data())
+      if (!snapshot.metadata.hasPendingWrites) {
+        setSettings(snapshot.data())
+      }
     })
 
     return unsubscribe
@@ -48,7 +51,8 @@ export function useUserSettings() {
       const userRef = doc(collection(firestore, 'users'), auth.currentUser.uid).withConverter(
         userSettingsConverter
       )
-      await setDoc(userRef, settings)
+      setSettings((s) => ({ ...s, ...settings }))
+      await setDoc(userRef, settings, { merge: true })
     },
     [auth, firestore]
   )
@@ -67,9 +71,27 @@ export function useUserSettings() {
 const userSettingsConverter: FirestoreDataConverter<UserSettings> = {
   toFirestore: (settings) => settings,
   fromFirestore: (snapshot) => {
-    const { apiToken } = snapshot.data()
-    return {
-      apiToken: apiToken != null ? String(apiToken) : undefined
+    const { defaultAccessibilityLevel: defaultAccLevel, apiToken } = snapshot.data() as Record<
+      string,
+      unknown
+    >
+    const settings: UserSettings = {}
+
+    if (
+      defaultAccLevel != null &&
+      (defaultAccLevel === 'public' ||
+        defaultAccLevel === 'protected' ||
+        defaultAccLevel === 'private')
+    ) {
+      settings.defaultAccessibilityLevel = defaultAccLevel
+    } else {
+      settings.defaultAccessibilityLevel = undefined
     }
+
+    if (apiToken != null) {
+      settings.apiToken = String(apiToken)
+    }
+
+    return settings
   }
 }
