@@ -1,5 +1,5 @@
 import React, { FC, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useMatches } from 'react-router-dom'
 import { Menu, MenuItem, MenuItemText, MenuItemWithAnchor } from './Menu'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser } from '@fortawesome/free-solid-svg-icons'
@@ -7,13 +7,11 @@ import styled from 'styled-components'
 import { useMenu } from '../utils/useMenu'
 import { withPrefix } from '../i18n/translate'
 import { NotSignedIn, User, isSignedIn, useAuth } from '../hooks/useAuth'
+import { ScreenName, useScreenName } from '../utils/screenNames'
 
 const t = withPrefix('menu')
 
-export const UserMenuButton: FC<{ className?: string; isInBoardList?: boolean }> = ({
-  className,
-  isInBoardList
-}) => {
+export const UserMenuButton: FC<{ className?: string }> = ({ className }) => {
   const {
     currentUser,
     signInWithGoogle: signInWithGoogleOriginal,
@@ -22,6 +20,8 @@ export const UserMenuButton: FC<{ className?: string; isInBoardList?: boolean }>
   } = useAuth()
 
   const { menuRef: accountMenuRef, buttonRef: accountMenuButtonRef } = useMenu()
+
+  const screenName = useScreenName()
 
   const signInWithGoogle = useCallback(async () => {
     const c = await signInWithGoogleOriginal()
@@ -62,7 +62,7 @@ export const UserMenuButton: FC<{ className?: string; isInBoardList?: boolean }>
       <Menu ref={accountMenuRef}>
         <Items
           user={currentUser}
-          isInBoardList={isInBoardList ?? false}
+          screenName={screenName}
           {...{ signInAnonymously, signInWithGoogle, signOut }}
         />
       </Menu>
@@ -72,7 +72,7 @@ export const UserMenuButton: FC<{ className?: string; isInBoardList?: boolean }>
 
 type ItemsProps = {
   user: User | NotSignedIn
-  isInBoardList: boolean
+  screenName: ScreenName | undefined
   signInWithGoogle(): void
   signInAnonymously(): void
   signOut(): void
@@ -83,7 +83,7 @@ const Items: FC<ItemsProps> = ({
   signInAnonymously,
   signInWithGoogle,
   signOut,
-  isInBoardList
+  screenName
 }) => {
   const isSignedIn_ = isSignedIn(user)
   const isAnonymous = isSignedIn(user) && user.isAnonymous
@@ -93,7 +93,7 @@ const Items: FC<ItemsProps> = ({
   return (
     <>
       {isAnonymous && <MenuItemText>{t('usingAnonymously')}</MenuItemText>}
-      {!isInBoardList && isSignedIn_ && (
+      {screenName !== 'boards' && isSignedIn_ && (
         <MenuItemWithAnchor>
           <Link to="/boards">{t('myBoards')}</Link>
         </MenuItemWithAnchor>

@@ -75,7 +75,7 @@ export const Pictures: FC = () => {
   return (
     <Container>
       <ButtonsContainer>
-        <StyledUserMenuButton isInBoardList />
+        <StyledUserMenuButton />
         <StyledEllipsisMenuButton />
       </ButtonsContainer>
       <Title>{t('title')}</Title>

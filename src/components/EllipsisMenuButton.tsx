@@ -9,6 +9,7 @@ import { copyToClipboard } from '../utils/copyToClipboard'
 
 import { useMenu } from '../utils/useMenu'
 import { Menu, MenuDivider, MenuItem, MenuItemText, MenuItemWithAnchor } from './Menu'
+import { useScreenName } from '../utils/screenNames'
 
 const t = withPrefix('menu')
 
@@ -23,6 +24,8 @@ const buyMeACoffeeLink = 'https://buymeacoffee.com/odiak'
 export const EllipsisMenuButton: FC<Props> = ({ pictureId, permission, className }) => {
   const { menuRef, buttonRef: menuButtonRef } = useMenu()
 
+  const screenName = useScreenName()
+
   const imageLink = `${imageBaseUrl}/${pictureId}.svg`
   const pageLink = `${baseUrl}/${pictureId}`
 
@@ -34,7 +37,7 @@ export const EllipsisMenuButton: FC<Props> = ({ pictureId, permission, className
     <MenuButton ref={menuButtonRef} className={className}>
       <FontAwesomeIcon icon={faEllipsisH} className="icon" />
       <Menu ref={menuRef}>
-        {pictureId !== undefined && (
+        {screenName === 'drawing' && pictureId !== undefined && (
           <>
             {permission?.accessibilityLevel === 'private' ? (
               <MenuItemText>{t('noImageLink')}</MenuItemText>

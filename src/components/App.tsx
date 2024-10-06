@@ -20,6 +20,7 @@ import { InvalidRouteError } from '../utils/InvalidRouteError'
 import { useAuth } from '../hooks/useAuth'
 import { SplashScreen } from './SplashScreen'
 import { New } from '../pages/New'
+import { screenNames } from '../utils/screenNames'
 
 const t = withPrefix('global')
 
@@ -69,10 +70,10 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" errorElement={<ErrorElement />} element={<Root />}>
       <Route index element={<Home />} />
-      <Route path="boards" element={<Boards />} />
-      <Route path="new" element={<New />} />
-      <Route path="flags" element={<Flags />} />
-      <Route path=":pictureId" element={<DrawingPage />} />
+      <Route id={screenNames.boards} path="boards" element={<Boards />} />
+      <Route id={screenNames.new} path="new" element={<New />} />
+      <Route id={screenNames.flags} path="flags" element={<Flags />} />
+      <Route id={screenNames.drawing} path=":pictureId" element={<DrawingPage />} />
     </Route>
   )
 )
