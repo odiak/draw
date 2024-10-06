@@ -80,6 +80,7 @@ export const en = {
   settings: {
     title: 'Account Settings',
     defaultAccessibilityLevel: 'Default access restriction',
+    defaultAccessibilityLevelDescription: 'This setting is applied to new boards.',
     public: 'Anyone can see and draw',
     protected: 'Anyone can see, only you can draw',
     private: 'Only you can see and draw',
@@ -90,6 +91,7 @@ export const en = {
     apiTokenIsNotCreated: 'Your API token is not created yet.',
     createApiToken: 'Create API token',
     creatingApiToken: 'Creating API token...',
-    apiDocumentation: 'API documentation'
+    apiDocumentation: 'API documentation',
+    backToHome: 'Back to home'
   }
 }

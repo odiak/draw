@@ -5,6 +5,7 @@ import { useUserSettings } from '../hooks/useUserSettings'
 import { withPrefix } from '../i18n/translate'
 import { AccessibilityLevel } from '../services/PictureService'
 import { Title } from '../components/Title'
+import { Link } from 'react-router-dom'
 
 const t = withPrefix('settings')
 
@@ -24,6 +25,8 @@ export const UserSettings: FC = () => {
       <h1>{t('title')}</h1>
 
       <h2>{t('defaultAccessibilityLevel')}</h2>
+
+      <p>{t('defaultAccessibilityLevelDescription')}</p>
 
       <select
         value={settings.defaultAccessibilityLevel ?? 'public'}
@@ -70,6 +73,11 @@ export const UserSettings: FC = () => {
             >
               {t('apiDocumentation')}
             </a>
+          </p>
+
+          <br />
+          <p>
+            <Link to="/">&laquo; {t('backToHome')}</Link>
           </p>
         </>
       )}

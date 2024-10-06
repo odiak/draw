@@ -83,6 +83,7 @@ export const ja: typeof en = {
   settings: {
     title: 'アカウント設定',
     defaultAccessibilityLevel: 'デフォルトのアクセス制限',
+    defaultAccessibilityLevelDescription: '新しく作成するボードのアクセス制限を指定します',
     public: '誰でも閲覧・書き込み可能',
     protected: '誰でも閲覧でき、自分だけが書き込み可能',
     private: '自分だけが閲覧・書き込み可能',
@@ -93,6 +94,7 @@ export const ja: typeof en = {
     apiTokenIsNotCreated: 'APIトークンはまだ作成されていません',
     createApiToken: 'APIトークンを作成する',
     creatingApiToken: 'APIトークンを作成中...',
-    apiDocumentation: 'APIドキュメント'
+    apiDocumentation: 'APIドキュメント',
+    backToHome: 'ホームに戻る'
   }
 }
