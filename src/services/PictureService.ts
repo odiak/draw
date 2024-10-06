@@ -27,7 +27,8 @@ import {
 import { imageBaseUrl } from '../constants'
 import { getAuth, User } from 'firebase/auth'
 import { UserState, isNotSignedIn, isSignedIn } from '../hooks/useAuth'
-import { getFunctions, httpsCallable } from 'firebase/functions'
+import { httpsCallable } from 'firebase/functions'
+import { getFunctions } from '../utils/firebase-functions'
 
 export type Point = { x: number; y: number }
 export type Path = {
@@ -299,10 +300,7 @@ export class PictureService {
     const { currentUser } = getAuth()
     if (currentUser === null) return false
 
-    const func = httpsCallable<{ pictureId: string }, boolean>(
-      getFunctions(undefined, 'asia-northeast1'),
-      'deletePicture'
-    )
+    const func = httpsCallable<{ pictureId: string }, boolean>(getFunctions(), 'deletePicture')
 
     try {
       const res = await func({ pictureId })

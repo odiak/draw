@@ -8,7 +8,8 @@ import {
   onSnapshot,
   setDoc
 } from 'firebase/firestore'
-import { getFunctions, httpsCallable } from 'firebase/functions'
+import { httpsCallable } from 'firebase/functions'
+import { getFunctions } from '../utils/firebase-functions'
 
 export type UserSettings = {
   apiToken?: string
@@ -54,10 +55,7 @@ export function useUserSettings() {
 
   const createOrRefreshApiToken = useCallback(async () => {
     setIsUpdatingApiToken(true)
-    const func = httpsCallable(
-      getFunctions(undefined, 'asia-northeast1'),
-      'createOrRefreshApiToken'
-    )
+    const func = httpsCallable(getFunctions(), 'createOrRefreshApiToken')
 
     await func()
     setIsUpdatingApiToken(false)

@@ -21,8 +21,9 @@ import {
   setDoc,
   doc
 } from 'firebase/firestore'
-import { getFunctions, httpsCallable } from 'firebase/functions'
+import { httpsCallable } from 'firebase/functions'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { getFunctions } from '../utils/firebase-functions'
 
 const migrationTokenKey = 'KAKERU_MIGRATION_TOKEN'
 
@@ -188,10 +189,7 @@ async function invokeMigrationReadyCallbacks(
 }
 
 async function migrateData(token: string): Promise<void> {
-  const migrateDataFunction = httpsCallable(
-    getFunctions(undefined, 'asia-northeast1'),
-    'migrateData'
-  )
+  const migrateDataFunction = httpsCallable(getFunctions(), 'migrateData')
 
   await migrateDataFunction({ token })
 }
