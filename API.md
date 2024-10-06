@@ -15,6 +15,8 @@ This document uses JSON with comments.
 
 List boards, sorted by `createdAt` in descending order.
 
+**Currently, it just return first 30 boards.**
+
 ### Response
 
 ```
@@ -43,6 +45,8 @@ List boards, sorted by `createdAt` in descending order.
 
 Get board with given ID.
 
+**Not implemented yet.**
+
 ### Response
 
 ```
@@ -58,6 +62,8 @@ Get board with given ID.
 ## POST /api/boards
 
 Create a new board.
+
+**Not implemented yet.**
 
 ### Request
 
@@ -83,6 +89,8 @@ Create a new board.
 ## PATCH /api/boards/{boardId}
 
 Update board with given ID.
+
+**Not implemented yet.**
 
 ### Request
 
