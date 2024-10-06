@@ -69,7 +69,10 @@ export function useUserSettings() {
 }
 
 const userSettingsConverter: FirestoreDataConverter<UserSettings> = {
-  toFirestore: (settings) => settings,
+  toFirestore: (settings) => ({
+    ...settings,
+    apiToken: settings.apiToken ?? null
+  }),
   fromFirestore: (snapshot) => {
     const { defaultAccessibilityLevel: defaultAccLevel, apiToken } = snapshot.data() as Record<
       string,

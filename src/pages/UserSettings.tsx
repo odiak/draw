@@ -11,6 +11,10 @@ const t = withPrefix('settings')
 
 const Container = styled.div`
   padding: 8px;
+
+  button {
+    margin-right: 8px;
+  }
 `
 
 export const UserSettings: FC = () => {
@@ -55,6 +59,13 @@ export const UserSettings: FC = () => {
                 <button onClick={createOrRefreshApiToken}>{t('refreshApiToken')}</button>
               )}
               {isUpdatingApiToken && <button disabled>Refreshing API token...</button>}
+              <button
+                onClick={() => {
+                  updateSettings({ apiToken: undefined })
+                }}
+              >
+                {t('deleteApiToken')}
+              </button>
             </div>
           ) : (
             <div>

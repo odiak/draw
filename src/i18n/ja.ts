@@ -91,10 +91,11 @@ export const ja: typeof en = {
     yourApiToken: 'あなたのAPIトークン',
     refreshApiToken: 'APIトークンを再設定する',
     refreshingApiToken: 'APIトークンを再設定中...',
-    apiTokenIsNotCreated: 'APIトークンはまだ作成されていません',
+    apiTokenIsNotCreated: 'APIトークンはありません',
     createApiToken: 'APIトークンを作成する',
     creatingApiToken: 'APIトークンを作成中...',
     apiDocumentation: 'APIドキュメント',
-    backToHome: 'ホームに戻る'
+    backToHome: 'ホームに戻る',
+    deleteApiToken: 'APIトークンを削除する'
   }
 }

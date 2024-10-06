@@ -88,10 +88,11 @@ export const en = {
     yourApiToken: 'Your API token',
     refreshApiToken: 'Refresh API token',
     refreshingApiToken: 'Refreshing API token...',
-    apiTokenIsNotCreated: 'Your API token is not created yet.',
+    apiTokenIsNotCreated: 'Your API token is not set.',
     createApiToken: 'Create API token',
     creatingApiToken: 'Creating API token...',
     apiDocumentation: 'API documentation',
-    backToHome: 'Back to home'
+    backToHome: 'Back to home',
+    deleteApiToken: 'Delete API token'
   }
 }
