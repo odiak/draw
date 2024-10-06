@@ -76,5 +76,16 @@ export const en = {
     text2: ' or ',
     link2: 'sign in with Google',
     text3: '.'
+  },
+  settings: {
+    title: 'Account Settings',
+    apiToken: 'API Token',
+    yourApiToken: 'Your API token',
+    refreshApiToken: 'Refresh API token',
+    refreshingApiToken: 'Refreshing API token...',
+    apiTokenIsNotCreated: 'Your API token is not created yet.',
+    createApiToken: 'Create API token',
+    creatingApiToken: 'Creating API token...',
+    apiDocumentation: 'API documentation'
   }
 }

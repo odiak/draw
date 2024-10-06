@@ -79,5 +79,16 @@ export const ja: typeof en = {
     text2: 'か、',
     link2: 'Googleアカウントでログイン',
     text3: 'してください'
+  },
+  settings: {
+    title: 'アカウント設定',
+    apiToken: 'APIトークン',
+    yourApiToken: 'あなたのAPIトークン',
+    refreshApiToken: 'APIトークンを再設定する',
+    refreshingApiToken: 'APIトークンを再設定中...',
+    apiTokenIsNotCreated: 'APIトークンはまだ作成されていません',
+    createApiToken: 'APIトークンを作成する',
+    creatingApiToken: 'APIトークンを作成中...',
+    apiDocumentation: 'APIドキュメント'
   }
 }

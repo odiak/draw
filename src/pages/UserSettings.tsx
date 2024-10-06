@@ -2,6 +2,9 @@ import React, { FC } from 'react'
 import styled from 'styled-components'
 import { isSignedIn, useAuth } from '../hooks/useAuth'
 import { useUserSettings } from '../hooks/useUserSettings'
+import { withPrefix } from '../i18n/translate'
+
+const t = withPrefix('settings')
 
 const Container = styled.div`
   padding: 8px;
@@ -13,28 +16,28 @@ export const UserSettings: FC = () => {
 
   return (
     <Container>
-      <h1>Account settings</h1>
+      <h1>{t('title')}</h1>
 
       {auth.currentUser !== undefined && isSignedIn(auth.currentUser) && (
         <>
-          <h2>API token</h2>
+          <h2>{t('apiToken')}</h2>
           {settings.apiToken ? (
             <div>
               <p>
-                Your API token is: <code>{settings.apiToken}</code>
+                {t('yourApiToken')}: <code>{settings.apiToken}</code>
               </p>
               {!isUpdatingApiToken && (
-                <button onClick={createOrRefreshApiToken}>Refresh API token</button>
+                <button onClick={createOrRefreshApiToken}>{t('refreshApiToken')}</button>
               )}
               {isUpdatingApiToken && <button disabled>Refreshing API token...</button>}
             </div>
           ) : (
             <div>
-              <p>Your API token is not created yet.</p>
+              <p>{t('apiTokenIsNotCreated')}</p>
               {!isUpdatingApiToken && (
-                <button onClick={createOrRefreshApiToken}>Create API token</button>
+                <button onClick={createOrRefreshApiToken}>{t('createApiToken')}</button>
               )}
-              {isUpdatingApiToken && <button disabled>Creating API token...</button>}
+              {isUpdatingApiToken && <button disabled>{t('creatingApiToken')}</button>}
             </div>
           )}
           <p>
@@ -43,7 +46,7 @@ export const UserSettings: FC = () => {
               target="_blank"
               rel="noreferrer"
             >
-              API documentation
+              {t('apiDocumentation')}
             </a>
           </p>
         </>
