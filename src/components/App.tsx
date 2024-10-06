@@ -21,6 +21,7 @@ import { useAuth } from '../hooks/useAuth'
 import { SplashScreen } from './SplashScreen'
 import { New } from '../pages/New'
 import { screenNames } from '../utils/screenNames'
+import { UserSettings } from '../pages/UserSettings'
 
 const t = withPrefix('global')
 
@@ -73,6 +74,7 @@ const router = createBrowserRouter(
       <Route id={screenNames.boards} path="boards" element={<Boards />} />
       <Route id={screenNames.new} path="new" element={<New />} />
       <Route id={screenNames.flags} path="flags" element={<Flags />} />
+      <Route id={screenNames.settings} path="settings" element={<UserSettings />} />
       <Route id={screenNames.drawing} path=":pictureId" element={<DrawingPage />} />
     </Route>
   )

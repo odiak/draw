@@ -98,6 +98,11 @@ const Items: FC<ItemsProps> = ({
           <Link to="/boards">{t('myBoards')}</Link>
         </MenuItemWithAnchor>
       )}
+      {screenName !== 'settings' && isSignedIn_ && (
+        <MenuItemWithAnchor>
+          <Link to="/settings">{t('settings')}</Link>
+        </MenuItemWithAnchor>
+      )}
       {isNotSignedIn && <MenuItem onClick={signInAnonymously}>{t('signInAnonymously')}</MenuItem>}
       {isAnonymousLike && <MenuItem onClick={signInWithGoogle}>{t('signInWithGoogle')}</MenuItem>}
       {isSignedIn_ && <MenuItem onClick={signOut}>{t('signOut')}</MenuItem>}

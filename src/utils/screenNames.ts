@@ -5,7 +5,8 @@ export const screenNames = {
   new: 'new',
   flags: 'flags',
   drawing: 'drawing',
-  boards: 'boards'
+  boards: 'boards',
+  settings: 'settings'
 }
 export type ScreenName = keyof typeof screenNames
 

@@ -38,7 +38,8 @@ export const ja: typeof en = {
     turnOnInsidersVersion: 'インサイダー版を使用する',
     turnOffInsidersVersion: 'インサイダー版の使用を停止する',
     supportOnBMC: 'Buy Me a Coffeeでサポートする',
-    signOutConfirmation: 'ログアウトしてよろしいですか？'
+    signOutConfirmation: 'ログアウトしてよろしいですか？',
+    settings: 'アカウント設定'
   },
   toolBar: {
     title: 'タイトル'
