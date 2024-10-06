@@ -255,17 +255,8 @@ export class PictureService {
 
     if (currentUser === undefined || isNotSignedIn(currentUser)) return
 
-    const doc = this.pictureRefById(pictureId)
-    const now = Timestamp.now()
-    await setDoc(
-      doc,
-      {
-        ownerId: currentUser.uid,
-        createdAt: now,
-        updatedAt: now
-      },
-      { merge: true }
-    )
+    const initPicture = httpsCallable(getFunctions(), 'initPicture')
+    await initPicture({ pictureId })
   }
 
   async fetchPictures(currentUser: User, anchor?: Anchor): Promise<[Array<PictureWithId>, Anchor]> {
