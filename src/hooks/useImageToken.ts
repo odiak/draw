@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { User, isNotSignedIn, useAuth } from './useAuth'
 import { imageBaseUrl } from '../constants'
 
+const updateInterval = 1000 * 60 * 10
+
 export type UseImageTokenResult = {
   imageToken: string | undefined
 }
@@ -13,11 +15,16 @@ export function useImageToken(): UseImageTokenResult {
   useEffect(() => {
     if (currentUser === undefined || isNotSignedIn(currentUser)) return
 
-    const timer = setInterval(() => {
-      fetchImageToken(currentUser).then(setImageToken, () => {
+    const user = currentUser
+
+    function fetchImageTokenWrapper() {
+      fetchImageToken(user).then(setImageToken, () => {
         // ignore error
       })
-    }, 1000 * 60 * 10)
+    }
+
+    fetchImageTokenWrapper()
+    const timer = setInterval(fetchImageTokenWrapper, updateInterval)
 
     return () => {
       clearInterval(timer)
