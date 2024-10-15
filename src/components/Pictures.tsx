@@ -12,6 +12,7 @@ import { isNotSignedIn, isSignedIn, useAuth } from '../hooks/useAuth'
 import { Link, useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
+import { useImageToken } from '../hooks/useImageToken'
 
 const t = withPrefix('boards')
 
@@ -27,6 +28,7 @@ export const Pictures: FC = () => {
   const [pictures, setPictures] = useState<Array<PictureWithId>>([])
   const [loadingState, setLoadingState] = useState<LoadingState>('initial')
   const [anchor, setAnchor] = useState<Anchor>()
+  const { imageToken } = useImageToken()
 
   const buttonRef = useRef<HTMLButtonElement>(null)
 
@@ -93,6 +95,7 @@ export const Pictures: FC = () => {
             <PictureListItem
               key={p.id}
               picture={p}
+              imageToken={p.accessibilityLevel === 'private' ? imageToken : undefined}
               onDelete={() => {
                 setPictures(removeArrayElementAt(pictures, i))
               }}

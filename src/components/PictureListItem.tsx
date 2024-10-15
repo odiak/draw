@@ -13,11 +13,18 @@ const t = withPrefix('boards')
 
 type Props = {
   picture: PictureWithId
+  imageToken?: string
   onDelete?: () => void
 }
 
-export const PictureListItem: FC<Props> = ({ picture: { id: pictureId, title }, onDelete }) => {
+export const PictureListItem: FC<Props> = ({
+  picture: { id: pictureId, title, accessibilityLevel },
+  onDelete,
+  imageToken
+}) => {
   const { buttonRef, menuRef } = useMenu()
+
+  const imageTokenQuery = imageToken ? `?token=${imageToken}` : ''
 
   const deletePicture = useCallback(async () => {
     if (!confirm(t('deleteConfirmation'))) return
@@ -46,7 +53,9 @@ export const PictureListItem: FC<Props> = ({ picture: { id: pictureId, title }, 
         </Menu>
       </MenuButton>
       <AnchorBox to={`/${pictureId}`}>
-        <PictureThumbnail src={`${imageBaseUrl}/${pictureId}-w380-h300.png`} />
+        {(accessibilityLevel !== 'private' || imageToken !== undefined) && (
+          <PictureThumbnail src={`${imageBaseUrl}/${pictureId}-w380-h300.png${imageTokenQuery}`} />
+        )}
         <PictureTitle>{title || t('untitled')}</PictureTitle>
       </AnchorBox>
     </Container>
