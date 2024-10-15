@@ -1,14 +1,19 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom'
 import './firebase'
 import * as Sentry from '@sentry/react'
-import { Integrations } from '@sentry/tracing'
 import { initializeAnalytics, isSupported, setUserId, setUserProperties } from 'firebase/analytics'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
 import { getApp } from 'firebase/app'
 import { App } from './components/App'
 import { checkCookie } from './checkCookie'
 import { showBMCWidget } from './bmc'
+import {
+  createRoutesFromChildren,
+  matchRoutes,
+  useLocation,
+  useNavigationType
+} from 'react-router-dom'
 
 const app = getApp()
 
@@ -27,8 +32,17 @@ isSupported().then((supported) => {
 
 Sentry.init({
   dsn: kakeruSecrets.sentryDsn,
-  integrations: [new Integrations.BrowserTracing()],
-  tracesSampleRate: 1.0
+  integrations: [
+    Sentry.reactRouterV6BrowserTracingIntegration({
+      useEffect,
+      useLocation,
+      useNavigationType,
+      createRoutesFromChildren,
+      matchRoutes
+    })
+  ],
+  tracesSampleRate: 1.0,
+  tracePropagationTargets: [/^\//, /^https?:\/\/i\.kakeru\.app\b/]
 })
 
 checkCookie()
