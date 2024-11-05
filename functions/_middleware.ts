@@ -13,7 +13,7 @@ type Env = {
   imageServer: Fetcher
 }
 
-const reservedImages = ['/favicon.png']
+const reservedImages = ['/favicon.png', '/kakeru-icon.svg']
 const imageUrlPattern = /^\/[-\w]+\.(?:png|svg)$/
 
 export const onRequest: PagesFunction<Env> = async (context) => {
