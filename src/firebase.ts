@@ -2,6 +2,11 @@ import { initializeAnalytics, isSupported, setUserId, setUserProperties } from '
 import { initializeApp } from 'firebase/app'
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager
+} from 'firebase/firestore'
 
 export async function initializeFirebase() {
   const app = initializeApp(kakeruSecrets.firebaseConfig)
@@ -13,6 +18,13 @@ export async function initializeFirebase() {
   initializeAppCheck(app, {
     provider: new ReCaptchaV3Provider(kakeruSecrets.recaptchaKey),
     isTokenAutoRefreshEnabled: true
+  })
+
+  initializeFirestore(app, {
+    ignoreUndefinedProperties: true,
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager()
+    })
   })
 
   const analyticsSupported = await isSupported()
