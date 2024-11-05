@@ -32,7 +32,6 @@ export async function initializeFirebase() {
     const analytics = initializeAnalytics(app)
     const auth = getAuth()
     onAuthStateChanged(auth, (user) => {
-      console.log('user', user)
       if (user != null && analytics != null) {
         setUserId(analytics, user.uid)
         setUserProperties(analytics, { anonymous: user.isAnonymous })
