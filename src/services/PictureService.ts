@@ -198,8 +198,6 @@ export class PictureService {
     const unwatch = onSnapshot(
       query(this.pathsById(pictureId), orderBy('timestamp')),
       (snapshot) => {
-        if (snapshot.metadata.hasPendingWrites) return
-
         const addedPaths: Path[] = []
         const removedPathIds: string[] = []
         const modifiedPaths: Path[] = []

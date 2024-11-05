@@ -275,13 +275,13 @@ export class Canvas extends React.Component<Props, State> {
     this.unwatchPaths = this.pictureService.watchPaths(
       this.props.pictureId,
       ({ addedPaths, removedPathIds, modifiedPaths }) => {
-        if (addedPaths != null) {
+        if (addedPaths != null && addedPaths.length !== 0) {
           this.addPathsAndAdjustPosition(addedPaths)
         }
-        if (removedPathIds != null) {
+        if (removedPathIds != null && removedPathIds.length !== 0) {
           this.removePathsById(removedPathIds)
         }
-        if (modifiedPaths != null) {
+        if (modifiedPaths != null && modifiedPaths.length !== 0) {
           this.updatePaths(modifiedPaths)
         }
       }
