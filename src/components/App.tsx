@@ -28,6 +28,7 @@ const t = withPrefix('global')
 const GlobalStyle = createGlobalStyle`
   html {
     font-family: Arial, Helvetica, sans-serif;
+    background: #fff;
   }
 
   html,
