@@ -13,6 +13,7 @@ export default defineConfig((env) => {
     registerType: 'autoUpdate',
     workbox: {
       globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
+      cleanupOutdatedCaches: true,
       runtimeCaching: [
         {
           urlPattern: /^https:\/\/i\.kakeru\.app\//i,
@@ -35,7 +36,6 @@ export default defineConfig((env) => {
       start_url: 'https://kakeru.app',
       theme_color: '#555555',
       icons: [
-        // アイコンの設定をここに追加
         {
           src: '/kakeru-icon.svg',
           sizes: '195x195',
@@ -44,6 +44,13 @@ export default defineConfig((env) => {
       ],
       background_color: '#ffffff',
       display: 'standalone'
+    },
+    devOptions: {
+      enabled: false,
+      navigateFallback: 'index.html',
+      suppressWarnings: true,
+      /* when using generateSW the PWA plugin will switch to classic */
+      type: 'module'
     }
   })
 
