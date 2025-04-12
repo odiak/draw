@@ -14,19 +14,19 @@
     "secrets:decrypt": "gpg --quiet --yes --batch --decrypt --passphrase=\"$(cat)\" --out secrets.json secrets.json.gpg"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20230807.0",
-    "@types/resize-observer-browser": "^0.1.4",
+    "@cloudflare/workers-types": "^4.20250412.0",
+    "@types/resize-observer-browser": "^0.1.11",
     "@typescript-eslint/eslint-plugin": "^4.26.0",
     "@typescript-eslint/parser": "^4.26.0",
-    "@vitejs/plugin-react": "^4.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^7.5.0",
     "eslint-plugin-react": "^7.20.3",
     "eslint-plugin-react-hooks": "^4.0.8",
-    "prettier": "^2.0.5",
+    "prettier": "^3.5.3",
     "typescript": "^5.8.3",
-    "vite": "^4.4.9",
-    "vite-plugin-pwa": "^0.20.5",
-    "vite-plugin-svgr": "^4.2.0",
+    "vite": "^6.2.6",
+    "vite-plugin-pwa": "^1.0.0",
+    "vite-plugin-svgr": "^4.3.0",
     "workbox-window": "^7.3.0"
   },
   "dependencies": {
