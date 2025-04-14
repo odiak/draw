@@ -3,13 +3,36 @@ import react from '@vitejs/plugin-react'
 import fs from 'fs'
 import svgr from 'vite-plugin-svgr'
 import { VitePWA } from 'vite-plugin-pwa'
+import tailwindcss from '@tailwindcss/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig((env) => {
   const kakeruSecrets = fs.readFileSync('./secrets.json', 'utf-8')
   const isRecaptchaEnabled = env.mode === 'production'
 
-  const vitePwa = VitePWA({
+  return {
+    plugins: [tailwindcss(), react(), svgr(), modifyHtml(), vitePwaConfig()],
+    define: {
+      kakeruSecrets,
+      isRecaptchaEnabled
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: (id) => {
+            if (id.includes('node_modules')) {
+              return 'vendor'
+            }
+          }
+        }
+      },
+      chunkSizeWarningLimit: 1000
+    }
+  }
+})
+
+function vitePwaConfig() {
+  return VitePWA({
     registerType: 'autoUpdate',
     workbox: {
       globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
@@ -53,27 +76,7 @@ export default defineConfig((env) => {
       type: 'module'
     }
   })
-
-  return {
-    plugins: [react(), svgr(), modifyHtml(), vitePwa],
-    define: {
-      kakeruSecrets,
-      isRecaptchaEnabled
-    },
-    build: {
-      rollupOptions: {
-        output: {
-          manualChunks: (id) => {
-            if (id.includes('node_modules')) {
-              return 'vendor'
-            }
-          }
-        }
-      },
-      chunkSizeWarningLimit: 1000
-    }
-  }
-})
+}
 
 function modifyHtml(): PluginOption {
   return {

@@ -7,6 +7,8 @@ import { initializeFirebase } from './firebase'
 import { initializeSentry } from './sentry'
 import { initializeServiceWorker } from './sw'
 
+import './index.css'
+
 initializeFirebase()
 
 initializeSentry()
