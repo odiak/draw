@@ -1,5 +1,4 @@
 import React, { FC, useEffect } from 'react'
-import { createGlobalStyle } from 'styled-components'
 import { withPrefix } from '../i18n/translate'
 import {
   Outlet,
@@ -24,33 +23,6 @@ import { screenNames } from '../utils/screenNames'
 import { UserSettings } from '../pages/UserSettings'
 
 const t = withPrefix('global')
-
-const GlobalStyle = createGlobalStyle`
-  html {
-    font-family: Arial, Helvetica, sans-serif;
-    background: #fff;
-  }
-
-  html,
-  body,
-  #app {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-  }
-
-  body {
-    overscroll-behavior: none;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    html {
-      background: #000;
-      color: #eee;
-    }
-  }
-`
 
 const ErrorElement: FC = () => {
   const error = useRouteError()
@@ -100,7 +72,6 @@ export const App: FC = () => {
 
   return (
     <>
-      <GlobalStyle />
       <SplashScreen />
       <RouterProvider router={router} />
     </>
