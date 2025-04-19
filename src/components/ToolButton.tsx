@@ -1,18 +1,17 @@
-import React, { ReactNode } from 'react'
-import { faPen, faHandPaper, faEraser } from '@fortawesome/free-solid-svg-icons'
-import { Tool } from '../types/Tool'
 import classNames from 'classnames'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import React from 'react'
 import styled from 'styled-components'
+import Eraser from '../assets/eraser.svg?react'
+import Hand from '../assets/hand.svg?react'
 import Lasso from '../assets/lasso.svg?react'
+import Pen from '../assets/pen.svg?react'
+import { Tool } from '../types/Tool'
 
-const faIcons = {
-  pen: faPen,
-  hand: faHandPaper,
-  eraser: faEraser
-}
 const svgIcons = {
-  lasso: Lasso
+  lasso: Lasso,
+  pen: Pen,
+  hand: Hand,
+  eraser: Eraser
 }
 
 type Props = {
@@ -22,21 +21,7 @@ type Props = {
 }
 
 export function ToolButton({ tool, isSelected, onSelect }: Props) {
-  let iconNode: ReactNode
-  switch (tool) {
-    case 'pen':
-    case 'hand':
-    case 'eraser': {
-      iconNode = <FontAwesomeIcon icon={faIcons[tool]} className="icon" />
-      break
-    }
-
-    case 'lasso': {
-      const Icon = svgIcons[tool]
-      iconNode = <Icon className="icon svg-icon" />
-      break
-    }
-  }
+  const Icon = svgIcons[tool]
 
   return (
     <Button
@@ -49,7 +34,7 @@ export function ToolButton({ tool, isSelected, onSelect }: Props) {
           : undefined
       }
     >
-      {iconNode}
+      <Icon className="icon svg-icon" />
     </Button>
   )
 }
