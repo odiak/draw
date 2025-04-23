@@ -1,18 +1,8 @@
 import classNames from 'classnames'
 import React from 'react'
 import styled from 'styled-components'
-import Eraser from '../assets/eraser.svg?react'
-import Hand from '../assets/hand.svg?react'
-import Lasso from '../assets/lasso.svg?react'
-import Pen from '../assets/pen.svg?react'
 import { Tool } from '../types/Tool'
-
-const svgIcons = {
-  lasso: Lasso,
-  pen: Pen,
-  hand: Hand,
-  eraser: Eraser
-}
+import { Icon } from './Icon'
 
 type Props = {
   tool: Tool
@@ -21,8 +11,6 @@ type Props = {
 }
 
 export function ToolButton({ tool, isSelected, onSelect }: Props) {
-  const Icon = svgIcons[tool]
-
   return (
     <Button
       className={classNames({ selected: isSelected })}
@@ -34,7 +22,7 @@ export function ToolButton({ tool, isSelected, onSelect }: Props) {
           : undefined
       }
     >
-      <Icon className="icon svg-icon" />
+      <Icon name={tool} className="icon svg-icon" />
     </Button>
   )
 }
