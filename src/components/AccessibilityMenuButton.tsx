@@ -1,9 +1,8 @@
-import { faCheck, faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Menu, MenuButton } from '@headlessui/react'
 import React, { FC, useCallback } from 'react'
 import { withPrefix } from '../i18n/translate'
 import { AccessibilityLevel, Permission } from '../services/PictureService'
+import { Icon } from './Icon'
 import { MenuItem, MenuItems } from './Menu2'
 
 const t = withPrefix('menu.accessibilities')
@@ -24,14 +23,14 @@ export const AccessibilityMenuButton: FC<{
   return (
     <Menu>
       <MenuButton className="bg-gray-300 dark:bg-gray-700 w-[30px] h-[30px] flex justify-center items-center relative text-inherit border-0">
-        <Icon type={permission.accessibilityLevel} />
+        <AccIcon type={permission.accessibilityLevel} />
       </MenuButton>
 
       <MenuItems anchor="bottom end">
         {(['public', 'protected', 'private'] as const).map((level) => (
           <MenuItem key={level}>
             <div onClick={() => change(level)}>
-              <Icon type={level} />
+              <AccIcon type={level} />
               {t(level)}
               {permission.accessibilityLevel === level && <CheckIcon />}
             </div>
@@ -42,15 +41,15 @@ export const AccessibilityMenuButton: FC<{
   )
 }
 
-const Icon: FC<{ type: AccessibilityLevel }> = ({ type }) => {
+const AccIcon: FC<{ type: AccessibilityLevel }> = ({ type }) => {
   switch (type) {
     case 'public':
-      return <FontAwesomeIcon icon={faLockOpen} fixedWidth className="mr-1" />
+      return <Icon name="unlocked" className="mr-1" />
     case 'protected':
-      return <FontAwesomeIcon icon={faLock} fixedWidth className="mr-1" />
+      return <Icon name="locked" className="mr-1" />
     case 'private':
-      return <FontAwesomeIcon icon={faLock} fixedWidth className="mr-1 text-red-500" />
+      return <Icon name="locked" className="mr-1 text-red-500" />
   }
 }
 
-const CheckIcon = () => <FontAwesomeIcon icon={faCheck} className="ml-1" />
+const CheckIcon = () => <Icon name="check" className="ml-1" />

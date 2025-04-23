@@ -1,18 +1,17 @@
-import React, { FC, useState, useEffect, useCallback, useRef } from 'react'
-import styled from 'styled-components'
-import { PictureService, PictureWithId, Anchor } from '../services/PictureService'
-import { UserMenuButton } from './UserMenuButton'
-import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
-import { withPrefix } from '../i18n/translate'
-import { Title } from './Title'
-import { PictureListItem } from './PictureListItem'
-import { removeArrayElementAt } from '../utils/removeArrayElementAt'
-import { EllipsisMenuButton } from './EllipsisMenuButton'
-import { isNotSignedIn, isSignedIn, useAuth } from '../hooks/useAuth'
+import React, { FC, useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlus } from '@fortawesome/free-solid-svg-icons'
+import styled from 'styled-components'
+import { isNotSignedIn, isSignedIn, useAuth } from '../hooks/useAuth'
 import { useImageToken } from '../hooks/useImageToken'
+import { withPrefix } from '../i18n/translate'
+import { Anchor, PictureService, PictureWithId } from '../services/PictureService'
+import { removeArrayElementAt } from '../utils/removeArrayElementAt'
+import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
+import { EllipsisMenuButton } from './EllipsisMenuButton'
+import { Icon } from './Icon'
+import { PictureListItem } from './PictureListItem'
+import { Title } from './Title'
+import { UserMenuButton } from './UserMenuButton'
 
 const t = withPrefix('boards')
 
@@ -87,7 +86,7 @@ export const Pictures: FC = () => {
         <PictureList>
           <NewButton to="/new">
             <div className="icon-wrapper">
-              <FontAwesomeIcon icon={faPlus} className="icon" />
+              <Icon name="plus" className="icon" />
             </div>
             <div className="text">{t('new')}</div>
           </NewButton>

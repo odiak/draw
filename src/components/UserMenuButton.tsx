@@ -1,13 +1,11 @@
 import React, { FC, useCallback } from 'react'
-import { Link, useMatches } from 'react-router-dom'
-import { Menu, MenuItem, MenuItemText, MenuItemWithAnchor } from './Menu'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUser } from '@fortawesome/free-solid-svg-icons'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
-import { useMenu } from '../utils/useMenu'
-import { withPrefix } from '../i18n/translate'
 import { NotSignedIn, User, isSignedIn, useAuth } from '../hooks/useAuth'
+import { withPrefix } from '../i18n/translate'
 import { ScreenName, useScreenName } from '../utils/screenNames'
+import { useMenu } from '../utils/useMenu'
+import { Icon } from './Icon'
 
 const t = withPrefix('menu')
 
@@ -56,7 +54,7 @@ export const UserMenuButton: FC<{ className?: string }> = ({ className }) => {
       currentUser.photoURL ? (
         <AccountImage src={currentUser.photoURL} />
       ) : (
-        <FontAwesomeIcon icon={faUser} className="icon" />
+        <Icon name="user" className="icon" />
       )}
 
       <Menu ref={accountMenuRef}>

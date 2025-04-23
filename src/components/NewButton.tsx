@@ -1,13 +1,12 @@
 import React, { FC } from 'react'
-import styled from 'styled-components'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Link } from 'react-router-dom'
-import { faPlus } from '@fortawesome/free-solid-svg-icons'
+import styled from 'styled-components'
+import { Icon } from './Icon'
 
 export const NewButton: FC<{ className?: string }> = ({ className }) => {
   return (
     <Button to="/new" className={className}>
-      <FontAwesomeIcon icon={faPlus} className="icon" />
+      <Icon name="plus" className="icon" />
     </Button>
   )
 }
