@@ -44,12 +44,12 @@ export const AccessibilityMenuButton: FC<{
 const AccIcon: FC<{ type: AccessibilityLevel }> = ({ type }) => {
   switch (type) {
     case 'public':
-      return <Icon name="unlocked" className="mr-1" />
+      return <Icon name="unlocked" className="mr-1 w-5 inline-block vertical-middle" />
     case 'protected':
-      return <Icon name="locked" className="mr-1" />
+      return <Icon name="locked" className="mr-1 w-5 inline-block vertical-middle" />
     case 'private':
-      return <Icon name="locked" className="mr-1 text-red-500" />
+      return <Icon name="locked" className="mr-1 w-5 inline-block vertical-middle text-red-500" />
   }
 }
 
-const CheckIcon = () => <Icon name="check" className="ml-1" />
+const CheckIcon = () => <Icon name="check" className="ml-1 w-5 inline-block" />
