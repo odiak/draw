@@ -1,4 +1,5 @@
 import React, { FC } from 'react'
+import Check from '../assets/check.svg?react'
 import Color from '../assets/color.svg?react'
 import Ellipsis from '../assets/ellipsis.svg?react'
 import Eraser from '../assets/eraser.svg?react'
@@ -11,10 +12,12 @@ import Plus from '../assets/plus.svg?react'
 import Redo from '../assets/redo.svg?react'
 import Undo from '../assets/undo.svg?react'
 import Unlocked from '../assets/unlocked.svg?react'
+import User from '../assets/user.svg?react'
 import ZoomIn from '../assets/zoom-in.svg?react'
 import ZoomOut from '../assets/zoom-out.svg?react'
 
 const icons = {
+  check: Check,
   color: Color,
   ellipsis: Ellipsis,
   eraser: Eraser,
@@ -27,6 +30,7 @@ const icons = {
   redo: Redo,
   undo: Undo,
   unlocked: Unlocked,
+  user: User,
   zoomIn: ZoomIn,
   zoomOut: ZoomOut
 } as const
