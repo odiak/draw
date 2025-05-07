@@ -5,7 +5,7 @@
 - [x] SignInBanner.tsx
 - [x] SplashScreen.tsx
 - [x] EllipsisMenuButton.tsx
-- [ ] AccessibilityMenuButton.tsx
+- [x] AccessibilityMenuButton.tsx
 - [ ] ToolBar.tsx
 - [ ] PictureListItem.tsx
 - [ ] Pictures.tsx

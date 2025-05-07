@@ -1,5 +1,4 @@
 import React, { FC, useCallback } from 'react'
-import styled from 'styled-components'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock, faLockOpen, faCheck } from '@fortawesome/free-solid-svg-icons'
 import { Permission, AccessibilityLevel } from '../services/PictureService'
@@ -9,50 +8,13 @@ import { withPrefix } from '../i18n/translate'
 
 const t = withPrefix('menu.accessibilities')
 
-const StyledFontAwesomeIcon = styled(FontAwesomeIcon)``
-const RedStyledFontAwesomeIcon = styled(StyledFontAwesomeIcon)`
-  color: red;
-`
+const PublicIcon = () => <FontAwesomeIcon icon={faLockOpen} fixedWidth className="block" />
+const ProtectedIcon = () => <FontAwesomeIcon icon={faLock} fixedWidth className="block" />
+const PrivateIcon = () => <FontAwesomeIcon icon={faLock} fixedWidth className="block text-red-500" />
 
-const PublicIcon = () => <StyledFontAwesomeIcon icon={faLockOpen} fixedWidth />
-const ProtectedIcon = () => <StyledFontAwesomeIcon icon={faLock} fixedWidth />
-const PrivateIcon = () => <RedStyledFontAwesomeIcon icon={faLock} fixedWidth />
+const CheckIcon = () => <FontAwesomeIcon icon={faCheck} className="ml-1" />
 
-const CheckIcon_ = styled(StyledFontAwesomeIcon)``
-const CheckIcon = () => <CheckIcon_ icon={faCheck} />
 
-const Button = styled.button`
-  background: #ddd;
-  display: block;
-  border: 0;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  color: inherit;
-
-  > ${StyledFontAwesomeIcon} {
-    display: block;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    & {
-      background: #444;
-    }
-  }
-`
-
-const StyledMenuItem = styled(MenuItem)`
-  ${StyledFontAwesomeIcon}:nth-of-type(1) {
-    margin-right: 4px;
-  }
-
-  ${CheckIcon_} {
-    margin-left: 4px;
-  }
-`
 
 export const AccessibilityMenuButton: FC<{
   className?: string
@@ -84,27 +46,30 @@ export const AccessibilityMenuButton: FC<{
   }, [change])
 
   return (
-    <Button className={className} ref={buttonRef}>
+    <button 
+      className={`bg-gray-300 dark:bg-gray-600 block border-0 w-[30px] h-[30px] flex justify-center items-center relative text-inherit ${className || ''}`} 
+      ref={buttonRef}
+    >
       {isPublic && <PublicIcon />}
       {isProtected && <ProtectedIcon />}
       {isPrivate && <PrivateIcon />}
       <Menu ref={menuRef}>
-        <StyledMenuItem onClick={makePublic}>
-          <PublicIcon />
-          {t('public')}
+        <MenuItem onClick={makePublic} className="flex items-center">
+          <FontAwesomeIcon icon={faLockOpen} fixedWidth className="mr-1" />
+          <span>{t('public')}</span>
           {isPublic && <CheckIcon />}
-        </StyledMenuItem>
-        <StyledMenuItem onClick={makeProtected}>
-          <ProtectedIcon />
-          {t('protected')}
+        </MenuItem>
+        <MenuItem onClick={makeProtected} className="flex items-center">
+          <FontAwesomeIcon icon={faLock} fixedWidth className="mr-1" />
+          <span>{t('protected')}</span>
           {isProtected && <CheckIcon />}
-        </StyledMenuItem>
-        <StyledMenuItem onClick={makePrivate}>
-          <PrivateIcon />
-          {t('private')}
+        </MenuItem>
+        <MenuItem onClick={makePrivate} className="flex items-center">
+          <FontAwesomeIcon icon={faLock} fixedWidth className="mr-1 text-red-500" />
+          <span>{t('private')}</span>
           {isPrivate && <CheckIcon />}
-        </StyledMenuItem>
+        </MenuItem>
       </Menu>
-    </Button>
+    </button>
   )
 }
