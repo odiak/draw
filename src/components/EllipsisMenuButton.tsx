@@ -1,7 +1,6 @@
 import { faEllipsisH } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { FC } from 'react'
-import styled from 'styled-components'
 import { baseUrl, imageBaseUrl } from '../constants'
 import { withPrefix } from '../i18n/translate'
 import { Permission } from '../services/PictureService'
@@ -34,7 +33,10 @@ export const EllipsisMenuButton: FC<Props> = ({ pictureId, permission, className
     : 'https://about.kakeru.app'
 
   return (
-    <MenuButton ref={menuButtonRef} className={className}>
+    <button 
+      ref={menuButtonRef} 
+      className={`w-[36px] h-[30px] border-0 bg-gray-300 dark:bg-gray-600 relative text-inherit ${className || ''}`}
+    >
       <FontAwesomeIcon icon={faEllipsisH} className="icon" />
       <Menu ref={menuRef}>
         {screenName === 'drawing' && pictureId !== undefined && (
@@ -59,7 +61,7 @@ export const EllipsisMenuButton: FC<Props> = ({ pictureId, permission, className
         <MenuItemWithLink link={buyMeACoffeeLink}>{t('supportOnBMC')}</MenuItemWithLink>
         <MenuItemWithLink link="/flags">{t('experimentalFlags')}</MenuItemWithLink>
       </Menu>
-    </MenuButton>
+    </button>
   )
 }
 
@@ -77,25 +79,15 @@ const MenuItemToCopy: FC<{ text: string }> = ({ children, text }) => {
 
 const MenuItemWithLink: FC<{ link: string }> = ({ link, children }) => {
   return (
-    <MenuItemWithAnchor>
-      <a href={link} target="_blank" rel="noopener noreferrer">
+    <MenuItem>
+      <a 
+        href={link} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="block px-2 py-1.5 text-inherit no-underline"
+      >
         {children}
       </a>
-    </MenuItemWithAnchor>
+    </MenuItem>
   )
 }
-
-const MenuButton = styled.button`
-  width: 36px;
-  height: 30px;
-  border: 0;
-  background: #ddd;
-  position: relative;
-  color: inherit;
-
-  @media (prefers-color-scheme: dark) {
-    & {
-      background: #444;
-    }
-  }
-`
