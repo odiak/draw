@@ -1,5 +1,4 @@
 import React, { FC, useCallback } from 'react'
-import styled from 'styled-components'
 import { translate, withPrefix } from '../i18n/translate'
 import { isSignedIn, useAuth } from '../hooks/useAuth'
 
@@ -20,31 +19,22 @@ export const SignInBanner: FC = () => {
   }
 
   return (
-    <Container>
+    <div className="p-2 text-center bg-red-200 text-base">
       {t('text1')}
-      <button onClick={signInAnonymously}>{t('link1')}</button>
+      <button 
+        onClick={signInAnonymously}
+        className="border-0 bg-transparent p-0 underline text-inherit cursor-pointer inline mx-[0.15em]"
+      >
+        {t('link1')}
+      </button>
       {t('text2')}
-      <button onClick={signInWithGoogle}>{t('link2')}</button>
+      <button 
+        onClick={signInWithGoogle}
+        className="border-0 bg-transparent p-0 underline text-inherit cursor-pointer inline mx-[0.15em]"
+      >
+        {t('link2')}
+      </button>
       {t('text3')}
-    </Container>
+    </div>
   )
 }
-
-const Container = styled.div`
-  padding: 8px;
-  text-align: center;
-  background: #fdd;
-  font-size: 16px;
-
-  button {
-    border: 0;
-    background: none;
-    padding: 0;
-    text-decoration: underline;
-    font-size: inherit;
-    cursor: pointer;
-    display: inline;
-    margin-left: 0.15em;
-    margin-right: 0.15em;
-  }
-`
