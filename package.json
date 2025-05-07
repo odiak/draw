@@ -58,7 +58,6 @@
     "react-dom": "^17.0.2",
     "react-is": "^17.0.2",
     "react-router-dom": "^6.24.1",
-    "styled-components": "^5.3.5",
     "web-auth-library": "^1.0.3"
   }
 }
