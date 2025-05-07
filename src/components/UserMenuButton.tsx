@@ -1,9 +1,8 @@
 import React, { FC, useCallback } from 'react'
 import { Link, useMatches } from 'react-router-dom'
-import { Menu, MenuItem, MenuItemText, MenuItemWithAnchor } from './Menu'
+import { Menu, MenuItem, MenuItemText } from './Menu'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser } from '@fortawesome/free-solid-svg-icons'
-import styled from 'styled-components'
 import { useMenu } from '../utils/useMenu'
 import { withPrefix } from '../i18n/translate'
 import { NotSignedIn, User, isSignedIn, useAuth } from '../hooks/useAuth'
@@ -49,14 +48,17 @@ export const UserMenuButton: FC<{ className?: string }> = ({ className }) => {
   }
 
   return (
-    <AccountButton ref={accountMenuButtonRef} className={className}>
+    <button 
+      ref={accountMenuButtonRef} 
+      className={`block w-[30px] h-[30px] border-0 bg-gray-300 dark:bg-gray-600 flex justify-center items-center relative p-[1px] text-inherit ${className || ''}`}
+    >
       {currentUser !== undefined &&
       isSignedIn(currentUser) &&
       !currentUser.isAnonymous &&
       currentUser.photoURL ? (
-        <AccountImage src={currentUser.photoURL} />
+        <img src={currentUser.photoURL} className="w-full h-full" />
       ) : (
-        <FontAwesomeIcon icon={faUser} className="icon" />
+        <FontAwesomeIcon icon={faUser} className="block" />
       )}
 
       <Menu ref={accountMenuRef}>
@@ -66,7 +68,7 @@ export const UserMenuButton: FC<{ className?: string }> = ({ className }) => {
           {...{ signInAnonymously, signInWithGoogle, signOut }}
         />
       </Menu>
-    </AccountButton>
+    </button>
   )
 }
 
@@ -94,14 +96,14 @@ const Items: FC<ItemsProps> = ({
     <>
       {isAnonymous && <MenuItemText>{t('usingAnonymously')}</MenuItemText>}
       {screenName !== 'boards' && isSignedIn_ && (
-        <MenuItemWithAnchor>
-          <Link to="/boards">{t('myBoards')}</Link>
-        </MenuItemWithAnchor>
+        <MenuItem>
+          <Link to="/boards" className="block px-2 py-1.5 text-inherit no-underline">{t('myBoards')}</Link>
+        </MenuItem>
       )}
       {screenName !== 'settings' && isSignedIn_ && (
-        <MenuItemWithAnchor>
-          <Link to="/settings">{t('settings')}</Link>
-        </MenuItemWithAnchor>
+        <MenuItem>
+          <Link to="/settings" className="block px-2 py-1.5 text-inherit no-underline">{t('settings')}</Link>
+        </MenuItem>
       )}
       {isNotSignedIn && <MenuItem onClick={signInAnonymously}>{t('signInAnonymously')}</MenuItem>}
       {isAnonymousLike && <MenuItem onClick={signInWithGoogle}>{t('signInWithGoogle')}</MenuItem>}
@@ -109,32 +111,3 @@ const Items: FC<ItemsProps> = ({
     </>
   )
 }
-
-const AccountButton = styled.button`
-  display: block;
-  width: 30px;
-  height: 30px;
-  border: 0;
-  background: #ddd;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  padding: 1px;
-  color: inherit;
-
-  > .icon {
-    display: block;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    & {
-      background: #444;
-    }
-  }
-`
-
-const AccountImage = styled.img`
-  width: 100%;
-  height: 100%;
-`

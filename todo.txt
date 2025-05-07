@@ -1,7 +1,7 @@
 # Components to migrate from styled-components to Tailwind CSS
 - [x] App.tsx (GlobalStyle)
 - [x] Menu.tsx
-- [ ] UserMenuButton.tsx
+- [x] UserMenuButton.tsx
 - [ ] NewButton.tsx
 - [ ] SignInBanner.tsx
 - [ ] SplashScreen.tsx
