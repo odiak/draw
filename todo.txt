@@ -12,6 +12,6 @@
 - [x] CanvasBottomMenu.tsx
 - [x] ToolButton.tsx
 - [x] Welcome.tsx
-- [ ] UserSettings.tsx (page)
+- [x] UserSettings.tsx (page)
 - [ ] Flags.tsx (page)
 - [ ] DrawingPage.tsx (page)
