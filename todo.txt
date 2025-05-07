@@ -10,7 +10,7 @@
 - [x] PictureListItem.tsx
 - [x] Pictures.tsx
 - [x] CanvasBottomMenu.tsx
-- [ ] ToolButton.tsx
+- [x] ToolButton.tsx
 - [ ] Welcome.tsx
 - [ ] UserSettings.tsx (page)
 - [ ] Flags.tsx (page)
