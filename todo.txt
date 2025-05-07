@@ -7,7 +7,7 @@
 - [x] EllipsisMenuButton.tsx
 - [x] AccessibilityMenuButton.tsx
 - [x] ToolBar.tsx
-- [ ] PictureListItem.tsx
+- [x] PictureListItem.tsx
 - [ ] Pictures.tsx
 - [ ] CanvasBottomMenu.tsx
 - [ ] ToolButton.tsx
