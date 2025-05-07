@@ -9,7 +9,7 @@
 - [x] ToolBar.tsx
 - [x] PictureListItem.tsx
 - [x] Pictures.tsx
-- [ ] CanvasBottomMenu.tsx
+- [x] CanvasBottomMenu.tsx
 - [ ] ToolButton.tsx
 - [ ] Welcome.tsx
 - [ ] UserSettings.tsx (page)
