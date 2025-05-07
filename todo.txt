@@ -13,5 +13,5 @@
 - [x] ToolButton.tsx
 - [x] Welcome.tsx
 - [x] UserSettings.tsx (page)
-- [ ] Flags.tsx (page)
+- [x] Flags.tsx (page)
 - [ ] DrawingPage.tsx (page)

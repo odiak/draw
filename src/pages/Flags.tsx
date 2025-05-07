@@ -1,21 +1,11 @@
 import React, { FC, useCallback } from 'react'
 import { ExperimentalSettingsService } from '../services/ExperimentalSettingsService'
-import styled from 'styled-components'
 import { useVariable } from '../utils/useVariable'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
 import { Title } from '../components/Title'
 import { withPrefix } from '../i18n/translate'
 
 const t = withPrefix('flags')
-
-const Container = styled.div`
-  padding: 5px 10px;
-`
-
-const Label = styled.label`
-  display: block;
-  margin-bottom: 14px;
-`
 
 export const Flags: FC = () => {
   useSetCurrentScreen('flags')
@@ -32,40 +22,43 @@ export const Flags: FC = () => {
   )
 
   return (
-    <Container>
+    <div className="px-2.5 py-1.5">
       <Title>{t('title')}</Title>
 
       <h1>{t('title')}</h1>
-      <Label>
+      <label className="block mb-3.5">
         <input
           type="checkbox"
           checked={!!settings.hackForSamsungGalaxyNote}
           onChange={(e) => {
             setSettingsWithSave({ hackForSamsungGalaxyNote: e.target.checked })
           }}
+          className="mr-2"
         />
         {t('hackForSamsungGalaxyNote')}
-      </Label>
-      <Label>
+      </label>
+      <label className="block mb-3.5">
         <input
           type="checkbox"
           checked={!!settings.disableSmoothingPaths}
           onChange={(e) => {
             setSettingsWithSave({ disableSmoothingPaths: e.target.checked })
           }}
+          className="mr-2"
         />
         {t('disableSmoothingPaths')}
-      </Label>
-      <Label>
+      </label>
+      <label className="block mb-3.5">
         <input
           type="checkbox"
           checked={!!settings.disableScaleLimit}
           onChange={(e) => {
             setSettingsWithSave({ disableScaleLimit: e.target.checked })
           }}
+          className="mr-2"
         />
         {t('disableScaleLimit')}
-      </Label>
-    </Container>
+      </label>
+    </div>
   )
 }
