@@ -1,6 +1,5 @@
 import React, { FC, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import styled from 'styled-components'
 import { Canvas } from '../components/Canvas'
 import { Title } from '../components/Title'
 
@@ -78,13 +77,13 @@ export const DrawingPage: FC = () => {
     <>
       <Title>{normalizeTitle(title) ?? t('defaultTitle')}</Title>
 
-      <Container>
+      <div className="flex h-full w-full flex-col select-none">
         <ToolBar pictureId={pictureId} />
-        <div className="canvas-wrapper" suppressHydrationWarning>
+        <div className="w-full h-full overflow-hidden relative" suppressHydrationWarning>
           <Canvas pictureId={pictureId} currentUser={currentUser} isWritable={isWritable} />
         </div>
         <SignInBanner />
-      </Container>
+      </div>
 
       {showWelcome && (
         <Welcome
@@ -97,19 +96,3 @@ export const DrawingPage: FC = () => {
     </>
   )
 }
-
-const Container = styled.div`
-  display: flex;
-  height: 100%;
-  width: 100%;
-  flex-direction: column;
-  user-select: none;
-  -webkit-user-select: none;
-
-  > .canvas-wrapper {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    position: relative;
-  }
-`

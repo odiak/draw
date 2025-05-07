@@ -14,4 +14,4 @@
 - [x] Welcome.tsx
 - [x] UserSettings.tsx (page)
 - [x] Flags.tsx (page)
-- [ ] DrawingPage.tsx (page)
+- [x] DrawingPage.tsx (page)
