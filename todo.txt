@@ -3,7 +3,7 @@
 - [x] UserMenuButton.tsx
 - [x] NewButton.tsx
 - [x] SignInBanner.tsx
-- [ ] SplashScreen.tsx
+- [x] SplashScreen.tsx
 - [ ] EllipsisMenuButton.tsx
 - [ ] AccessibilityMenuButton.tsx
 - [ ] ToolBar.tsx
