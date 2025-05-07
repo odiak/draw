@@ -6,7 +6,7 @@
 - [x] SplashScreen.tsx
 - [x] EllipsisMenuButton.tsx
 - [x] AccessibilityMenuButton.tsx
-- [ ] ToolBar.tsx
+- [x] ToolBar.tsx
 - [ ] PictureListItem.tsx
 - [ ] Pictures.tsx
 - [ ] CanvasBottomMenu.tsx

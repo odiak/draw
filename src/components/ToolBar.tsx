@@ -11,7 +11,7 @@ import {
 import { ToolButton } from './ToolButton'
 import { Tool } from '../types/Tool'
 import classNames from 'classnames'
-import styled, { css } from 'styled-components'
+import { Menu as HeadlessMenu } from '@headlessui/react'
 import { useMenu } from '../utils/useMenu'
 import { useVariable } from '../utils/useVariable'
 import { PictureService, Permission, AccessibilityLevel } from '../services/PictureService'
@@ -105,300 +105,143 @@ export function ToolBar({ pictureId }: Props) {
   const [strokeColor, setStrokeColor] = useVariable(drawingService.strokeColor)
 
   return (
-    <Container>
+    <div className="block border-b border-black dark:border-gray-500 touch-none">
       <input
         type="text"
         value={title ?? defaultTitle}
         onChange={(e) => setTitleWithUpdate(e.target.value)}
         placeholder={tToolBar('title')}
         disabled={permission == null || !permission.writable}
+        className="block border border-transparent p-[3px] w-[300px] hover:border-gray-300 disabled:bg-inherit disabled:text-inherit disabled:hover:border-transparent dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:hover:border-gray-500"
       />
-      <RightButtonsContainer>
+      <div className="flex w-fit absolute right-0 top-0">
         {permission != null && permission.isOwner && (
-          <StyledAccessibilityMenuButton
+          <AccessibilityMenuButton
+            className="mr-10"
             permission={permission}
             onAccessibilityLevelChange={updateAccessibilityLevel}
           />
         )}
-        <StyledNewButton />
-        <StyledUserMenuButton />
+        <NewButton className="mr-3" />
+        <UserMenuButton className="mr-3" />
         <EllipsisMenuButton pictureId={pictureId} permission={permission} />
-      </RightButtonsContainer>
-      <div className="tools">
+      </div>
+      <div className="flex flex-row flex-wrap mt-1">
         {permission?.writable && (
           <>
-            <div className="tool-group">
+            <div className="mr-5 h-[30px]">
               <WrappedToolButton tool="pen" selectedTool={tool} onSelectedToolChange={setTool} />
               <WrappedToolButton tool="hand" selectedTool={tool} onSelectedToolChange={setTool} />
               <WrappedToolButton tool="eraser" selectedTool={tool} onSelectedToolChange={setTool} />
               <WrappedToolButton tool="lasso" selectedTool={tool} onSelectedToolChange={setTool} />
             </div>
 
-            <div className="tool-group">
-              <button className="tool-bar-button" ref={colorWidthButtonRef}>
-                <ColorIcon color={strokeColor} width={strokeWidth} />
-                <ColorWidthMenu ref={colorWidthMenuRef}>
+            <div className="mr-5 h-[30px]">
+              <button 
+                className="w-[40px] h-[30px] border-0 bg-gray-200 dark:bg-gray-600 relative text-inherit"
+                ref={colorWidthButtonRef}
+              >
+                <div 
+                  className="inline-block align-middle border border-black dark:border-gray-400 box-border"
+                  style={{
+                    backgroundColor: strokeColor,
+                    width: `${strokeWidth + 6}px`,
+                    height: `${strokeWidth + 6}px`,
+                    borderRadius: `${(strokeWidth + 6) / 2}px`
+                  }}
+                />
+                <div 
+                  ref={colorWidthMenuRef}
+                  className="hidden absolute right-0 top-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 m-0 shadow-md z-[100] text-base text-left w-[120px] leading-none p-0"
+                >
                   <div>
                     {colors.map((color, i) => (
-                      <ColorWidthMenuItem
+                      <div
                         key={i}
-                        selected={color === strokeColor}
+                        className={`inline-block w-[30px] h-[30px] ${color === strokeColor ? 'rounded bg-gray-300 dark:bg-gray-600' : ''}`}
                         onClick={() => setStrokeColor(color)}
                       >
-                        <ColorIndicator color={color} />
-                      </ColorWidthMenuItem>
+                        <div 
+                          className="w-[22px] h-[22px] rounded-[11px] border border-black dark:border-gray-400 m-1 box-border"
+                          style={{ backgroundColor: color }}
+                        />
+                      </div>
                     ))}
                   </div>
                   <div>
                     {widths.map((width, i) => (
-                      <ColorWidthMenuItem
+                      <div
                         key={i}
-                        selected={width === strokeWidth}
+                        className={`inline-block w-[30px] h-[30px] ${width === strokeWidth ? 'rounded bg-gray-300 dark:bg-gray-600' : ''}`}
                         onClick={() => setStrokeWidth(width)}
                       >
-                        <WidthIndicator width={width} />
-                      </ColorWidthMenuItem>
+                        <div 
+                          className="bg-black dark:bg-white box-border"
+                          style={{ 
+                            width: `${width * 1.3 + 1}px`,
+                            height: `${width * 1.3 + 1}px`,
+                            borderRadius: `${(width * 1.3 + 1) / 2}px`,
+                            margin: `${(30 - (width * 1.3 + 1)) / 2}px`
+                          }}
+                        />
+                      </div>
                     ))}
                   </div>
-                </ColorWidthMenu>
+                </div>
               </button>
             </div>
 
-            <div className="tool-group">
+            <div className="mr-5 h-[30px]">
               <button
-                className={classNames('tool-bar-button', { selected: palmRejection })}
+                className={`w-[40px] h-[30px] border-0 bg-gray-200 dark:bg-gray-600 relative text-inherit ${palmRejection ? 'bg-gray-600 text-white dark:bg-gray-300 dark:text-black' : ''}`}
                 onClick={() => {
                   setPalmRejection(!palmRejection)
                 }}
               >
                 <span className="fa-layers fa-fw">
-                  <FontAwesomeIcon icon={faHandPointUp} className="icon" />
-                  <FontAwesomeIcon icon={faSlash} className="icon" />
+                  <FontAwesomeIcon icon={faHandPointUp} className="block" />
+                  <FontAwesomeIcon icon={faSlash} className="block text-red-500" />
                 </span>
               </button>
             </div>
           </>
         )}
 
-        <div className="tool-group">
-          <button className="tool-bar-button" onClick={zoomOut}>
-            <FontAwesomeIcon className="icon" icon={faSearchMinus} />
+        <div className="mr-5 h-[30px]">
+          <button 
+            className="w-[40px] h-[30px] border-0 bg-gray-200 dark:bg-gray-600 relative text-inherit disabled:dark:text-gray-500"
+            onClick={zoomOut}
+          >
+            <FontAwesomeIcon className="block" icon={faSearchMinus} />
           </button>
-          <button className="tool-bar-button" onClick={zoomIn}>
-            <FontAwesomeIcon className="icon" icon={faSearchPlus} />
+          <button 
+            className="w-[40px] h-[30px] border-0 bg-gray-200 dark:bg-gray-600 relative text-inherit disabled:dark:text-gray-500"
+            onClick={zoomIn}
+          >
+            <FontAwesomeIcon className="block" icon={faSearchPlus} />
           </button>
           <span>{(scale * 100).toFixed()}%</span>
         </div>
 
         {permission?.writable && (
-          <div className="tool-group">
-            <button className="tool-bar-button" disabled={!canUndo} onClick={undo}>
-              <FontAwesomeIcon className="icon" icon={faUndo} />
+          <div className="mr-5 h-[30px]">
+            <button 
+              className="w-[40px] h-[30px] border-0 bg-gray-200 dark:bg-gray-600 relative text-inherit disabled:dark:text-gray-500"
+              disabled={!canUndo} 
+              onClick={undo}
+            >
+              <FontAwesomeIcon className="block" icon={faUndo} />
             </button>
-            <button className="tool-bar-button" disabled={!canRedo} onClick={redo}>
-              <FontAwesomeIcon className="icon" icon={faRedo} />
+            <button 
+              className="w-[40px] h-[30px] border-0 bg-gray-200 dark:bg-gray-600 relative text-inherit disabled:dark:text-gray-500"
+              disabled={!canRedo} 
+              onClick={redo}
+            >
+              <FontAwesomeIcon className="block" icon={faRedo} />
             </button>
           </div>
         )}
       </div>
-    </Container>
+    </div>
   )
 }
-
-const Container = styled.div`
-  display: block;
-  border-bottom: 1px solid #000;
-  touch-action: manipulation;
-
-  @media (prefers-color-scheme: dark) {
-    & {
-      border-bottom-color: #888;
-    }
-  }
-
-  input {
-    display: block;
-    border: 1px solid transparent;
-    padding: 3px;
-    width: 300px;
-
-    &:hover {
-      border-color: #ccc;
-    }
-
-    &:disabled {
-      background: inherit;
-      color: inherit;
-      &:hover {
-        border-color: transparent;
-      }
-    }
-
-    @media (prefers-color-scheme: dark) {
-      & {
-        background: #555;
-        color: #fff;
-      }
-      &::placeholder {
-        color: #bbb;
-      }
-      &:hover {
-        border-color: #999;
-      }
-    }
-  }
-
-  .tools {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    margin-top: 4px;
-  }
-
-  .tool-group {
-    margin-right: 20px;
-    height: 30px;
-  }
-
-  .tool-bar-button {
-    width: 40px;
-    height: 30px;
-    border: 0;
-    background: #e8e8e8;
-    position: relative;
-    color: inherit;
-
-    .fa-slash {
-      color: red !important;
-    }
-
-    &.selected {
-      background: #444;
-      color: #fff;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      & {
-        background: #444;
-      }
-      &:disabled {
-        color: #777;
-      }
-      &.selected {
-        background: #aaa;
-        color: #000;
-      }
-    }
-  }
-`
-
-const RightButtonsContainer = styled.div`
-  display: flex;
-  width: fit-content;
-  align-items: right;
-  position: absolute;
-  right: 0;
-  top: 0;
-`
-
-const StyledNewButton = styled(NewButton)`
-  margin-right: 12px;
-`
-
-const StyledUserMenuButton = styled(UserMenuButton)`
-  margin-right: 12px;
-`
-
-const StyledAccessibilityMenuButton = styled(AccessibilityMenuButton)`
-  margin-right: 40px;
-`
-
-const ColorIcon = styled.div<{ color: string; width: number }>`
-  border: 1px solid #000;
-  box-sizing: border-box;
-  display: inline-block;
-  background: ${(p) => p.color};
-  vertical-align: middle;
-  ${(p) => {
-    const size = p.width + 6
-    return css`
-      width: ${size}px;
-      height: ${size}px;
-      border-radius: ${size / 2}px;
-    `
-  }}
-
-  @media (prefers-color-scheme: dark) {
-    border: 1px solid #999;
-  }
-`
-
-const ColorWidthMenu = styled.div`
-  padding: 0;
-  position: absolute;
-  right: 0;
-  top: 100%;
-  background: #fff;
-  border: 1px solid #ccc;
-  margin: 0;
-  box-shadow: 0 0 6px #0004;
-  z-index: 100;
-  font-size: 16px;
-  text-align: left;
-  width: 120px;
-  display: none;
-  line-height: 0;
-
-  @media (prefers-color-scheme: dark) {
-    background: #444;
-    border-color: #777;
-  }
-`
-
-const ColorWidthMenuItem = styled.div<{ selected?: boolean }>`
-  display: inline-block;
-  width: 30px;
-  height: 30px;
-  ${(p) =>
-    p.selected &&
-    css`
-      border-radius: 4px;
-      background: #ccc;
-
-      @media (prefers-color-scheme: dark) {
-        background: #999;
-      }
-    `}
-`
-
-const ColorIndicator = styled.div<{ color: string }>`
-  background: ${(p) => p.color};
-  width: 22px;
-  height: 22px;
-  border-radius: 11px;
-  border: 1px solid #000;
-  box-sizing: border-box;
-  margin: 4px;
-
-  @media (prefers-color-scheme: dark) {
-    border-color: #999;
-  }
-`
-
-const WidthIndicator = styled.div<{ width: number }>`
-  box-sizing: border-box;
-  background: #000;
-  ${(p) => {
-    const size = p.width * 1.3 + 1
-    return css`
-      width: ${size}px;
-      height: ${size}px;
-      border-radius: ${size / 2}px;
-      margin: ${(30 - size) / 2}px;
-    `
-  }}
-
-  @media (prefers-color-scheme: dark) {
-    background: #fff;
-  }
-`
