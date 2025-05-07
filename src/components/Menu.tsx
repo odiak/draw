@@ -1,73 +1,78 @@
-import styled from 'styled-components'
+import React, { forwardRef, ReactNode } from 'react'
 
-export const Menu = styled.ul`
-  padding: 0;
-  list-style: none;
-  position: absolute;
-  right: 0;
-  top: 100%;
-  background: #fff;
-  border: 1px solid #ccc;
-  margin: 0;
-  box-shadow: 0 0 6px #0004;
-  z-index: 100;
-  font-size: 16px;
-  width: max-content;
-  text-align: left;
-  min-width: 160px;
-  display: none;
+interface MenuProps {
+  className?: string;
+  children: ReactNode;
+}
 
-  @media (prefers-color-scheme: dark) {
-    background: #444;
-    border-color: #777;
-  }
-`
+export const Menu = forwardRef<HTMLUListElement, MenuProps>(({ className = '', children }, ref) => {
+  return (
+    <ul 
+      ref={ref}
+      className={`p-0 list-none absolute right-0 top-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 m-0 shadow-md z-100 text-base w-max text-left min-w-[160px] hidden ${className}`}
+    >
+      {children}
+    </ul>
+  )
+})
 
-export const MenuItem = styled.li`
-  padding: 6px 8px;
-  cursor: pointer;
+Menu.displayName = 'Menu'
 
-  &:hover {
-    background: #eee;
-  }
+interface MenuItemProps {
+  className?: string;
+  onClick?: () => void;
+  children: ReactNode;
+}
 
-  @media (prefers-color-scheme: dark) {
-    &:hover {
-      background: #666;
-    }
-  }
-`
+export const MenuItem = ({ className = '', onClick, children }: MenuItemProps) => {
+  return (
+    <li 
+      className={`px-2 py-1.5 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 ${className}`}
+      onClick={onClick}
+    >
+      {children}
+    </li>
+  )
+}
 
-export const MenuItemText = styled.li`
-  padding: 6px 8px;
-  color: #777;
-  font-style: italic;
-`
+interface MenuItemTextProps {
+  className?: string;
+  children: ReactNode;
+}
 
-export const MenuItemWithAnchor = styled.li`
-  padding: 0;
-  cursor: pointer;
+export const MenuItemText = ({ className = '', children }: MenuItemTextProps) => {
+  return (
+    <li className={`px-2 py-1.5 text-gray-500 italic ${className}`}>
+      {children}
+    </li>
+  )
+}
 
-  &:hover {
-    background: #eee;
-  }
+interface MenuItemWithAnchorProps {
+  className?: string;
+  href: string;
+  children: ReactNode;
+}
 
-  & > a:link,
-  & > a:visited {
-    padding: 6px 8px;
-    color: inherit;
-    text-decoration: none;
-    display: block;
-  }
+export const MenuItemWithAnchor = ({ className = '', href, children }: MenuItemWithAnchorProps) => {
+  return (
+    <li className={`p-0 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 ${className}`}>
+      <a 
+        href={href}
+        className="px-2 py-1.5 text-inherit no-underline block"
+      >
+        {children}
+      </a>
+    </li>
+  )
+}
 
-  @media (prefers-color-scheme: dark) {
-    &:hover {
-      background: #666;
-    }
-  }
-`
+interface MenuDividerProps {
+  className?: string;
+}
 
-export const MenuDivider = styled.div`
-  height: 1px;
-  background: #ccc;
-`
+export const MenuDivider = ({ className = '' }: MenuDividerProps) => {
+  return (
+    <div className={`h-px bg-gray-300 dark:bg-gray-500 ${className}`} />
+  )
+}
