@@ -1,5 +1,4 @@
-import React, { FC, useEffect } from 'react'
-import { createGlobalStyle } from 'styled-components'
+import React, { FC, useEffect, useState } from 'react'
 import { withPrefix } from '../i18n/translate'
 import {
   Outlet,
@@ -24,33 +23,6 @@ import { screenNames } from '../utils/screenNames'
 import { UserSettings } from '../pages/UserSettings'
 
 const t = withPrefix('global')
-
-const GlobalStyle = createGlobalStyle`
-  html {
-    font-family: Arial, Helvetica, sans-serif;
-    background: #fff;
-  }
-
-  html,
-  body,
-  #app {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-  }
-
-  body {
-    overscroll-behavior: none;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    html {
-      background: #000;
-      color: #eee;
-    }
-  }
-`
 
 const ErrorElement: FC = () => {
   const error = useRouteError()
@@ -83,6 +55,27 @@ const router = createBrowserRouter(
 
 export const App: FC = () => {
   const { onMigrationReady } = useAuth()
+  const [darkMode, setDarkMode] = useState(false)
+
+  useEffect(() => {
+    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleChange = (e: MediaQueryListEvent) => {
+      setDarkMode(e.matches)
+    }
+    
+    setDarkMode(darkModeMediaQuery.matches)
+    
+    darkModeMediaQuery.addEventListener('change', handleChange)
+    return () => darkModeMediaQuery.removeEventListener('change', handleChange)
+  }, [])
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [darkMode])
 
   useEffect(() => {
     return onMigrationReady(async (migrate) => {
@@ -100,7 +93,6 @@ export const App: FC = () => {
 
   return (
     <>
-      <GlobalStyle />
       <SplashScreen />
       <RouterProvider router={router} />
     </>
