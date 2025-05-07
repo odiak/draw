@@ -1,40 +1,15 @@
 import React, { FC } from 'react'
-import styled from 'styled-components'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Link } from 'react-router-dom'
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
 
 export const NewButton: FC<{ className?: string }> = ({ className }) => {
   return (
-    <Button to="/new" className={className}>
-      <FontAwesomeIcon icon={faPlus} className="icon" />
-    </Button>
+    <Link 
+      to="/new" 
+      className={`block w-[30px] h-[30px] border-0 bg-gray-300 dark:bg-gray-600 flex justify-center items-center text-inherit no-underline ${className || ''}`}
+    >
+      <FontAwesomeIcon icon={faPlus} className="block" />
+    </Link>
   )
 }
-
-const Button = styled(Link)`
-  display: block;
-  width: 30px;
-  height: 30px;
-  border: 0;
-  background: #ddd;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  &:link,
-  &:visited {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  > .icon {
-    display: block;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    & {
-      background: #444;
-    }
-  }
-`
