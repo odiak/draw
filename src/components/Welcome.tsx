@@ -44,13 +44,13 @@ export const Welcome: FC<Props> = ({ onClose }) => {
       <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-lg">
         <h1 className="mt-0 mb-4">{t('title')}</h1>
         <p className="leading-relaxed">{t('description')}</p>
-        <button 
+        <button
           onClick={signInAnonymously}
           className="inline-block mr-3 my-2 text-2xl py-1 px-2 rounded border border-blue-600 bg-blue-600 text-white"
         >
           {t('startUsingNow')}
         </button>
-        <button 
+        <button
           onClick={signInWithGoogle}
           className="inline-block mr-3 my-2 text-2xl py-1 px-2 rounded border border-gray-500 bg-gray-500 text-white"
         >

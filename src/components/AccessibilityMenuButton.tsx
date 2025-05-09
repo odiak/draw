@@ -10,11 +10,11 @@ const t = withPrefix('menu.accessibilities')
 
 const PublicIcon = () => <FontAwesomeIcon icon={faLockOpen} fixedWidth className="block" />
 const ProtectedIcon = () => <FontAwesomeIcon icon={faLock} fixedWidth className="block" />
-const PrivateIcon = () => <FontAwesomeIcon icon={faLock} fixedWidth className="block text-red-500" />
+const PrivateIcon = () => (
+  <FontAwesomeIcon icon={faLock} fixedWidth className="block text-red-500" />
+)
 
 const CheckIcon = () => <FontAwesomeIcon icon={faCheck} className="ml-1" />
-
-
 
 export const AccessibilityMenuButton: FC<{
   className?: string
@@ -46,8 +46,8 @@ export const AccessibilityMenuButton: FC<{
   }, [change])
 
   return (
-    <button 
-      className={`bg-gray-300 dark:bg-gray-600 block border-0 w-[30px] h-[30px] flex justify-center items-center relative text-inherit ${className || ''}`} 
+    <button
+      className={`bg-gray-300 dark:bg-gray-600 block border-0 w-[30px] h-[30px] flex justify-center items-center relative text-inherit ${className || ''}`}
       ref={buttonRef}
     >
       {isPublic && <PublicIcon />}

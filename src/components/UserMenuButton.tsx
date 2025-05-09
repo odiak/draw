@@ -48,8 +48,8 @@ export const UserMenuButton: FC<{ className?: string }> = ({ className }) => {
   }
 
   return (
-    <button 
-      ref={accountMenuButtonRef} 
+    <button
+      ref={accountMenuButtonRef}
       className={`block w-[30px] h-[30px] border-0 bg-gray-300 dark:bg-gray-600 flex justify-center items-center relative p-[1px] text-inherit ${className || ''}`}
     >
       {currentUser !== undefined &&
@@ -97,12 +97,16 @@ const Items: FC<ItemsProps> = ({
       {isAnonymous && <MenuItemText>{t('usingAnonymously')}</MenuItemText>}
       {screenName !== 'boards' && isSignedIn_ && (
         <MenuItem>
-          <Link to="/boards" className="block px-2 py-1.5 text-inherit no-underline">{t('myBoards')}</Link>
+          <Link to="/boards" className="block px-2 py-1.5 text-inherit no-underline">
+            {t('myBoards')}
+          </Link>
         </MenuItem>
       )}
       {screenName !== 'settings' && isSignedIn_ && (
         <MenuItem>
-          <Link to="/settings" className="block px-2 py-1.5 text-inherit no-underline">{t('settings')}</Link>
+          <Link to="/settings" className="block px-2 py-1.5 text-inherit no-underline">
+            {t('settings')}
+          </Link>
         </MenuItem>
       )}
       {isNotSignedIn && <MenuItem onClick={signInAnonymously}>{t('signInAnonymously')}</MenuItem>}

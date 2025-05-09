@@ -38,14 +38,14 @@ export function ToolButton({ tool, isSelected, onSelect }: Props) {
   }
 
   const buttonClasses = classNames(
-    "w-[50px] h-[30px] border-0 bg-gray-200 dark:bg-gray-600 text-inherit align-top",
+    'w-[50px] h-[30px] border-0 bg-gray-200 dark:bg-gray-600 text-inherit align-top',
     {
-      "bg-black dark:bg-gray-300": isSelected
+      'bg-black dark:bg-gray-300': isSelected
     }
   )
 
-  const iconClasses = classNames("icon", {
-    "text-white dark:text-black": isSelected
+  const iconClasses = classNames('icon', {
+    'text-white dark:text-black': isSelected
   })
 
   return (
@@ -59,7 +59,11 @@ export function ToolButton({ tool, isSelected, onSelect }: Props) {
           : undefined
       }
     >
-      {tool === 'lasso' ? iconNode : <FontAwesomeIcon icon={faIcons[tool]} className={iconClasses} />}
+      {tool === 'lasso' ? (
+        iconNode
+      ) : (
+        <FontAwesomeIcon icon={faIcons[tool]} className={iconClasses} />
+      )}
     </button>
   )
 }

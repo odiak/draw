@@ -39,7 +39,7 @@ export const PictureListItem: FC<Props> = ({
 
   return (
     <div className="relative">
-      <button 
+      <button
         ref={buttonRef}
         className="absolute bg-gray-300/50 dark:bg-gray-700/50 border-0 right-0 top-0 z-[1] p-1 px-1.5 text-inherit"
       >
@@ -56,8 +56,8 @@ export const PictureListItem: FC<Props> = ({
       </button>
       <Link to={`/${pictureId}`} className="text-inherit no-underline">
         {(accessibilityLevel !== 'private' || imageToken !== undefined) && (
-          <img 
-            src={`${imageBaseUrl}/${pictureId}-w380-h300.png${imageTokenQuery}`} 
+          <img
+            src={`${imageBaseUrl}/${pictureId}-w380-h300.png${imageTokenQuery}`}
             className="scale-50 -translate-x-1/2 -translate-y-1/2"
           />
         )}

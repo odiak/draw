@@ -33,8 +33,8 @@ export const EllipsisMenuButton: FC<Props> = ({ pictureId, permission, className
     : 'https://about.kakeru.app'
 
   return (
-    <button 
-      ref={menuButtonRef} 
+    <button
+      ref={menuButtonRef}
       className={`w-[36px] h-[30px] border-0 bg-gray-300 dark:bg-gray-600 relative text-inherit ${className || ''}`}
     >
       <FontAwesomeIcon icon={faEllipsisH} className="icon" />
@@ -80,9 +80,9 @@ const MenuItemToCopy: FC<{ text: string }> = ({ children, text }) => {
 const MenuItemWithLink: FC<{ link: string }> = ({ link, children }) => {
   return (
     <MenuItem>
-      <a 
-        href={link} 
-        target="_blank" 
+      <a
+        href={link}
+        target="_blank"
         rel="noopener noreferrer"
         className="block px-2 py-1.5 text-inherit no-underline"
       >

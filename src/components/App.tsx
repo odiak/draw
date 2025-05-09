@@ -62,9 +62,9 @@ export const App: FC = () => {
     const handleChange = (e: MediaQueryListEvent) => {
       setDarkMode(e.matches)
     }
-    
+
     setDarkMode(darkModeMediaQuery.matches)
-    
+
     darkModeMediaQuery.addEventListener('change', handleChange)
     return () => darkModeMediaQuery.removeEventListener('change', handleChange)
   }, [])

@@ -45,10 +45,13 @@ export const UserSettings: FC = () => {
           {settings.apiToken ? (
             <div>
               <p>
-                {t('yourApiToken')}: <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">{settings.apiToken}</code>
+                {t('yourApiToken')}:{' '}
+                <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">
+                  {settings.apiToken}
+                </code>
               </p>
               {!isUpdatingApiToken && (
-                <button 
+                <button
                   onClick={createOrRefreshApiToken}
                   className="mr-2 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
@@ -56,7 +59,7 @@ export const UserSettings: FC = () => {
                 </button>
               )}
               {isUpdatingApiToken && (
-                <button 
+                <button
                   disabled
                   className="mr-2 px-2 py-1 bg-gray-400 text-white rounded cursor-not-allowed"
                 >
@@ -76,7 +79,7 @@ export const UserSettings: FC = () => {
             <div>
               <p>{t('apiTokenIsNotCreated')}</p>
               {!isUpdatingApiToken && (
-                <button 
+                <button
                   onClick={createOrRefreshApiToken}
                   className="mr-2 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
@@ -84,7 +87,7 @@ export const UserSettings: FC = () => {
                 </button>
               )}
               {isUpdatingApiToken && (
-                <button 
+                <button
                   disabled
                   className="mr-2 px-2 py-1 bg-gray-400 text-white rounded cursor-not-allowed"
                 >
@@ -106,7 +109,9 @@ export const UserSettings: FC = () => {
 
           <br />
           <p>
-            <Link to="/" className="text-blue-500 hover:underline">&laquo; {t('backToHome')}</Link>
+            <Link to="/" className="text-blue-500 hover:underline">
+              &laquo; {t('backToHome')}
+            </Link>
           </p>
         </>
       )}

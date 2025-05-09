@@ -137,11 +137,11 @@ export function ToolBar({ pictureId }: Props) {
             </div>
 
             <div className="mr-5 h-[30px]">
-              <button 
+              <button
                 className="w-[40px] h-[30px] border-0 bg-gray-200 dark:bg-gray-600 relative text-inherit"
                 ref={colorWidthButtonRef}
               >
-                <div 
+                <div
                   className="inline-block align-middle border border-black dark:border-gray-400 box-border"
                   style={{
                     backgroundColor: strokeColor,
@@ -150,7 +150,7 @@ export function ToolBar({ pictureId }: Props) {
                     borderRadius: `${(strokeWidth + 6) / 2}px`
                   }}
                 />
-                <div 
+                <div
                   ref={colorWidthMenuRef}
                   className="hidden absolute right-0 top-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 m-0 shadow-md z-[100] text-base text-left w-[120px] leading-none p-0"
                 >
@@ -161,7 +161,7 @@ export function ToolBar({ pictureId }: Props) {
                         className={`inline-block w-[30px] h-[30px] ${color === strokeColor ? 'rounded bg-gray-300 dark:bg-gray-600' : ''}`}
                         onClick={() => setStrokeColor(color)}
                       >
-                        <div 
+                        <div
                           className="w-[22px] h-[22px] rounded-[11px] border border-black dark:border-gray-400 m-1 box-border"
                           style={{ backgroundColor: color }}
                         />
@@ -175,9 +175,9 @@ export function ToolBar({ pictureId }: Props) {
                         className={`inline-block w-[30px] h-[30px] ${width === strokeWidth ? 'rounded bg-gray-300 dark:bg-gray-600' : ''}`}
                         onClick={() => setStrokeWidth(width)}
                       >
-                        <div 
+                        <div
                           className="bg-black dark:bg-white box-border"
-                          style={{ 
+                          style={{
                             width: `${width * 1.3 + 1}px`,
                             height: `${width * 1.3 + 1}px`,
                             borderRadius: `${(width * 1.3 + 1) / 2}px`,
@@ -208,13 +208,13 @@ export function ToolBar({ pictureId }: Props) {
         )}
 
         <div className="mr-5 h-[30px]">
-          <button 
+          <button
             className="w-[40px] h-[30px] border-0 bg-gray-200 dark:bg-gray-600 relative text-inherit disabled:dark:text-gray-500"
             onClick={zoomOut}
           >
             <FontAwesomeIcon className="block" icon={faSearchMinus} />
           </button>
-          <button 
+          <button
             className="w-[40px] h-[30px] border-0 bg-gray-200 dark:bg-gray-600 relative text-inherit disabled:dark:text-gray-500"
             onClick={zoomIn}
           >
@@ -225,16 +225,16 @@ export function ToolBar({ pictureId }: Props) {
 
         {permission?.writable && (
           <div className="mr-5 h-[30px]">
-            <button 
+            <button
               className="w-[40px] h-[30px] border-0 bg-gray-200 dark:bg-gray-600 relative text-inherit disabled:dark:text-gray-500"
-              disabled={!canUndo} 
+              disabled={!canUndo}
               onClick={undo}
             >
               <FontAwesomeIcon className="block" icon={faUndo} />
             </button>
-            <button 
+            <button
               className="w-[40px] h-[30px] border-0 bg-gray-200 dark:bg-gray-600 relative text-inherit disabled:dark:text-gray-500"
-              disabled={!canRedo} 
+              disabled={!canRedo}
               onClick={redo}
             >
               <FontAwesomeIcon className="block" icon={faRedo} />

@@ -20,7 +20,7 @@ export const CanvasBottomMenu: FC<Props> = ({ state, onCopy, onPaste, onDelete }
         case 'idle':
           return (
             <div className="absolute bottom-0 left-0 right-0 m-0 p-0 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] text-center">
-              <button 
+              <button
                 className="m-0 p-[5px] inline-block bg-gray-400/70 dark:bg-gray-600/70 border-0 rounded-sm text-inherit"
                 onClick={onPaste}
               >
@@ -33,19 +33,19 @@ export const CanvasBottomMenu: FC<Props> = ({ state, onCopy, onPaste, onDelete }
         case 'closed':
           return (
             <div className="absolute bottom-0 left-0 right-0 m-0 p-0 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] text-center">
-              <button 
+              <button
                 className="m-0 p-[5px] inline-block bg-gray-400/70 dark:bg-gray-600/70 border-0 rounded-sm text-inherit"
                 onClick={onPaste}
               >
                 {t('paste')}
               </button>
-              <button 
+              <button
                 className="m-0 ml-[5px] p-[5px] inline-block bg-gray-400/70 dark:bg-gray-600/70 border-0 rounded-sm text-inherit"
                 onClick={onDelete}
               >
                 {t('delete')}
               </button>
-              <button 
+              <button
                 className="m-0 ml-[5px] p-[5px] inline-block bg-gray-400/70 dark:bg-gray-600/70 border-0 rounded-sm text-inherit"
                 onClick={onCopy}
               >

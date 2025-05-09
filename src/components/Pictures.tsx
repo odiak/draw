@@ -84,8 +84,8 @@ export const Pictures: FC = () => {
       <div className="mx-auto max-w-[800px] p-[5px] pb-5">
         <h1>{t('title')}</h1>
         <div className="flex flex-wrap">
-          <Link 
-            to="/new" 
+          <Link
+            to="/new"
             className="block bg-gray-500 dark:bg-gray-600 text-white text-base flex flex-col border-0 w-[190px] h-[150px] m-[5px] relative shadow-md overflow-hidden rounded-sm no-underline sm:w-[calc(25%-10px)] max-sm:w-[calc(33%-10px)] max-[400px]:w-[calc(50%-10px)]"
           >
             <div className="flex-1 grid place-items-center">
@@ -105,16 +105,14 @@ export const Pictures: FC = () => {
           ))}
         </div>
         {loadingState === 'loaded' && anchor != null && (
-          <button 
-            ref={buttonRef} 
-            onClick={onClick}
-            className="block mx-auto my-2.5"
-          >
+          <button ref={buttonRef} onClick={onClick} className="block mx-auto my-2.5">
             {t('loadMore')}
           </button>
         )}
         {loadingState === 'loading' && <div className="text-center my-2.5">{t('loading')}</div>}
-        {loadingState === 'loaded' && pictures.length === 0 && <div className="text-center my-2.5">{t('empty')}</div>}
+        {loadingState === 'loaded' && pictures.length === 0 && (
+          <div className="text-center my-2.5">{t('empty')}</div>
+        )}
       </div>
     </div>
   )

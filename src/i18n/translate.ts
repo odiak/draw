@@ -16,8 +16,8 @@ type Dig<Data, Keys extends string> = Keys extends `${infer Key}.${infer Rest}`
     ? Dig<Data[Key], Rest>
     : never
   : Keys extends keyof Data
-  ? Data[Keys]
-  : never
+    ? Data[Keys]
+    : never
 
 type RemovePrefix<
   Keys extends string,

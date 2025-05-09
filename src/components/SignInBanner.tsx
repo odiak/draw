@@ -21,14 +21,14 @@ export const SignInBanner: FC = () => {
   return (
     <div className="p-2 text-center bg-red-200 text-base">
       {t('text1')}
-      <button 
+      <button
         onClick={signInAnonymously}
         className="border-0 bg-transparent p-0 underline text-inherit cursor-pointer inline mx-[0.15em]"
       >
         {t('link1')}
       </button>
       {t('text2')}
-      <button 
+      <button
         onClick={signInWithGoogle}
         className="border-0 bg-transparent p-0 underline text-inherit cursor-pointer inline mx-[0.15em]"
       >
