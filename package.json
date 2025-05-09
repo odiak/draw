@@ -16,6 +16,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250412.0",
     "@headlessui/react": "^2.2.2",
+    "@tailwindcss/postcss": "^4.1.6",
     "@types/resize-observer-browser": "^0.1.11",
     "@typescript-eslint/eslint-plugin": "^4.26.0",
     "@typescript-eslint/parser": "^4.26.0",
