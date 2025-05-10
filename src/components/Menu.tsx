@@ -1,4 +1,4 @@
-import { MenuItem, MenuItems } from '@headlessui/react'
+import { MenuItem, MenuItems, MenuSeparator } from '@headlessui/react'
 import { AnchorProps } from '@headlessui/react/dist/internal/floating'
 import classNames from 'classnames'
 import { FC, PropsWithChildren } from 'react'
@@ -32,14 +32,14 @@ const CustomMenuItem: FC<
     | { type: 'text' }
   >
 > = (props) => {
-  const baseClassName =
-    'p-2 w-full text-left cursor-default block hover:bg-gray-100 dark:hover:bg-gray-600'
+  const className =
+    'px-2 py-1.5 w-full text-left cursor-default block hover:bg-gray-100 dark:hover:bg-gray-600'
 
   switch (props.type) {
     case 'link':
       return (
         <MenuItem>
-          <Link to={props.to} className={baseClassName}>
+          <Link to={props.to} className={className}>
             {props.children}
           </Link>
         </MenuItem>
@@ -47,7 +47,7 @@ const CustomMenuItem: FC<
     case 'action':
       return (
         <MenuItem>
-          <button className={baseClassName} onClick={props.onClick}>
+          <button className={className} onClick={props.onClick}>
             {props.children}
           </button>
         </MenuItem>
@@ -55,10 +55,25 @@ const CustomMenuItem: FC<
     case 'text':
       return (
         <MenuItem disabled>
-          <div className={baseClassName}>{props.children}</div>
+          <div className={className}>{props.children}</div>
         </MenuItem>
       )
   }
 }
 
-export { CustomMenuItems as MenuItems, CustomMenuItem as MenuItem }
+const CustomMenuSeparator: FC<PropsWithChildren<{ className?: string }>> = ({
+  children,
+  className
+}) => {
+  return (
+    <MenuSeparator className={classNames('border-t-1 border-gray-300 my-1', className)}>
+      {children}
+    </MenuSeparator>
+  )
+}
+
+export {
+  CustomMenuItems as MenuItems,
+  CustomMenuItem as MenuItem,
+  CustomMenuSeparator as MenuSeparator
+}

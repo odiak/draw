@@ -16,3 +16,9 @@
     @apply overscroll-none;
   }
 }
+
+@custom-variant supports-aspect-ratio {
+  @supports (aspect-ratio: 1/1) {
+    @slot;
+  }
+}

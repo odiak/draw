@@ -81,23 +81,23 @@ export const Pictures: FC = () => {
       </div>
       <Title>{t('title')}</Title>
 
-      <div className="mx-auto max-w-[800px] p-[5px] pb-5">
-        <h1>{t('title')}</h1>
-        <div className="flex flex-wrap">
+      <div className="mx-auto max-w-300 p-3 pb-5">
+        <h1 className="text-2xl font-bold my-3">{t('title')}</h1>
+
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           <Link
             to="/new"
-            className="block bg-gray-500 dark:bg-gray-600 text-white text-base flex flex-col border-0 w-[190px] h-[150px] m-[5px] relative shadow-md overflow-hidden rounded-sm no-underline sm:w-[calc(25%-10px)] max-sm:w-[calc(33%-10px)] max-[400px]:w-[calc(50%-10px)]"
+            className="bg-gray-500 dark:bg-gray-600 text-white text-base flex flex-col border-0 relative shadow-md overflow-hidden rounded-sm w-full aspect-4/3 not-supports-aspect-ratio:h-40 hover:scale-103 hover:shadow-lg transition-all duration-200"
           >
-            <div className="flex-1 grid place-items-center">
-              <FontAwesomeIcon icon={faPlus} className="block text-[80px] flex-1" />
-            </div>
-            <div className="p-1 bg-white/20">{t('new')}</div>
+            <FontAwesomeIcon icon={faPlus} className="block flex-1 p-2" />
+            <div className="p-1 bg-white/20 flex-0">{t('new')}</div>
           </Link>
           {pictures.map((p, i) => (
             <PictureListItem
               key={p.id}
               picture={p}
               imageToken={p.accessibilityLevel === 'private' ? imageToken : undefined}
+              className="rounded-sm shadow-md overflow-hidden hover:scale-103 hover:shadow-lg transition-all duration-200"
               onDelete={() => {
                 setPictures(removeArrayElementAt(pictures, i))
               }}

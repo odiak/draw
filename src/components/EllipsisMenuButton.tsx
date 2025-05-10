@@ -6,9 +6,9 @@ import { withPrefix } from '../i18n/translate'
 import { Permission } from '../services/PictureService'
 import { copyToClipboard } from '../utils/copyToClipboard'
 
-import { MenuItems, MenuItem } from './Menu'
+import { MenuItems, MenuItem, MenuSeparator } from './Menu'
 import { useScreenName } from '../utils/screenNames'
-import { Menu, MenuButton, MenuSeparator } from '@headlessui/react'
+import { Menu, MenuButton } from '@headlessui/react'
 
 const t = withPrefix('menu')
 
