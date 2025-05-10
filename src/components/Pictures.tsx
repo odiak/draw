@@ -82,7 +82,7 @@ export const Pictures: FC = () => {
       <Title>{t('title')}</Title>
 
       <div className="mx-auto max-w-300 p-3 pb-5">
-        <h1 className="text-2xl font-bold my-3">{t('title')}</h1>
+        <h1>{t('title')}</h1>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           <Link

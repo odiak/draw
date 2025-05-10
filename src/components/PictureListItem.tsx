@@ -41,7 +41,7 @@ export const PictureListItem: FC<Props> = ({
   return (
     <div className={classNames('relative w-full', className)}>
       <Menu>
-        <MenuButton className="absolute bg-gray-300/50 dark:bg-gray-700/50 border-0 right-0 top-0 z-[1] p-1 px-1.5 text-inherit">
+        <MenuButton className="absolute bg-gray-300/50 dark:bg-gray-700/50 border-0 right-0 top-0 p-1 px-1.5 text-inherit">
           <FontAwesomeIcon icon={faEllipsisH} className="text-gray-600/80 dark:text-gray-400/80" />
         </MenuButton>
         <MenuItems>

@@ -15,6 +15,16 @@
   body {
     @apply overscroll-none;
   }
+
+  h1 {
+    @apply text-2xl font-bold my-3;
+  }
+  h2 {
+    @apply text-xl font-bold my-2;
+  }
+  p {
+    @apply my-2;
+  }
 }
 
 @custom-variant supports-aspect-ratio {
