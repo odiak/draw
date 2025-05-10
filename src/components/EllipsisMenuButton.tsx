@@ -1,14 +1,14 @@
-import { faEllipsisH } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { FC } from 'react'
+import { FC } from 'react'
 import { baseUrl, imageBaseUrl } from '../constants'
 import { withPrefix } from '../i18n/translate'
 import { Permission } from '../services/PictureService'
 import { copyToClipboard } from '../utils/copyToClipboard'
 
-import { MenuItems, MenuItem, MenuSeparator } from './Menu'
-import { useScreenName } from '../utils/screenNames'
 import { Menu, MenuButton } from '@headlessui/react'
+import classNames from 'classnames'
+import { useScreenName } from '../utils/screenNames'
+import { Icon } from './Icon'
+import { MenuItem, MenuItems, MenuSeparator } from './Menu'
 
 const t = withPrefix('menu')
 
@@ -33,9 +33,12 @@ export const EllipsisMenuButton: FC<Props> = ({ pictureId, permission, className
   return (
     <Menu>
       <MenuButton
-        className={`w-[36px] h-[30px] border-0 bg-gray-300 dark:bg-gray-600 relative text-inherit ${className || ''}`}
+        className={classNames(
+          'w-[36px] h-[30px] border-0 bg-gray-300 dark:bg-gray-600 relative text-inherit',
+          className
+        )}
       >
-        <FontAwesomeIcon icon={faEllipsisH} className="icon" />
+        <Icon name="ellipsis" className="w-[1.2em] inline-block" />
       </MenuButton>
       <MenuItems className="w-max">
         {screenName === 'drawing' && pictureId !== undefined && (

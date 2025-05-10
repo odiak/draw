@@ -35,9 +35,6 @@
     "workbox-window": "^7.3.0"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^6.6.0",
-    "@fortawesome/free-solid-svg-icons": "^6.6.0",
-    "@fortawesome/react-fontawesome": "^0.2.2",
     "@msgpack/msgpack": "^2.7.0",
     "@odiak/fit-curve": "^0.3.2",
     "@odiak/iterate": "^0.0.4",

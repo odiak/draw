@@ -1,17 +1,16 @@
-import React, { FC, useState, useEffect, useCallback, useRef } from 'react'
-import { PictureService, PictureWithId, Anchor } from '../services/PictureService'
-import { UserMenuButton } from './UserMenuButton'
-import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
-import { withPrefix } from '../i18n/translate'
-import { Title } from './Title'
-import { PictureListItem } from './PictureListItem'
-import { removeArrayElementAt } from '../utils/removeArrayElementAt'
-import { EllipsisMenuButton } from './EllipsisMenuButton'
-import { isNotSignedIn, isSignedIn, useAuth } from '../hooks/useAuth'
+import { FC, useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlus } from '@fortawesome/free-solid-svg-icons'
+import { isNotSignedIn, isSignedIn, useAuth } from '../hooks/useAuth'
 import { useImageToken } from '../hooks/useImageToken'
+import { withPrefix } from '../i18n/translate'
+import { Anchor, PictureService, PictureWithId } from '../services/PictureService'
+import { removeArrayElementAt } from '../utils/removeArrayElementAt'
+import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
+import { EllipsisMenuButton } from './EllipsisMenuButton'
+import { Icon } from './Icon'
+import { PictureListItem } from './PictureListItem'
+import { Title } from './Title'
+import { UserMenuButton } from './UserMenuButton'
 
 const t = withPrefix('boards')
 
@@ -89,7 +88,7 @@ export const Pictures: FC = () => {
             to="/new"
             className="bg-gray-500 dark:bg-gray-600 text-white text-base flex flex-col border-0 relative shadow-md overflow-hidden rounded-sm w-full aspect-4/3 not-supports-aspect-ratio:h-40 hover:scale-103 hover:shadow-lg transition-all duration-200"
           >
-            <FontAwesomeIcon icon={faPlus} className="block flex-1 p-2" />
+            <Icon name="plus" className="block flex-1 p-3" />
             <div className="p-1 bg-white/20 flex-0">{t('new')}</div>
           </Link>
           {pictures.map((p, i) => (

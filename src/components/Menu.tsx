@@ -66,14 +66,16 @@ const CustomMenuSeparator: FC<PropsWithChildren<{ className?: string }>> = ({
   className
 }) => {
   return (
-    <MenuSeparator className={classNames('border-t-1 border-gray-300 my-1', className)}>
+    <MenuSeparator
+      className={classNames('border-t-1 border-gray-300 dark:border-gray-500 my-1', className)}
+    >
       {children}
     </MenuSeparator>
   )
 }
 
 export {
-  CustomMenuItems as MenuItems,
   CustomMenuItem as MenuItem,
+  CustomMenuItems as MenuItems,
   CustomMenuSeparator as MenuSeparator
 }

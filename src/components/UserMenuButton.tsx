@@ -1,11 +1,10 @@
-import { faUser } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Menu, MenuButton } from '@headlessui/react'
 import classNames from 'classnames'
 import { FC, useCallback } from 'react'
 import { NotSignedIn, User, isSignedIn, useAuth } from '../hooks/useAuth'
 import { withPrefix } from '../i18n/translate'
 import { ScreenName, useScreenName } from '../utils/screenNames'
+import { Icon } from './Icon'
 import { MenuItem, MenuItems } from './Menu'
 
 const t = withPrefix('menu')
@@ -59,7 +58,7 @@ export const UserMenuButton: FC<{ className?: string }> = ({ className }) => {
         currentUser.photoURL ? (
           <img src={currentUser.photoURL} className="w-full h-full" />
         ) : (
-          <FontAwesomeIcon icon={faUser} className="block" />
+          <Icon name="user" className="p-1" />
         )}
       </MenuButton>
       <MenuItems>

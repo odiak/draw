@@ -1,21 +1,18 @@
-import { faCheck, faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Menu, MenuButton } from '@headlessui/react'
 import classNames from 'classnames'
 import { FC } from 'react'
 import { withPrefix } from '../i18n/translate'
 import { AccessibilityLevel, Permission } from '../services/PictureService'
+import { Icon } from './Icon'
 import { MenuItem, MenuItems } from './Menu'
 
 const t = withPrefix('menu.accessibilities')
 
-const PublicIcon = () => <FontAwesomeIcon icon={faLockOpen} fixedWidth className="block" />
-const ProtectedIcon = () => <FontAwesomeIcon icon={faLock} fixedWidth className="block" />
-const PrivateIcon = () => (
-  <FontAwesomeIcon icon={faLock} fixedWidth className="block text-red-500" />
-)
+const PublicIcon = () => <Icon name="unlocked" className="block" />
+const ProtectedIcon = () => <Icon name="locked" className="block" />
+const PrivateIcon = () => <Icon name="locked" className="block text-red-500" />
 
-const CheckIcon = () => <FontAwesomeIcon icon={faCheck} className="ml-1" />
+const CheckIcon = () => <Icon name="check" className="ml-1 w-[1.2em] inline-block" />
 
 export const AccessibilityMenuButton: FC<{
   className?: string
@@ -36,7 +33,7 @@ export const AccessibilityMenuButton: FC<{
     <Menu>
       <MenuButton
         className={classNames(
-          'bg-gray-300 dark:bg-gray-600 border-0 w-[30px] h-[30px] flex justify-center items-center relative text-inherit',
+          'bg-gray-300 dark:bg-gray-600 border-0 w-[30px] h-[30px] p-1 flex justify-center items-center relative text-inherit',
           className
         )}
       >
@@ -46,17 +43,17 @@ export const AccessibilityMenuButton: FC<{
       </MenuButton>
       <MenuItems>
         <MenuItem type="action" onClick={() => change('public')}>
-          <FontAwesomeIcon icon={faLockOpen} fixedWidth className="mr-1" />
+          <Icon name="unlocked" className="mr-1 w-[1.2em] inline-block" />
           <span>{t('public')}</span>
           {isPublic && <CheckIcon />}
         </MenuItem>
         <MenuItem type="action" onClick={() => change('protected')}>
-          <FontAwesomeIcon icon={faLock} fixedWidth className="mr-1" />
+          <Icon name="locked" className="mr-1 w-[1.2em] inline-block" />
           <span>{t('protected')}</span>
           {isProtected && <CheckIcon />}
         </MenuItem>
         <MenuItem type="action" onClick={() => change('private')}>
-          <FontAwesomeIcon icon={faLock} fixedWidth className="mr-1 text-red-500" />
+          <Icon name="locked" className="mr-1 w-[1.2em] inline-block text-red-500" />
           <span>{t('private')}</span>
           {isPrivate && <CheckIcon />}
         </MenuItem>

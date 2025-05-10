@@ -1,13 +1,12 @@
-import { faEllipsisH } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Menu, MenuButton } from '@headlessui/react'
+import classNames from 'classnames'
 import { FC, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { imageBaseUrl } from '../constants'
 import { withPrefix } from '../i18n/translate'
 import { PictureService, PictureWithId } from '../services/PictureService'
-import { MenuItems, MenuItem } from './Menu'
-import { Menu, MenuButton } from '@headlessui/react'
-import classNames from 'classnames'
+import { Icon } from './Icon'
+import { MenuItem, MenuItems } from './Menu'
 
 const t = withPrefix('boards')
 
@@ -42,7 +41,7 @@ export const PictureListItem: FC<Props> = ({
     <div className={classNames('relative w-full dark:bg-gray-200', className)}>
       <Menu>
         <MenuButton className="absolute bg-gray-300/50 dark:bg-gray-500/50 border-0 right-0 top-0 p-1 px-2 text-inherit">
-          <FontAwesomeIcon icon={faEllipsisH} className="text-gray-600/80 dark:text-gray-100/80" />
+          <Icon name="ellipsis" className="w-[1.2em]" />
         </MenuButton>
         <MenuItems>
           <MenuItem

@@ -1,12 +1,3 @@
-import {
-  faHandPointUp,
-  faRedo,
-  faSearchMinus,
-  faSearchPlus,
-  faSlash,
-  faUndo
-} from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Menu, MenuButton, MenuItem, MenuItems, MenuSection } from '@headlessui/react'
 import classNames from 'classnames'
 import React, { FC, Fragment, useCallback, useEffect, useState } from 'react'
@@ -18,6 +9,7 @@ import { Tool } from '../types/Tool'
 import { useVariable } from '../utils/useVariable'
 import { AccessibilityMenuButton } from './AccessibilityMenuButton'
 import { EllipsisMenuButton } from './EllipsisMenuButton'
+import { Icon } from './Icon'
 import { NewButton } from './NewButton'
 import { ToolButton } from './ToolButton'
 import { UserMenuButton } from './UserMenuButton'
@@ -208,10 +200,7 @@ export function ToolBar({ pictureId }: Props) {
                   setPalmRejection(!palmRejection)
                 }}
               >
-                <span className="fa-layers fa-fw">
-                  <FontAwesomeIcon icon={faHandPointUp} className="block" />
-                  <FontAwesomeIcon icon={faSlash} className="block text-red-500" />
-                </span>
+                <Icon name="palmRejection" className="w-[1.2em] inline-block" />
               </button>
             </div>
           </>
@@ -219,10 +208,10 @@ export function ToolBar({ pictureId }: Props) {
 
         <div className="mr-5 h-[30px]">
           <Button onClick={zoomOut}>
-            <FontAwesomeIcon className="block" icon={faSearchMinus} />
+            <Icon name="zoomOut" className="w-[1.2em] inline-block" />
           </Button>
           <Button onClick={zoomIn}>
-            <FontAwesomeIcon className="block" icon={faSearchPlus} />
+            <Icon name="zoomIn" className="w-[1.2em] inline-block" />
           </Button>
           <span>{(scale * 100).toFixed()}%</span>
         </div>
@@ -230,10 +219,10 @@ export function ToolBar({ pictureId }: Props) {
         {permission?.writable && (
           <div className="mr-5 h-[30px]">
             <Button disabled={!canUndo} onClick={undo}>
-              <FontAwesomeIcon className="block" icon={faUndo} />
+              <Icon name="undo" className="w-[1.2em] inline-block" />
             </Button>
             <Button disabled={!canRedo} onClick={redo}>
-              <FontAwesomeIcon className="block" icon={faRedo} />
+              <Icon name="redo" className="w-[1.2em] inline-block" />
             </Button>
           </div>
         )}
