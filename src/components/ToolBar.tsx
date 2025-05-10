@@ -1,27 +1,26 @@
-import React, { useState, useCallback, FC, useEffect } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faHandPointUp,
-  faSlash,
-  faSearchPlus,
+  faRedo,
   faSearchMinus,
-  faUndo,
-  faRedo
+  faSearchPlus,
+  faSlash,
+  faUndo
 } from '@fortawesome/free-solid-svg-icons'
-import { ToolButton } from './ToolButton'
-import { Tool } from '../types/Tool'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Menu, MenuButton, MenuItem, MenuItems, MenuSection } from '@headlessui/react'
 import classNames from 'classnames'
-import { Menu as HeadlessMenu } from '@headlessui/react'
-import { useMenu } from '../utils/useMenu'
-import { useVariable } from '../utils/useVariable'
-import { PictureService, Permission, AccessibilityLevel } from '../services/PictureService'
-import { AccessibilityMenuButton } from './AccessibilityMenuButton'
-import { UserMenuButton } from './UserMenuButton'
-import { NewButton } from './NewButton'
-import { DrawingService, colors, widths } from '../services/DrawingService'
-import { withPrefix } from '../i18n/translate'
-import { EllipsisMenuButton } from './EllipsisMenuButton'
+import React, { FC, Fragment, useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
+import { withPrefix } from '../i18n/translate'
+import { DrawingService, colors, widths } from '../services/DrawingService'
+import { AccessibilityLevel, Permission, PictureService } from '../services/PictureService'
+import { Tool } from '../types/Tool'
+import { useVariable } from '../utils/useVariable'
+import { AccessibilityMenuButton } from './AccessibilityMenuButton'
+import { EllipsisMenuButton } from './EllipsisMenuButton'
+import { NewButton } from './NewButton'
+import { ToolButton } from './ToolButton'
+import { UserMenuButton } from './UserMenuButton'
 
 const tToolBar = withPrefix('toolBar')
 
@@ -99,8 +98,6 @@ export function ToolBar({ pictureId }: Props) {
     [currentUser, pictureId, pictureService]
   )
 
-  const { buttonRef: colorWidthButtonRef, menuRef: colorWidthMenuRef } = useMenu()
-
   const [strokeWidth, setStrokeWidth] = useVariable(drawingService.strokeWidth)
   const [strokeColor, setStrokeColor] = useVariable(drawingService.strokeColor)
 
@@ -137,42 +134,50 @@ export function ToolBar({ pictureId }: Props) {
             </div>
 
             <div className="mr-5 h-[30px]">
-              <button
-                className="w-[40px] h-[30px] border-0 bg-gray-200 dark:bg-gray-600 relative text-inherit"
-                ref={colorWidthButtonRef}
-              >
-                <div
-                  className="inline-block align-middle border border-black dark:border-gray-400 box-border"
-                  style={{
-                    backgroundColor: strokeColor,
-                    width: `${strokeWidth + 6}px`,
-                    height: `${strokeWidth + 6}px`,
-                    borderRadius: `${(strokeWidth + 6) / 2}px`
-                  }}
-                />
-                <div
-                  ref={colorWidthMenuRef}
-                  className="hidden absolute right-0 top-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 m-0 shadow-md z-[100] text-base text-left w-[120px] leading-none p-0"
+              <Menu>
+                <MenuButton as={Fragment}>
+                  <Button>
+                    <div
+                      className="inline-block align-middle border border-black dark:border-gray-400 box-border"
+                      style={{
+                        backgroundColor: strokeColor,
+                        width: `${strokeWidth + 6}px`,
+                        height: `${strokeWidth + 6}px`,
+                        borderRadius: `${(strokeWidth + 6) / 2}px`
+                      }}
+                    />
+                  </Button>
+                </MenuButton>
+                <MenuItems
+                  anchor="bottom"
+                  as="div"
+                  className="bg-white dark:bg-gray-700 w-30 shadow-lg rounded"
                 >
-                  <div>
+                  <MenuSection className="grid grid-cols-4">
                     {colors.map((color, i) => (
-                      <div
+                      <MenuItem
                         key={i}
-                        className={`inline-block w-[30px] h-[30px] ${color === strokeColor ? 'rounded bg-gray-300 dark:bg-gray-600' : ''}`}
+                        as="div"
+                        className={classNames('w-[30px] h-[30px]', {
+                          'rounded bg-gray-300 dark:bg-gray-600': color === strokeColor
+                        })}
                         onClick={() => setStrokeColor(color)}
                       >
                         <div
-                          className="w-[22px] h-[22px] rounded-[11px] border border-black dark:border-gray-400 m-1 box-border"
+                          className="w-[22px] h-[22px] rounded-full border border-black dark:border-gray-400 m-1 box-border"
                           style={{ backgroundColor: color }}
                         />
-                      </div>
+                      </MenuItem>
                     ))}
-                  </div>
-                  <div>
+                  </MenuSection>
+                  <MenuSection className="grid grid-cols-4">
                     {widths.map((width, i) => (
-                      <div
+                      <MenuItem
                         key={i}
-                        className={`inline-block w-[30px] h-[30px] ${width === strokeWidth ? 'rounded bg-gray-300 dark:bg-gray-600' : ''}`}
+                        as="div"
+                        className={classNames('w-[30px] h-[30px]', {
+                          'rounded bg-gray-300 dark:bg-gray-600': width === strokeWidth
+                        })}
                         onClick={() => setStrokeWidth(width)}
                       >
                         <div
@@ -184,16 +189,21 @@ export function ToolBar({ pictureId }: Props) {
                             margin: `${(30 - (width * 1.3 + 1)) / 2}px`
                           }}
                         />
-                      </div>
+                      </MenuItem>
                     ))}
-                  </div>
-                </div>
-              </button>
+                  </MenuSection>
+                </MenuItems>
+              </Menu>
             </div>
 
             <div className="mr-5 h-[30px]">
               <button
-                className={`w-[40px] h-[30px] border-0 bg-gray-200 dark:bg-gray-600 relative text-inherit ${palmRejection ? 'bg-gray-600 text-white dark:bg-gray-300 dark:text-black' : ''}`}
+                className={classNames(
+                  'w-[40px] h-[30px] border-0 relative',
+                  palmRejection
+                    ? 'bg-gray-600 text-white dark:bg-gray-300 dark:text-black'
+                    : 'bg-gray-200 text-black dark:bg-gray-600 dark:text-white'
+                )}
                 onClick={() => {
                   setPalmRejection(!palmRejection)
                 }}
@@ -208,40 +218,39 @@ export function ToolBar({ pictureId }: Props) {
         )}
 
         <div className="mr-5 h-[30px]">
-          <button
-            className="w-[40px] h-[30px] border-0 bg-gray-200 dark:bg-gray-600 relative text-inherit disabled:dark:text-gray-500"
-            onClick={zoomOut}
-          >
+          <Button onClick={zoomOut}>
             <FontAwesomeIcon className="block" icon={faSearchMinus} />
-          </button>
-          <button
-            className="w-[40px] h-[30px] border-0 bg-gray-200 dark:bg-gray-600 relative text-inherit disabled:dark:text-gray-500"
-            onClick={zoomIn}
-          >
+          </Button>
+          <Button onClick={zoomIn}>
             <FontAwesomeIcon className="block" icon={faSearchPlus} />
-          </button>
+          </Button>
           <span>{(scale * 100).toFixed()}%</span>
         </div>
 
         {permission?.writable && (
           <div className="mr-5 h-[30px]">
-            <button
-              className="w-[40px] h-[30px] border-0 bg-gray-200 dark:bg-gray-600 relative text-inherit disabled:dark:text-gray-500"
-              disabled={!canUndo}
-              onClick={undo}
-            >
+            <Button disabled={!canUndo} onClick={undo}>
               <FontAwesomeIcon className="block" icon={faUndo} />
-            </button>
-            <button
-              className="w-[40px] h-[30px] border-0 bg-gray-200 dark:bg-gray-600 relative text-inherit disabled:dark:text-gray-500"
-              disabled={!canRedo}
-              onClick={redo}
-            >
+            </Button>
+            <Button disabled={!canRedo} onClick={redo}>
               <FontAwesomeIcon className="block" icon={faRedo} />
-            </button>
+            </Button>
           </div>
         )}
       </div>
     </div>
   )
 }
+
+type ButtonProps = React.ComponentProps<'button'>
+const Button = ({ children, className, ...props }: ButtonProps) => (
+  <button
+    className={classNames(
+      'w-[40px] h-[30px] border-0 bg-gray-200 text-black dark:bg-gray-600 dark:text-white relative disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-500 dark:disabled:text-gray-500',
+      className
+    )}
+    {...props}
+  >
+    {children}
+  </button>
+)
