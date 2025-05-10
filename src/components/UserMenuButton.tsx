@@ -1,12 +1,13 @@
-import React, { FC, useCallback } from 'react'
-import { Link, useMatches } from 'react-router-dom'
-import { Menu, MenuItem, MenuItemText } from './Menu'
+import React, { FC, PropsWithChildren, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser } from '@fortawesome/free-solid-svg-icons'
-import { useMenu } from '../utils/useMenu'
 import { withPrefix } from '../i18n/translate'
 import { NotSignedIn, User, isSignedIn, useAuth } from '../hooks/useAuth'
 import { ScreenName, useScreenName } from '../utils/screenNames'
+import classNames from 'classnames'
+import { Menu, MenuButton } from '@headlessui/react'
+import { MenuItems, MenuItem } from './Menu'
 
 const t = withPrefix('menu')
 
@@ -17,8 +18,6 @@ export const UserMenuButton: FC<{ className?: string }> = ({ className }) => {
     signInAnonymously,
     signOut: signOutOriginal
   } = useAuth()
-
-  const { menuRef: accountMenuRef, buttonRef: accountMenuButtonRef } = useMenu()
 
   const screenName = useScreenName()
 
@@ -48,27 +47,30 @@ export const UserMenuButton: FC<{ className?: string }> = ({ className }) => {
   }
 
   return (
-    <button
-      ref={accountMenuButtonRef}
-      className={`block w-[30px] h-[30px] border-0 bg-gray-300 dark:bg-gray-600 flex justify-center items-center relative p-[1px] text-inherit ${className || ''}`}
-    >
-      {currentUser !== undefined &&
-      isSignedIn(currentUser) &&
-      !currentUser.isAnonymous &&
-      currentUser.photoURL ? (
-        <img src={currentUser.photoURL} className="w-full h-full" />
-      ) : (
-        <FontAwesomeIcon icon={faUser} className="block" />
-      )}
-
-      <Menu ref={accountMenuRef}>
+    <Menu>
+      <MenuButton
+        className={classNames(
+          'w-[30px] h-[30px] border-0 bg-gray-300 dark:bg-gray-600 flex justify-center items-center p-[1px] text-inherit',
+          className
+        )}
+      >
+        {currentUser !== undefined &&
+        isSignedIn(currentUser) &&
+        !currentUser.isAnonymous &&
+        currentUser.photoURL ? (
+          <img src={currentUser.photoURL} className="w-full h-full" />
+        ) : (
+          <FontAwesomeIcon icon={faUser} className="block" />
+        )}
+      </MenuButton>
+      <MenuItems>
         <Items
           user={currentUser}
           screenName={screenName}
           {...{ signInAnonymously, signInWithGoogle, signOut }}
         />
-      </Menu>
-    </button>
+      </MenuItems>
+    </Menu>
   )
 }
 
@@ -94,24 +96,32 @@ const Items: FC<ItemsProps> = ({
 
   return (
     <>
-      {isAnonymous && <MenuItemText>{t('usingAnonymously')}</MenuItemText>}
+      {isAnonymous && <MenuItem type="text">{t('usingAnonymously')}</MenuItem>}
       {screenName !== 'boards' && isSignedIn_ && (
-        <MenuItem>
-          <Link to="/boards" className="block px-2 py-1.5 text-inherit no-underline">
-            {t('myBoards')}
-          </Link>
+        <MenuItem type="link" to="/boards">
+          {t('myBoards')}
         </MenuItem>
       )}
       {screenName !== 'settings' && isSignedIn_ && (
-        <MenuItem>
-          <Link to="/settings" className="block px-2 py-1.5 text-inherit no-underline">
-            {t('settings')}
-          </Link>
+        <MenuItem type="link" to="/settings">
+          {t('settings')}
         </MenuItem>
       )}
-      {isNotSignedIn && <MenuItem onClick={signInAnonymously}>{t('signInAnonymously')}</MenuItem>}
-      {isAnonymousLike && <MenuItem onClick={signInWithGoogle}>{t('signInWithGoogle')}</MenuItem>}
-      {isSignedIn_ && <MenuItem onClick={signOut}>{t('signOut')}</MenuItem>}
+      {isNotSignedIn && (
+        <MenuItem type="action" onClick={signInAnonymously}>
+          {t('signInAnonymously')}
+        </MenuItem>
+      )}
+      {isAnonymousLike && (
+        <MenuItem type="action" onClick={signInWithGoogle}>
+          {t('signInWithGoogle')}
+        </MenuItem>
+      )}
+      {isSignedIn_ && (
+        <MenuItem type="action" onClick={signOut}>
+          {t('signOut')}
+        </MenuItem>
+      )}
     </>
   )
 }

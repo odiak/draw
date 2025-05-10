@@ -6,9 +6,9 @@ import { withPrefix } from '../i18n/translate'
 import { Permission } from '../services/PictureService'
 import { copyToClipboard } from '../utils/copyToClipboard'
 
-import { useMenu } from '../utils/useMenu'
-import { Menu, MenuDivider, MenuItem, MenuItemText, MenuItemWithAnchor } from './Menu'
+import { MenuItems, MenuItem } from './Menu'
 import { useScreenName } from '../utils/screenNames'
+import { Menu, MenuButton, MenuSeparator } from '@headlessui/react'
 
 const t = withPrefix('menu')
 
@@ -21,8 +21,6 @@ type Props = {
 const buyMeACoffeeLink = 'https://buymeacoffee.com/odiak'
 
 export const EllipsisMenuButton: FC<Props> = ({ pictureId, permission, className }) => {
-  const { menuRef, buttonRef: menuButtonRef } = useMenu()
-
   const screenName = useScreenName()
 
   const imageLink = `${imageBaseUrl}/${pictureId}.svg`
@@ -33,61 +31,49 @@ export const EllipsisMenuButton: FC<Props> = ({ pictureId, permission, className
     : 'https://about.kakeru.app'
 
   return (
-    <button
-      ref={menuButtonRef}
-      className={`w-[36px] h-[30px] border-0 bg-gray-300 dark:bg-gray-600 relative text-inherit ${className || ''}`}
-    >
-      <FontAwesomeIcon icon={faEllipsisH} className="icon" />
-      <Menu ref={menuRef}>
+    <Menu>
+      <MenuButton
+        className={`w-[36px] h-[30px] border-0 bg-gray-300 dark:bg-gray-600 relative text-inherit ${className || ''}`}
+      >
+        <FontAwesomeIcon icon={faEllipsisH} className="icon" />
+      </MenuButton>
+      <MenuItems className="w-max">
         {screenName === 'drawing' && pictureId !== undefined && (
           <>
             {permission?.accessibilityLevel === 'private' ? (
-              <MenuItemText>{t('noImageLink')}</MenuItemText>
+              <MenuItem type="text">{t('noImageLink')}</MenuItem>
             ) : (
               <>
-                <MenuItemToCopy text={imageLink}>{t('copyImageLink')}</MenuItemToCopy>
-                <MenuItemToCopy text={`[![](${imageLink})](${pageLink})`}>
+                <MenuItem type="action" onClick={() => copyToClipboard(imageLink)}>
+                  {t('copyImageLink')}
+                </MenuItem>
+                <MenuItem
+                  type="action"
+                  onClick={() => copyToClipboard(`[![](${imageLink})](${pageLink})`)}
+                >
                   {t('copyImageLinkForMarkdown')}
-                </MenuItemToCopy>
-                <MenuItemToCopy text={`[${pageLink} ${imageLink}]`}>
+                </MenuItem>
+                <MenuItem
+                  type="action"
+                  onClick={() => copyToClipboard(`[${pageLink} ${imageLink}]`)}
+                >
                   {t('copyImageLinkForScrapbox')}
-                </MenuItemToCopy>
+                </MenuItem>
               </>
             )}
-            <MenuDivider />
+            <MenuSeparator />
           </>
         )}
-        <MenuItemWithLink link={aboutPageLink}>{t('aboutKakeru')}</MenuItemWithLink>
-        <MenuItemWithLink link={buyMeACoffeeLink}>{t('supportOnBMC')}</MenuItemWithLink>
-        <MenuItemWithLink link="/flags">{t('experimentalFlags')}</MenuItemWithLink>
-      </Menu>
-    </button>
-  )
-}
-
-const MenuItemToCopy: FC<{ text: string }> = ({ children, text }) => {
-  return (
-    <MenuItem
-      onClick={() => {
-        copyToClipboard(text)
-      }}
-    >
-      {children}
-    </MenuItem>
-  )
-}
-
-const MenuItemWithLink: FC<{ link: string }> = ({ link, children }) => {
-  return (
-    <MenuItem>
-      <a
-        href={link}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block px-2 py-1.5 text-inherit no-underline"
-      >
-        {children}
-      </a>
-    </MenuItem>
+        <MenuItem type="link" to={aboutPageLink}>
+          {t('aboutKakeru')}
+        </MenuItem>
+        <MenuItem type="link" to={buyMeACoffeeLink}>
+          {t('supportOnBMC')}
+        </MenuItem>
+        <MenuItem type="link" to="/flags">
+          {t('experimentalFlags')}
+        </MenuItem>
+      </MenuItems>
+    </Menu>
   )
 }

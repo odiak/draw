@@ -1,12 +1,13 @@
 import { faEllipsisH } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { FC, useCallback } from 'react'
+import { FC, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { imageBaseUrl } from '../constants'
 import { withPrefix } from '../i18n/translate'
 import { PictureService, PictureWithId } from '../services/PictureService'
 import { useMenu } from '../utils/useMenu'
-import { Menu, MenuItem } from './Menu'
+import { MenuItems, MenuItem } from './Menu'
+import { Menu, MenuButton } from '@headlessui/react'
 
 const t = withPrefix('boards')
 
@@ -39,21 +40,24 @@ export const PictureListItem: FC<Props> = ({
 
   return (
     <div className="relative">
-      <button
-        ref={buttonRef}
-        className="absolute bg-gray-300/50 dark:bg-gray-700/50 border-0 right-0 top-0 z-[1] p-1 px-1.5 text-inherit"
-      >
-        <FontAwesomeIcon icon={faEllipsisH} className="text-gray-600/80 dark:text-gray-400/80" />
-        <Menu ref={menuRef} className="min-w-0">
+      <Menu>
+        <MenuButton
+          ref={buttonRef}
+          className="absolute bg-gray-300/50 dark:bg-gray-700/50 border-0 right-0 top-0 z-[1] p-1 px-1.5 text-inherit"
+        >
+          <FontAwesomeIcon icon={faEllipsisH} className="text-gray-600/80 dark:text-gray-400/80" />
+        </MenuButton>
+        <MenuItems>
           <MenuItem
+            type="action"
             onClick={() => {
               deletePicture()
             }}
           >
             {t('deleteBoard')}
           </MenuItem>
-        </Menu>
-      </button>
+        </MenuItems>
+      </Menu>
       <Link to={`/${pictureId}`} className="text-inherit no-underline">
         {(accessibilityLevel !== 'private' || imageToken !== undefined) && (
           <img
