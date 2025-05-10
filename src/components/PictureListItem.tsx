@@ -61,7 +61,7 @@ export const PictureListItem: FC<Props> = ({
             className="w-full h-full object-cover"
           />
         )}
-        <div className="absolute bottom-0 p-1 bg-white/90 dark:bg-gray-800/90 w-full box-border">
+        <div className="absolute bottom-0 p-1 bg-white/90 dark:bg-gray-800/90 w-full box-border line-clamp-1">
           {title || t('untitled')}
         </div>
       </Link>
