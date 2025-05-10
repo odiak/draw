@@ -3,7 +3,7 @@
     "strict": true,
     "esModuleInterop": true,
     "module": "commonjs",
-    "jsx": "react",
+    "jsx": "react-jsx",
     "target": "es6",
     "lib": ["es2015", "es2016", "es2017", "es2018", "es2019", "es2020", "es2021", "dom"],
     "alwaysStrict": true,
