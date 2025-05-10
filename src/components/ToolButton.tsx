@@ -3,7 +3,6 @@ import { faPen, faHandPaper, faEraser } from '@fortawesome/free-solid-svg-icons'
 import { Tool } from '../types/Tool'
 import classNames from 'classnames'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import styled from 'styled-components'
 import Lasso from '../assets/lasso.svg?react'
 
 const faIcons = {
@@ -18,7 +17,7 @@ const svgIcons = {
 type Props = {
   tool: Tool
   isSelected: boolean
-  onSelect?: (() => void) | null
+  onSelect: (() => void) | null
 }
 
 export function ToolButton({ tool, isSelected, onSelect }: Props) {
@@ -27,65 +26,39 @@ export function ToolButton({ tool, isSelected, onSelect }: Props) {
     case 'pen':
     case 'hand':
     case 'eraser': {
-      iconNode = <FontAwesomeIcon icon={faIcons[tool]} className="icon" />
+      iconNode = (
+        <FontAwesomeIcon
+          icon={faIcons[tool]}
+          className={isSelected ? 'text-white dark:text-black' : 'text-black dark:text-white'}
+        />
+      )
       break
     }
 
     case 'lasso': {
       const Icon = svgIcons[tool]
-      iconNode = <Icon className="icon svg-icon" />
+      iconNode = (
+        <Icon
+          className={classNames(
+            'icon h-[1em] inline-block align-[-0.125em]',
+            isSelected ? 'text-white dark:text-black' : 'text-black dark:text-white'
+          )}
+        />
+      )
       break
     }
   }
 
+  const buttonClasses = classNames(
+    'w-[50px] h-[30px] border-0 align-top',
+    isSelected
+      ? 'text-white bg-black dark:text-black dark:bg-white'
+      : 'bg-gray-200 dark:bg-gray-600 text-black dark:text-white'
+  )
+
   return (
-    <Button
-      className={classNames({ selected: isSelected })}
-      onClick={
-        onSelect && !isSelected
-          ? () => {
-              onSelect()
-            }
-          : undefined
-      }
-    >
-      {iconNode}
-    </Button>
+    <button className={buttonClasses} onClick={() => !isSelected && onSelect?.()}>
+      {tool === 'lasso' ? iconNode : <FontAwesomeIcon icon={faIcons[tool]} />}
+    </button>
   )
 }
-
-const Button = styled.button`
-  width: 50px;
-  height: 30px;
-  border: 0;
-  background: #e8e8e8;
-  color: inherit;
-  vertical-align: top;
-
-  &.selected {
-    background: #000;
-
-    > .icon {
-      color: #fff;
-    }
-  }
-
-  > .svg-icon {
-    height: 1em;
-    display: inline-block;
-    vertical-align: -0.125em;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    & {
-      background: #444;
-    }
-
-    &.selected {
-      background: #aaa;
-      > .icon {
-        color: #000;
-      }
-    }
-  }
-`

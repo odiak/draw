@@ -1,5 +1,4 @@
 import React, { FC, useState, useEffect, useCallback, useRef } from 'react'
-import styled from 'styled-components'
 import { PictureService, PictureWithId, Anchor } from '../services/PictureService'
 import { UserMenuButton } from './UserMenuButton'
 import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
@@ -75,153 +74,46 @@ export const Pictures: FC = () => {
   }, [fetchPictures])
 
   return (
-    <Container>
-      <ButtonsContainer>
-        <StyledUserMenuButton />
-        <StyledEllipsisMenuButton />
-      </ButtonsContainer>
+    <div className="w-full h-full overflow-auto">
+      <div className="fixed top-0 right-0 w-fit flex z-10">
+        <UserMenuButton className="mr-3" />
+        <EllipsisMenuButton />
+      </div>
       <Title>{t('title')}</Title>
 
-      <ContentContainer>
-        <H>{t('title')}</H>
-        <PictureList>
-          <NewButton to="/new">
-            <div className="icon-wrapper">
-              <FontAwesomeIcon icon={faPlus} className="icon" />
-            </div>
-            <div className="text">{t('new')}</div>
-          </NewButton>
+      <div className="mx-auto max-w-300 p-3 pb-5">
+        <h1>{t('title')}</h1>
+
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          <Link
+            to="/new"
+            className="bg-gray-500 dark:bg-gray-600 text-white text-base flex flex-col border-0 relative shadow-md overflow-hidden rounded-sm w-full aspect-4/3 not-supports-aspect-ratio:h-40 hover:scale-103 hover:shadow-lg transition-all duration-200"
+          >
+            <FontAwesomeIcon icon={faPlus} className="block flex-1 p-2" />
+            <div className="p-1 bg-white/20 flex-0">{t('new')}</div>
+          </Link>
           {pictures.map((p, i) => (
             <PictureListItem
               key={p.id}
               picture={p}
               imageToken={p.accessibilityLevel === 'private' ? imageToken : undefined}
+              className="rounded-sm shadow-md overflow-hidden hover:scale-103 hover:shadow-lg transition-all duration-200"
               onDelete={() => {
                 setPictures(removeArrayElementAt(pictures, i))
               }}
             />
           ))}
-        </PictureList>
+        </div>
         {loadingState === 'loaded' && anchor != null && (
-          <Button ref={buttonRef} onClick={onClick}>
+          <button ref={buttonRef} onClick={onClick} className="block mx-auto my-2.5">
             {t('loadMore')}
-          </Button>
+          </button>
         )}
-        {loadingState === 'loading' && <Message>{t('loading')}</Message>}
-        {loadingState === 'loaded' && pictures.length === 0 && <Message>{t('empty')}</Message>}
-      </ContentContainer>
-    </Container>
+        {loadingState === 'loading' && <div className="text-center my-2.5">{t('loading')}</div>}
+        {loadingState === 'loaded' && pictures.length === 0 && (
+          <div className="text-center my-2.5">{t('empty')}</div>
+        )}
+      </div>
+    </div>
   )
 }
-
-const Container = styled.div`
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-`
-
-const ContentContainer = styled.div`
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 800px;
-  padding: 5px;
-  padding-bottom: 20px;
-`
-
-const H = styled.h1``
-
-const PictureList = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-
-  & > div,
-  & > a {
-    border: 0;
-    width: 190px;
-    height: 150px;
-    margin: 5px;
-    position: relative;
-    box-shadow: 1px 1px 4px #6669;
-    overflow: hidden;
-    border-radius: 2px;
-
-    @media screen and (max-width: 830px) {
-      width: calc(25% - 10px);
-    }
-
-    @media screen and (max-width: 600px) {
-      width: calc(33% - 10px);
-    }
-
-    @media screen and (max-width: 400px) {
-      width: calc(50% - 10px);
-    }
-  }
-
-  @media (prefers-color-scheme: dark) {
-    & > div {
-      background: #ddd;
-    }
-  }
-`
-
-const Button = styled.button`
-  display: block;
-  margin: 10px auto;
-`
-
-const Message = styled.div`
-  text-align: center;
-  margin: 10px 0;
-`
-
-const ButtonsContainer = styled.div`
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: fit-content;
-  display: flex;
-  z-index: 10;
-`
-
-const StyledUserMenuButton = styled(UserMenuButton)`
-  margin-right: 12px;
-`
-const StyledEllipsisMenuButton = styled(EllipsisMenuButton)``
-
-const NewButton = styled(Link)`
-  display: block;
-  background: #888;
-  color: #fff;
-  font-size: 16px;
-  display: flex;
-  flex-direction: column;
-
-  &:link,
-  &:visited {
-    text-decoration: none;
-  }
-
-  > .icon-wrapper {
-    flex: 1;
-    display: grid;
-    place-items: center;
-
-    > .icon {
-      display: block;
-      font-size: 80px;
-      flex: 1;
-    }
-  }
-
-  > .text {
-    padding: 4px;
-    background: #fff2;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    & {
-      background: #555;
-    }
-  }
-`

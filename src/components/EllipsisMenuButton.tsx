@@ -1,15 +1,14 @@
 import { faEllipsisH } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { FC } from 'react'
-import styled from 'styled-components'
 import { baseUrl, imageBaseUrl } from '../constants'
 import { withPrefix } from '../i18n/translate'
 import { Permission } from '../services/PictureService'
 import { copyToClipboard } from '../utils/copyToClipboard'
 
-import { useMenu } from '../utils/useMenu'
-import { Menu, MenuDivider, MenuItem, MenuItemText, MenuItemWithAnchor } from './Menu'
+import { MenuItems, MenuItem, MenuSeparator } from './Menu'
 import { useScreenName } from '../utils/screenNames'
+import { Menu, MenuButton } from '@headlessui/react'
 
 const t = withPrefix('menu')
 
@@ -22,8 +21,6 @@ type Props = {
 const buyMeACoffeeLink = 'https://buymeacoffee.com/odiak'
 
 export const EllipsisMenuButton: FC<Props> = ({ pictureId, permission, className }) => {
-  const { menuRef, buttonRef: menuButtonRef } = useMenu()
-
   const screenName = useScreenName()
 
   const imageLink = `${imageBaseUrl}/${pictureId}.svg`
@@ -34,68 +31,49 @@ export const EllipsisMenuButton: FC<Props> = ({ pictureId, permission, className
     : 'https://about.kakeru.app'
 
   return (
-    <MenuButton ref={menuButtonRef} className={className}>
-      <FontAwesomeIcon icon={faEllipsisH} className="icon" />
-      <Menu ref={menuRef}>
+    <Menu>
+      <MenuButton
+        className={`w-[36px] h-[30px] border-0 bg-gray-300 dark:bg-gray-600 relative text-inherit ${className || ''}`}
+      >
+        <FontAwesomeIcon icon={faEllipsisH} className="icon" />
+      </MenuButton>
+      <MenuItems className="w-max">
         {screenName === 'drawing' && pictureId !== undefined && (
           <>
             {permission?.accessibilityLevel === 'private' ? (
-              <MenuItemText>{t('noImageLink')}</MenuItemText>
+              <MenuItem type="text">{t('noImageLink')}</MenuItem>
             ) : (
               <>
-                <MenuItemToCopy text={imageLink}>{t('copyImageLink')}</MenuItemToCopy>
-                <MenuItemToCopy text={`[![](${imageLink})](${pageLink})`}>
+                <MenuItem type="action" onClick={() => copyToClipboard(imageLink)}>
+                  {t('copyImageLink')}
+                </MenuItem>
+                <MenuItem
+                  type="action"
+                  onClick={() => copyToClipboard(`[![](${imageLink})](${pageLink})`)}
+                >
                   {t('copyImageLinkForMarkdown')}
-                </MenuItemToCopy>
-                <MenuItemToCopy text={`[${pageLink} ${imageLink}]`}>
+                </MenuItem>
+                <MenuItem
+                  type="action"
+                  onClick={() => copyToClipboard(`[${pageLink} ${imageLink}]`)}
+                >
                   {t('copyImageLinkForScrapbox')}
-                </MenuItemToCopy>
+                </MenuItem>
               </>
             )}
-            <MenuDivider />
+            <MenuSeparator />
           </>
         )}
-        <MenuItemWithLink link={aboutPageLink}>{t('aboutKakeru')}</MenuItemWithLink>
-        <MenuItemWithLink link={buyMeACoffeeLink}>{t('supportOnBMC')}</MenuItemWithLink>
-        <MenuItemWithLink link="/flags">{t('experimentalFlags')}</MenuItemWithLink>
-      </Menu>
-    </MenuButton>
+        <MenuItem type="link" to={aboutPageLink}>
+          {t('aboutKakeru')}
+        </MenuItem>
+        <MenuItem type="link" to={buyMeACoffeeLink}>
+          {t('supportOnBMC')}
+        </MenuItem>
+        <MenuItem type="link" to="/flags">
+          {t('experimentalFlags')}
+        </MenuItem>
+      </MenuItems>
+    </Menu>
   )
 }
-
-const MenuItemToCopy: FC<{ text: string }> = ({ children, text }) => {
-  return (
-    <MenuItem
-      onClick={() => {
-        copyToClipboard(text)
-      }}
-    >
-      {children}
-    </MenuItem>
-  )
-}
-
-const MenuItemWithLink: FC<{ link: string }> = ({ link, children }) => {
-  return (
-    <MenuItemWithAnchor>
-      <a href={link} target="_blank" rel="noopener noreferrer">
-        {children}
-      </a>
-    </MenuItemWithAnchor>
-  )
-}
-
-const MenuButton = styled.button`
-  width: 36px;
-  height: 30px;
-  border: 0;
-  background: #ddd;
-  position: relative;
-  color: inherit;
-
-  @media (prefers-color-scheme: dark) {
-    & {
-      background: #444;
-    }
-  }
-`

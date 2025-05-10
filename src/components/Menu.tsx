@@ -1,73 +1,79 @@
-import styled from 'styled-components'
+import { MenuItem, MenuItems, MenuSeparator } from '@headlessui/react'
+import { AnchorProps } from '@headlessui/react/dist/internal/floating'
+import classNames from 'classnames'
+import { FC, PropsWithChildren } from 'react'
+import { Link } from 'react-router-dom'
 
-export const Menu = styled.ul`
-  padding: 0;
-  list-style: none;
-  position: absolute;
-  right: 0;
-  top: 100%;
-  background: #fff;
-  border: 1px solid #ccc;
-  margin: 0;
-  box-shadow: 0 0 6px #0004;
-  z-index: 100;
-  font-size: 16px;
-  width: max-content;
-  text-align: left;
-  min-width: 160px;
-  display: none;
+const CustomMenuItems: FC<PropsWithChildren<{ anchor?: AnchorProps; className?: string }>> = ({
+  children,
+  anchor,
+  className
+}) => {
+  return (
+    <MenuItems
+      anchor={anchor ?? 'bottom end'}
+      className={classNames(
+        'bg-white dark:bg-gray-700 shadow-lg rounded border-[1px] border-gray-300 dark:border-gray-500',
+        className
+      )}
+    >
+      {children}
+    </MenuItems>
+  )
+}
 
-  @media (prefers-color-scheme: dark) {
-    background: #444;
-    border-color: #777;
+const CustomMenuItem: FC<
+  PropsWithChildren<
+    | {
+        type: 'link'
+        to: string
+      }
+    | { type: 'action'; onClick: () => void }
+    | { type: 'text' }
+  >
+> = (props) => {
+  const className =
+    'px-2 py-1.5 w-full text-left cursor-default block hover:bg-gray-100 dark:hover:bg-gray-600'
+
+  switch (props.type) {
+    case 'link':
+      return (
+        <MenuItem>
+          <Link to={props.to} className={className}>
+            {props.children}
+          </Link>
+        </MenuItem>
+      )
+    case 'action':
+      return (
+        <MenuItem>
+          <button className={className} onClick={props.onClick}>
+            {props.children}
+          </button>
+        </MenuItem>
+      )
+    case 'text':
+      return (
+        <MenuItem disabled>
+          <div className={className}>{props.children}</div>
+        </MenuItem>
+      )
   }
-`
+}
 
-export const MenuItem = styled.li`
-  padding: 6px 8px;
-  cursor: pointer;
+const CustomMenuSeparator: FC<PropsWithChildren<{ className?: string }>> = ({
+  children,
+  className
+}) => {
+  return (
+    <MenuSeparator className={classNames('border-t-1 border-gray-300 my-1', className)}>
+      {children}
+    </MenuSeparator>
+  )
+}
 
-  &:hover {
-    background: #eee;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    &:hover {
-      background: #666;
-    }
-  }
-`
-
-export const MenuItemText = styled.li`
-  padding: 6px 8px;
-  color: #777;
-  font-style: italic;
-`
-
-export const MenuItemWithAnchor = styled.li`
-  padding: 0;
-  cursor: pointer;
-
-  &:hover {
-    background: #eee;
-  }
-
-  & > a:link,
-  & > a:visited {
-    padding: 6px 8px;
-    color: inherit;
-    text-decoration: none;
-    display: block;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    &:hover {
-      background: #666;
-    }
-  }
-`
-
-export const MenuDivider = styled.div`
-  height: 1px;
-  background: #ccc;
-`
+export {
+  CustomMenuItems as MenuItems,
+  CustomMenuItem as MenuItem,
+  CustomMenuSeparator as MenuSeparator
+}

@@ -1,27 +1,26 @@
-import React, { useState, useCallback, FC, useEffect } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faHandPointUp,
-  faSlash,
-  faSearchPlus,
+  faRedo,
   faSearchMinus,
-  faUndo,
-  faRedo
+  faSearchPlus,
+  faSlash,
+  faUndo
 } from '@fortawesome/free-solid-svg-icons'
-import { ToolButton } from './ToolButton'
-import { Tool } from '../types/Tool'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Menu, MenuButton, MenuItem, MenuItems, MenuSection } from '@headlessui/react'
 import classNames from 'classnames'
-import styled, { css } from 'styled-components'
-import { useMenu } from '../utils/useMenu'
-import { useVariable } from '../utils/useVariable'
-import { PictureService, Permission, AccessibilityLevel } from '../services/PictureService'
-import { AccessibilityMenuButton } from './AccessibilityMenuButton'
-import { UserMenuButton } from './UserMenuButton'
-import { NewButton } from './NewButton'
-import { DrawingService, colors, widths } from '../services/DrawingService'
-import { withPrefix } from '../i18n/translate'
-import { EllipsisMenuButton } from './EllipsisMenuButton'
+import React, { FC, Fragment, useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
+import { withPrefix } from '../i18n/translate'
+import { DrawingService, colors, widths } from '../services/DrawingService'
+import { AccessibilityLevel, Permission, PictureService } from '../services/PictureService'
+import { Tool } from '../types/Tool'
+import { useVariable } from '../utils/useVariable'
+import { AccessibilityMenuButton } from './AccessibilityMenuButton'
+import { EllipsisMenuButton } from './EllipsisMenuButton'
+import { NewButton } from './NewButton'
+import { ToolButton } from './ToolButton'
+import { UserMenuButton } from './UserMenuButton'
 
 const tToolBar = withPrefix('toolBar')
 
@@ -99,306 +98,159 @@ export function ToolBar({ pictureId }: Props) {
     [currentUser, pictureId, pictureService]
   )
 
-  const { buttonRef: colorWidthButtonRef, menuRef: colorWidthMenuRef } = useMenu()
-
   const [strokeWidth, setStrokeWidth] = useVariable(drawingService.strokeWidth)
   const [strokeColor, setStrokeColor] = useVariable(drawingService.strokeColor)
 
   return (
-    <Container>
+    <div className="block border-b border-black dark:border-gray-500 touch-none">
       <input
         type="text"
         value={title ?? defaultTitle}
         onChange={(e) => setTitleWithUpdate(e.target.value)}
         placeholder={tToolBar('title')}
         disabled={permission == null || !permission.writable}
+        className="block border border-transparent p-[3px] w-[300px] hover:border-gray-300 disabled:bg-inherit disabled:text-inherit disabled:hover:border-transparent dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:hover:border-gray-500"
       />
-      <RightButtonsContainer>
+      <div className="flex w-fit absolute right-0 top-0">
         {permission != null && permission.isOwner && (
-          <StyledAccessibilityMenuButton
+          <AccessibilityMenuButton
+            className="mr-10"
             permission={permission}
             onAccessibilityLevelChange={updateAccessibilityLevel}
           />
         )}
-        <StyledNewButton />
-        <StyledUserMenuButton />
+        <NewButton className="mr-3" />
+        <UserMenuButton className="mr-3" />
         <EllipsisMenuButton pictureId={pictureId} permission={permission} />
-      </RightButtonsContainer>
-      <div className="tools">
+      </div>
+      <div className="flex flex-row flex-wrap mt-1">
         {permission?.writable && (
           <>
-            <div className="tool-group">
+            <div className="mr-5 h-[30px]">
               <WrappedToolButton tool="pen" selectedTool={tool} onSelectedToolChange={setTool} />
               <WrappedToolButton tool="hand" selectedTool={tool} onSelectedToolChange={setTool} />
               <WrappedToolButton tool="eraser" selectedTool={tool} onSelectedToolChange={setTool} />
               <WrappedToolButton tool="lasso" selectedTool={tool} onSelectedToolChange={setTool} />
             </div>
 
-            <div className="tool-group">
-              <button className="tool-bar-button" ref={colorWidthButtonRef}>
-                <ColorIcon color={strokeColor} width={strokeWidth} />
-                <ColorWidthMenu ref={colorWidthMenuRef}>
-                  <div>
+            <div className="mr-5 h-[30px]">
+              <Menu>
+                <MenuButton as={Fragment}>
+                  <Button>
+                    <div
+                      className="inline-block align-middle border border-black dark:border-gray-400 box-border"
+                      style={{
+                        backgroundColor: strokeColor,
+                        width: `${strokeWidth + 6}px`,
+                        height: `${strokeWidth + 6}px`,
+                        borderRadius: `${(strokeWidth + 6) / 2}px`
+                      }}
+                    />
+                  </Button>
+                </MenuButton>
+                <MenuItems
+                  anchor="bottom"
+                  as="div"
+                  className="bg-white dark:bg-gray-700 w-30 shadow-lg rounded border-[1px] border-gray-300 dark:border-gray-500"
+                >
+                  <MenuSection className="grid grid-cols-4">
                     {colors.map((color, i) => (
-                      <ColorWidthMenuItem
+                      <MenuItem
                         key={i}
-                        selected={color === strokeColor}
+                        as="div"
+                        className={classNames('w-[30px] h-[30px]', {
+                          'rounded bg-gray-300 dark:bg-gray-600': color === strokeColor
+                        })}
                         onClick={() => setStrokeColor(color)}
                       >
-                        <ColorIndicator color={color} />
-                      </ColorWidthMenuItem>
+                        <div
+                          className="w-[22px] h-[22px] rounded-full border border-black dark:border-gray-400 m-1 box-border"
+                          style={{ backgroundColor: color }}
+                        />
+                      </MenuItem>
                     ))}
-                  </div>
-                  <div>
+                  </MenuSection>
+                  <MenuSection className="grid grid-cols-4">
                     {widths.map((width, i) => (
-                      <ColorWidthMenuItem
+                      <MenuItem
                         key={i}
-                        selected={width === strokeWidth}
+                        as="div"
+                        className={classNames('w-[30px] h-[30px]', {
+                          'rounded bg-gray-300 dark:bg-gray-600': width === strokeWidth
+                        })}
                         onClick={() => setStrokeWidth(width)}
                       >
-                        <WidthIndicator width={width} />
-                      </ColorWidthMenuItem>
+                        <div
+                          className="bg-black dark:bg-white box-border"
+                          style={{
+                            width: `${width * 1.3 + 1}px`,
+                            height: `${width * 1.3 + 1}px`,
+                            borderRadius: `${(width * 1.3 + 1) / 2}px`,
+                            margin: `${(30 - (width * 1.3 + 1)) / 2}px`
+                          }}
+                        />
+                      </MenuItem>
                     ))}
-                  </div>
-                </ColorWidthMenu>
-              </button>
+                  </MenuSection>
+                </MenuItems>
+              </Menu>
             </div>
 
-            <div className="tool-group">
+            <div className="mr-5 h-[30px]">
               <button
-                className={classNames('tool-bar-button', { selected: palmRejection })}
+                className={classNames(
+                  'w-[40px] h-[30px] border-0 relative',
+                  palmRejection
+                    ? 'bg-gray-600 text-white dark:bg-gray-300 dark:text-black'
+                    : 'bg-gray-200 text-black dark:bg-gray-600 dark:text-white'
+                )}
                 onClick={() => {
                   setPalmRejection(!palmRejection)
                 }}
               >
                 <span className="fa-layers fa-fw">
-                  <FontAwesomeIcon icon={faHandPointUp} className="icon" />
-                  <FontAwesomeIcon icon={faSlash} className="icon" />
+                  <FontAwesomeIcon icon={faHandPointUp} className="block" />
+                  <FontAwesomeIcon icon={faSlash} className="block text-red-500" />
                 </span>
               </button>
             </div>
           </>
         )}
 
-        <div className="tool-group">
-          <button className="tool-bar-button" onClick={zoomOut}>
-            <FontAwesomeIcon className="icon" icon={faSearchMinus} />
-          </button>
-          <button className="tool-bar-button" onClick={zoomIn}>
-            <FontAwesomeIcon className="icon" icon={faSearchPlus} />
-          </button>
+        <div className="mr-5 h-[30px]">
+          <Button onClick={zoomOut}>
+            <FontAwesomeIcon className="block" icon={faSearchMinus} />
+          </Button>
+          <Button onClick={zoomIn}>
+            <FontAwesomeIcon className="block" icon={faSearchPlus} />
+          </Button>
           <span>{(scale * 100).toFixed()}%</span>
         </div>
 
         {permission?.writable && (
-          <div className="tool-group">
-            <button className="tool-bar-button" disabled={!canUndo} onClick={undo}>
-              <FontAwesomeIcon className="icon" icon={faUndo} />
-            </button>
-            <button className="tool-bar-button" disabled={!canRedo} onClick={redo}>
-              <FontAwesomeIcon className="icon" icon={faRedo} />
-            </button>
+          <div className="mr-5 h-[30px]">
+            <Button disabled={!canUndo} onClick={undo}>
+              <FontAwesomeIcon className="block" icon={faUndo} />
+            </Button>
+            <Button disabled={!canRedo} onClick={redo}>
+              <FontAwesomeIcon className="block" icon={faRedo} />
+            </Button>
           </div>
         )}
       </div>
-    </Container>
+    </div>
   )
 }
 
-const Container = styled.div`
-  display: block;
-  border-bottom: 1px solid #000;
-  touch-action: manipulation;
-
-  @media (prefers-color-scheme: dark) {
-    & {
-      border-bottom-color: #888;
-    }
-  }
-
-  input {
-    display: block;
-    border: 1px solid transparent;
-    padding: 3px;
-    width: 300px;
-
-    &:hover {
-      border-color: #ccc;
-    }
-
-    &:disabled {
-      background: inherit;
-      color: inherit;
-      &:hover {
-        border-color: transparent;
-      }
-    }
-
-    @media (prefers-color-scheme: dark) {
-      & {
-        background: #555;
-        color: #fff;
-      }
-      &::placeholder {
-        color: #bbb;
-      }
-      &:hover {
-        border-color: #999;
-      }
-    }
-  }
-
-  .tools {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    margin-top: 4px;
-  }
-
-  .tool-group {
-    margin-right: 20px;
-    height: 30px;
-  }
-
-  .tool-bar-button {
-    width: 40px;
-    height: 30px;
-    border: 0;
-    background: #e8e8e8;
-    position: relative;
-    color: inherit;
-
-    .fa-slash {
-      color: red !important;
-    }
-
-    &.selected {
-      background: #444;
-      color: #fff;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      & {
-        background: #444;
-      }
-      &:disabled {
-        color: #777;
-      }
-      &.selected {
-        background: #aaa;
-        color: #000;
-      }
-    }
-  }
-`
-
-const RightButtonsContainer = styled.div`
-  display: flex;
-  width: fit-content;
-  align-items: right;
-  position: absolute;
-  right: 0;
-  top: 0;
-`
-
-const StyledNewButton = styled(NewButton)`
-  margin-right: 12px;
-`
-
-const StyledUserMenuButton = styled(UserMenuButton)`
-  margin-right: 12px;
-`
-
-const StyledAccessibilityMenuButton = styled(AccessibilityMenuButton)`
-  margin-right: 40px;
-`
-
-const ColorIcon = styled.div<{ color: string; width: number }>`
-  border: 1px solid #000;
-  box-sizing: border-box;
-  display: inline-block;
-  background: ${(p) => p.color};
-  vertical-align: middle;
-  ${(p) => {
-    const size = p.width + 6
-    return css`
-      width: ${size}px;
-      height: ${size}px;
-      border-radius: ${size / 2}px;
-    `
-  }}
-
-  @media (prefers-color-scheme: dark) {
-    border: 1px solid #999;
-  }
-`
-
-const ColorWidthMenu = styled.div`
-  padding: 0;
-  position: absolute;
-  right: 0;
-  top: 100%;
-  background: #fff;
-  border: 1px solid #ccc;
-  margin: 0;
-  box-shadow: 0 0 6px #0004;
-  z-index: 100;
-  font-size: 16px;
-  text-align: left;
-  width: 120px;
-  display: none;
-  line-height: 0;
-
-  @media (prefers-color-scheme: dark) {
-    background: #444;
-    border-color: #777;
-  }
-`
-
-const ColorWidthMenuItem = styled.div<{ selected?: boolean }>`
-  display: inline-block;
-  width: 30px;
-  height: 30px;
-  ${(p) =>
-    p.selected &&
-    css`
-      border-radius: 4px;
-      background: #ccc;
-
-      @media (prefers-color-scheme: dark) {
-        background: #999;
-      }
-    `}
-`
-
-const ColorIndicator = styled.div<{ color: string }>`
-  background: ${(p) => p.color};
-  width: 22px;
-  height: 22px;
-  border-radius: 11px;
-  border: 1px solid #000;
-  box-sizing: border-box;
-  margin: 4px;
-
-  @media (prefers-color-scheme: dark) {
-    border-color: #999;
-  }
-`
-
-const WidthIndicator = styled.div<{ width: number }>`
-  box-sizing: border-box;
-  background: #000;
-  ${(p) => {
-    const size = p.width * 1.3 + 1
-    return css`
-      width: ${size}px;
-      height: ${size}px;
-      border-radius: ${size / 2}px;
-      margin: ${(30 - size) / 2}px;
-    `
-  }}
-
-  @media (prefers-color-scheme: dark) {
-    background: #fff;
-  }
-`
+type ButtonProps = React.ComponentProps<'button'>
+const Button = ({ children, className, ...props }: ButtonProps) => (
+  <button
+    className={classNames(
+      'w-[40px] h-[30px] border-0 bg-gray-200 text-black dark:bg-gray-600 dark:text-white relative disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-500 dark:disabled:text-gray-400',
+      className
+    )}
+    {...props}
+  >
+    {children}
+  </button>
+)

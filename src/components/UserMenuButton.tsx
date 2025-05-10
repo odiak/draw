@@ -1,13 +1,12 @@
-import React, { FC, useCallback } from 'react'
-import { Link, useMatches } from 'react-router-dom'
-import { Menu, MenuItem, MenuItemText, MenuItemWithAnchor } from './Menu'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser } from '@fortawesome/free-solid-svg-icons'
-import styled from 'styled-components'
-import { useMenu } from '../utils/useMenu'
-import { withPrefix } from '../i18n/translate'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Menu, MenuButton } from '@headlessui/react'
+import classNames from 'classnames'
+import { FC, useCallback } from 'react'
 import { NotSignedIn, User, isSignedIn, useAuth } from '../hooks/useAuth'
+import { withPrefix } from '../i18n/translate'
 import { ScreenName, useScreenName } from '../utils/screenNames'
+import { MenuItem, MenuItems } from './Menu'
 
 const t = withPrefix('menu')
 
@@ -18,8 +17,6 @@ export const UserMenuButton: FC<{ className?: string }> = ({ className }) => {
     signInAnonymously,
     signOut: signOutOriginal
   } = useAuth()
-
-  const { menuRef: accountMenuRef, buttonRef: accountMenuButtonRef } = useMenu()
 
   const screenName = useScreenName()
 
@@ -49,24 +46,30 @@ export const UserMenuButton: FC<{ className?: string }> = ({ className }) => {
   }
 
   return (
-    <AccountButton ref={accountMenuButtonRef} className={className}>
-      {currentUser !== undefined &&
-      isSignedIn(currentUser) &&
-      !currentUser.isAnonymous &&
-      currentUser.photoURL ? (
-        <AccountImage src={currentUser.photoURL} />
-      ) : (
-        <FontAwesomeIcon icon={faUser} className="icon" />
-      )}
-
-      <Menu ref={accountMenuRef}>
+    <Menu>
+      <MenuButton
+        className={classNames(
+          'w-[30px] h-[30px] border-0 bg-gray-300 dark:bg-gray-600 flex justify-center items-center p-[1px] text-inherit',
+          className
+        )}
+      >
+        {currentUser !== undefined &&
+        isSignedIn(currentUser) &&
+        !currentUser.isAnonymous &&
+        currentUser.photoURL ? (
+          <img src={currentUser.photoURL} className="w-full h-full" />
+        ) : (
+          <FontAwesomeIcon icon={faUser} className="block" />
+        )}
+      </MenuButton>
+      <MenuItems>
         <Items
           user={currentUser}
           screenName={screenName}
           {...{ signInAnonymously, signInWithGoogle, signOut }}
         />
-      </Menu>
-    </AccountButton>
+      </MenuItems>
+    </Menu>
   )
 }
 
@@ -92,49 +95,32 @@ const Items: FC<ItemsProps> = ({
 
   return (
     <>
-      {isAnonymous && <MenuItemText>{t('usingAnonymously')}</MenuItemText>}
+      {isAnonymous && <MenuItem type="text">{t('usingAnonymously')}</MenuItem>}
       {screenName !== 'boards' && isSignedIn_ && (
-        <MenuItemWithAnchor>
-          <Link to="/boards">{t('myBoards')}</Link>
-        </MenuItemWithAnchor>
+        <MenuItem type="link" to="/boards">
+          {t('myBoards')}
+        </MenuItem>
       )}
       {screenName !== 'settings' && isSignedIn_ && (
-        <MenuItemWithAnchor>
-          <Link to="/settings">{t('settings')}</Link>
-        </MenuItemWithAnchor>
+        <MenuItem type="link" to="/settings">
+          {t('settings')}
+        </MenuItem>
       )}
-      {isNotSignedIn && <MenuItem onClick={signInAnonymously}>{t('signInAnonymously')}</MenuItem>}
-      {isAnonymousLike && <MenuItem onClick={signInWithGoogle}>{t('signInWithGoogle')}</MenuItem>}
-      {isSignedIn_ && <MenuItem onClick={signOut}>{t('signOut')}</MenuItem>}
+      {isNotSignedIn && (
+        <MenuItem type="action" onClick={signInAnonymously}>
+          {t('signInAnonymously')}
+        </MenuItem>
+      )}
+      {isAnonymousLike && (
+        <MenuItem type="action" onClick={signInWithGoogle}>
+          {t('signInWithGoogle')}
+        </MenuItem>
+      )}
+      {isSignedIn_ && (
+        <MenuItem type="action" onClick={signOut}>
+          {t('signOut')}
+        </MenuItem>
+      )}
     </>
   )
 }
-
-const AccountButton = styled.button`
-  display: block;
-  width: 30px;
-  height: 30px;
-  border: 0;
-  background: #ddd;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  padding: 1px;
-  color: inherit;
-
-  > .icon {
-    display: block;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    & {
-      background: #444;
-    }
-  }
-`
-
-const AccountImage = styled.img`
-  width: 100%;
-  height: 100%;
-`

@@ -1,5 +1,4 @@
 import React, { FC, useEffect, useRef, useState } from 'react'
-import styled from 'styled-components'
 import { useAuth } from '../hooks/useAuth'
 
 const duration = 700
@@ -24,37 +23,13 @@ export const SplashScreen: FC = () => {
 
   if (isWaiting || currentUser === undefined) {
     return (
-      <Container>
-        <h1>Kakeru</h1>
-      </Container>
+      <div className="fixed inset-0 bg-white/90 dark:bg-black grid place-items-center z-[9999]">
+        <h1 className="text-[60px] italic text-transparent [--text-stroke-color:black] dark:[--text-stroke-color:white] [-webkit-text-stroke:1.5px_var(--text-stroke-color)]">
+          Kakeru
+        </h1>
+      </div>
     )
   }
 
   return null
 }
-
-const Container = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #fffe;
-  display: grid;
-  place-items: center;
-  z-index: 9999;
-  --text-stroke-color: #000;
-
-  h1 {
-    font-size: 60px;
-    font-style: italic;
-    color: transparent;
-    -webkit-text-stroke: 1.5px var(--text-stroke-color);
-  }
-
-  /* dark mode */
-  @media (prefers-color-scheme: dark) {
-    background: #000;
-    --text-stroke-color: #fff;
-  }
-`
