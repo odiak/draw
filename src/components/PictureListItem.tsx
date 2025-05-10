@@ -39,10 +39,10 @@ export const PictureListItem: FC<Props> = ({
   }, [onDelete, pictureId])
 
   return (
-    <div className={classNames('relative w-full', className)}>
+    <div className={classNames('relative w-full dark:bg-gray-200', className)}>
       <Menu>
-        <MenuButton className="absolute bg-gray-300/50 dark:bg-gray-700/50 border-0 right-0 top-0 p-1 px-1.5 text-inherit">
-          <FontAwesomeIcon icon={faEllipsisH} className="text-gray-600/80 dark:text-gray-400/80" />
+        <MenuButton className="absolute bg-gray-300/50 dark:bg-gray-500/50 border-0 right-0 top-0 p-1 px-2 text-inherit">
+          <FontAwesomeIcon icon={faEllipsisH} className="text-gray-600/80 dark:text-gray-100/80" />
         </MenuButton>
         <MenuItems>
           <MenuItem

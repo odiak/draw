@@ -19,7 +19,7 @@ export const SignInBanner: FC = () => {
   }
 
   return (
-    <div className="p-2 text-center bg-red-200 text-base">
+    <div className="p-2 text-center bg-red-200 text-base dark:text-gray-800">
       {t('text1')}
       <button
         onClick={signInAnonymously}

@@ -246,7 +246,7 @@ type ButtonProps = React.ComponentProps<'button'>
 const Button = ({ children, className, ...props }: ButtonProps) => (
   <button
     className={classNames(
-      'w-[40px] h-[30px] border-0 bg-gray-200 text-black dark:bg-gray-600 dark:text-white relative disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-500 dark:disabled:text-gray-500',
+      'w-[40px] h-[30px] border-0 bg-gray-200 text-black dark:bg-gray-600 dark:text-white relative disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-500 dark:disabled:text-gray-400',
       className
     )}
     {...props}
