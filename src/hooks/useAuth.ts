@@ -11,15 +11,15 @@ import {
   signOut
 } from 'firebase/auth'
 import {
-  getFirestore,
-  getDocs,
-  query,
   collection,
-  where,
+  doc,
+  getDocs,
+  getFirestore,
   limit,
   orderBy,
+  query,
   setDoc,
-  doc
+  where
 } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -58,7 +58,7 @@ export function useAuth(): UseAuthResult {
     () => auth.currentUser ?? undefined
   )
 
-  const migrationReadyCallbacks = useRef<Set<(m: MigrateFunction) => void> | undefined>()
+  const migrationReadyCallbacks = useRef<Set<(m: MigrateFunction) => void>>(undefined)
 
   useEffect(() => {
     auth.useDeviceLanguage()

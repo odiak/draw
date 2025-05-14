@@ -1,16 +1,16 @@
-import React, { FC, useEffect, useRef, useState } from 'react'
+import { FC, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Canvas } from '../components/Canvas'
 import { Title } from '../components/Title'
 
+import { SignInBanner } from '../components/SignInBanner'
 import { ToolBar } from '../components/ToolBar'
+import { Welcome } from '../components/Welcome'
+import { useAuth } from '../hooks/useAuth'
 import { withPrefix } from '../i18n/translate'
 import { PictureService } from '../services/PictureService'
-import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
 import { InvalidRouteError } from '../utils/InvalidRouteError'
-import { useAuth } from '../hooks/useAuth'
-import { Welcome } from '../components/Welcome'
-import { SignInBanner } from '../components/SignInBanner'
+import { useSetCurrentScreen } from '../utils/useSetCurrentScreen'
 
 const t = withPrefix('global')
 
@@ -23,7 +23,7 @@ const pictureIdPattern = /^[0-9a-f]{32}$/
 
 function useValidatedParams(): { pictureId: string } {
   const { pictureId = '' } = useParams()
-  const prev = useRef<string>()
+  const prev = useRef<string>(undefined)
 
   if (prev.current !== pictureId) {
     prev.current = pictureId
