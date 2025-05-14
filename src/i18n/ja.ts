@@ -22,6 +22,7 @@ export const ja: typeof en = {
     copyImageLink: '画像のリンクをコピーする',
     copyImageLinkForMarkdown: 'Markdown用のリンクをコピーする',
     copyImageLinkForScrapbox: 'Scrapbox用のリンクをコピーする',
+    share: 'シェア',
     aboutKakeru: 'Kakeruについて',
     experimentalFlags: '試験的な設定',
     accessibilities: {
@@ -97,5 +98,19 @@ export const ja: typeof en = {
     apiDocumentation: 'APIドキュメント',
     backToHome: 'ホームに戻る',
     deleteApiToken: 'APIトークンを削除する'
+  },
+  shareModal: {
+    title: 'シェア',
+    format: 'フォーマット',
+    linkType: 'リンクタイプ',
+    direct: '直接リンク',
+    opacity: '透明度',
+    scale: '拡大率',
+    width: '幅',
+    height: '高さ',
+    linkPreview: 'リンクプレビュー',
+    cancel: 'キャンセル',
+    copyLink: 'リンクをコピー',
+    download: 'ダウンロード'
   }
 }

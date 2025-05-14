@@ -20,6 +20,7 @@ export const en = {
     copyImageLink: 'Copy image link',
     copyImageLinkForMarkdown: 'Copy image link for Markdown',
     copyImageLinkForScrapbox: 'Copy image link for Scrapbox',
+    share: 'Share',
     aboutKakeru: 'About Kakeru',
     experimentalFlags: 'Experimental flags',
     accessibilities: {
@@ -94,5 +95,19 @@ export const en = {
     apiDocumentation: 'API documentation',
     backToHome: 'Back to home',
     deleteApiToken: 'Delete API token'
+  },
+  shareModal: {
+    title: 'Share',
+    format: 'Format',
+    linkType: 'Link Type',
+    direct: 'Direct',
+    opacity: 'Opacity',
+    scale: 'Scale',
+    width: 'Width',
+    height: 'Height',
+    linkPreview: 'Link Preview',
+    cancel: 'Cancel',
+    copyLink: 'Copy Link',
+    download: 'Download'
   }
 }
