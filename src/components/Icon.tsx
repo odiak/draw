@@ -10,7 +10,6 @@ import PalmRejection from '../assets/palm-rejection.svg?react'
 import Pen from '../assets/pen.svg?react'
 import Plus from '../assets/plus.svg?react'
 import Redo from '../assets/redo.svg?react'
-import Share from '../assets/share.svg?react'
 import Undo from '../assets/undo.svg?react'
 import Unlocked from '../assets/unlocked.svg?react'
 import User from '../assets/user.svg?react'
@@ -29,7 +28,6 @@ const icons = {
   pen: Pen,
   plus: Plus,
   redo: Redo,
-  share: Share,
   undo: Undo,
   unlocked: Unlocked,
   user: User,
