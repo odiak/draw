@@ -114,6 +114,7 @@ export const ja: typeof en = {
     none: 'ページへのリンク',
     png: '画像 (PNG)',
     svg: '画像 (SVG)',
-    transparent: '背景を透明にする'
+    transparent: '背景を透明にする',
+    copied: 'コピーしました！'
   }
 }

@@ -111,6 +111,7 @@ export const en = {
     none: 'Link to page',
     png: 'Image (PNG)',
     svg: 'Image (SVG)',
-    transparent: 'Make background transparent'
+    transparent: 'Transparent background',
+    copied: 'Copied!'
   }
 }

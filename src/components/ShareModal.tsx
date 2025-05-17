@@ -24,12 +24,13 @@ export const ShareModal: FC<Props> = ({ isOpen, onClose, pictureId }) => {
   const [crop, setCrop] = useState(false)
   const [width, setWidth] = useState(800)
   const [height, setHeight] = useState(600)
+  const [copiedLink, setCopiedLink] = useState(false)
 
   const pageLink = `${baseUrl}/${pictureId}`
 
-  const link = useMemo(() => {
+  const imageLink = useMemo(() => {
     if (imageFormat === 'none') {
-      return pageLink
+      return ''
     }
 
     let url = `${imageBaseUrl}/${pictureId}`
@@ -46,30 +47,37 @@ export const ShareModal: FC<Props> = ({ isOpen, onClose, pictureId }) => {
     url += `.${imageFormat}`
 
     return url
-  }, [crop, height, imageFormat, pageLink, pictureId, scale, transparent, width])
+  }, [crop, height, imageFormat, pictureId, scale, transparent, width])
 
   const linkText = useMemo(() => {
+    if (imageFormat === 'none') return pageLink
+
     switch (linkFormat) {
       case 'direct':
-        return link
+        return imageLink
       case 'markdown':
-        return `[![](${link})](${pageLink})`
+        return `[![](${imageLink})](${pageLink})`
       case 'scrapbox':
-        return `[${pageLink} ${link}]`
+        return `[${pageLink} ${imageLink}]`
     }
-  }, [link, linkFormat, pageLink])
+  }, [imageFormat, imageLink, linkFormat, pageLink])
 
   const handleCopyLink = () => {
     copyToClipboard(linkText)
+
+    setCopiedLink(true)
+    setTimeout(() => {
+      setCopiedLink(false)
+    }, 1000)
   }
 
   const handleDownload = () => {
+    if (imageLink === '') return
+
     const a = document.createElement('a')
-    a.href = link
-    a.download = `kakeru-${pictureId}.${imageFormat}`
-    document.body.appendChild(a)
+    a.href = `${imageLink}?dl=1`
+    a.download = `kakeru-${imageLink.replace(/.*\//, '')}`
     a.click()
-    document.body.removeChild(a)
   }
 
   return (
@@ -77,7 +85,7 @@ export const ShareModal: FC<Props> = ({ isOpen, onClose, pictureId }) => {
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
         <DialogPanel className="w-full max-w-lg rounded-xl bg-white dark:bg-gray-800 p-6 shadow-xl relative">
-          <DialogTitle className="text-xl mb-4 font-bold">{t('title')}</DialogTitle>
+          <DialogTitle className="text-2xl mb-4 font-bold">{t('title')}</DialogTitle>
 
           <button
             className="absolute top-2 right-4 text-3xl cursor-pointer text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -89,7 +97,7 @@ export const ShareModal: FC<Props> = ({ isOpen, onClose, pictureId }) => {
           <div className="space-y-4">
             {/* Image Format */}
             <div>
-              <label className="block text-sm font-medium mb-2">{t('format')}</label>
+              <label className="block text-md font-medium mb-2">{t('format')}</label>
               <RadioGroup
                 value={imageFormat}
                 onChange={setImageFormat}
@@ -115,7 +123,7 @@ export const ShareModal: FC<Props> = ({ isOpen, onClose, pictureId }) => {
             {/* Transparent */}
             {imageFormat !== 'none' && (
               <div>
-                <label>
+                <label className="block text-md font-medium mb-2">
                   <input
                     type="checkbox"
                     checked={transparent}
@@ -130,7 +138,7 @@ export const ShareModal: FC<Props> = ({ isOpen, onClose, pictureId }) => {
             {/* Scale */}
             {imageFormat !== 'none' && (
               <div>
-                <label className="block text-sm font-medium mb-2">{t('scale')}</label>
+                <label className="block text-md font-medium mb-2">{t('scale')}</label>
                 <select
                   value={scale}
                   onChange={(e) => setScale(Number(e.target.value))}
@@ -148,7 +156,7 @@ export const ShareModal: FC<Props> = ({ isOpen, onClose, pictureId }) => {
             {/* Crop */}
             {imageFormat !== 'none' && (
               <div>
-                <label className="my-2">
+                <label className="block text-md font-medium mb-2">
                   <input
                     type="checkbox"
                     checked={crop}
@@ -164,7 +172,7 @@ export const ShareModal: FC<Props> = ({ isOpen, onClose, pictureId }) => {
             {imageFormat !== 'none' && crop && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">{t('width')}</label>
+                  <label className="block text-md font-medium mb-2">{t('width')}</label>
                   <input
                     type="number"
                     value={width}
@@ -191,7 +199,7 @@ export const ShareModal: FC<Props> = ({ isOpen, onClose, pictureId }) => {
             {/* Link Type */}
             {imageFormat !== 'none' && (
               <div>
-                <label className="block text-sm font-medium mb-2">{t('linkType')}</label>
+                <label className="block text-md font-medium mb-2">{t('linkType')}</label>
                 <div className="flex space-x-2">
                   <button
                     className={classNames(
@@ -232,7 +240,7 @@ export const ShareModal: FC<Props> = ({ isOpen, onClose, pictureId }) => {
 
             {/* Link Preview */}
             <div>
-              <label className="block text-sm font-medium mb-2">{t('linkPreview')}</label>
+              <label className="block text-md font-medium mb-2">{t('linkPreview')}</label>
               <Textarea
                 readOnly
                 className="w-full px-3 py-2 border rounded font-mono text-sm break-all border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400"
@@ -243,7 +251,7 @@ export const ShareModal: FC<Props> = ({ isOpen, onClose, pictureId }) => {
             {/* Action Buttons */}
             <div className="flex justify-end gap-2 pt-4 flex-wrap">
               <button className="px-4 py-2 bg-blue-500 text-white rounded" onClick={handleCopyLink}>
-                {t('copyLink')}
+                {copiedLink ? t('copied') : t('copyLink')}
               </button>
               {imageFormat !== 'none' && (
                 <>
