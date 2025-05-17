@@ -1,5 +1,3 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { NotSignedIn, useAuth } from './useAuth'
 import {
   FirestoreDataConverter,
   collection,
@@ -9,7 +7,9 @@ import {
   setDoc
 } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getFunctions } from '../utils/firebase-functions'
+import { NotSignedIn, useAuth } from './useAuth'
 
 export type UserSettings = {
   defaultAccessibilityLevel?: 'public' | 'protected' | 'private'
@@ -17,7 +17,7 @@ export type UserSettings = {
 }
 
 export function useUserSettings() {
-  const auth = useAuth()
+  const { currentUser } = useAuth()
 
   const firestore = useMemo(() => getFirestore(), [])
 
@@ -25,9 +25,9 @@ export function useUserSettings() {
   const [isUpdatingApiToken, setIsUpdatingApiToken] = useState(false)
 
   useEffect(() => {
-    if (auth.currentUser === undefined || auth.currentUser instanceof NotSignedIn) return
+    if (currentUser === undefined || currentUser instanceof NotSignedIn) return
 
-    const userRef = doc(collection(firestore, 'users'), auth.currentUser.uid).withConverter(
+    const userRef = doc(collection(firestore, 'users'), currentUser.uid).withConverter(
       userSettingsConverter
     )
     const unsubscribe = onSnapshot(userRef, (snapshot) => {
@@ -42,19 +42,19 @@ export function useUserSettings() {
     })
 
     return unsubscribe
-  }, [auth, firestore])
+  }, [currentUser, firestore])
 
   const updateSettings = useCallback(
     async (settings: UserSettings) => {
-      if (auth.currentUser === undefined || auth.currentUser instanceof NotSignedIn) return
+      if (currentUser === undefined || currentUser instanceof NotSignedIn) return
 
-      const userRef = doc(collection(firestore, 'users'), auth.currentUser.uid).withConverter(
+      const userRef = doc(collection(firestore, 'users'), currentUser.uid).withConverter(
         userSettingsConverter
       )
       setSettings((s) => ({ ...s, ...settings }))
       await setDoc(userRef, settings, { merge: true })
     },
-    [auth, firestore]
+    [currentUser, firestore]
   )
 
   const createOrRefreshApiToken = useCallback(async () => {
